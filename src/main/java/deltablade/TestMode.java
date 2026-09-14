@@ -6,7 +6,7 @@ import java.util.Optional;
 
 /**
  * Debug codes: tap the same number key three times
- * (111 Meteor, 222 Cognitive, 333 Shield, 444 Warp, 555 UFO, 666 Bonus, 777 Attack, 888 Scoop, 999 Swarm).
+ * (000 Missile, 111 Meteor, 222 Cognitive, 333 Shield, 444 Warp, 555 UFO, 666 Bonus, 777 Attack, 888 Scoop, 999 Swarm).
  */
 public final class TestMode {
 
@@ -50,6 +50,7 @@ public final class TestMode {
 
     public static Drop dropFor(int index) {
         return switch (index) {
+            case 0 -> new Drop("missilePickup", "TEST DROP  MISSILE");
             case 1 -> new Drop("meteorPickup", "TEST DROP  METEOR");
             case 2 -> new Drop("cognitivePickup", "TEST DROP  COGNITIVE");
             case 3 -> new Drop("shieldPickup", "TEST DROP  SHIELD");
@@ -68,6 +69,7 @@ public final class TestMode {
             return null;
         }
         return switch (code) {
+            case DIGIT0, NUMPAD0 -> 0;
             case DIGIT1, NUMPAD1 -> 1;
             case DIGIT2, NUMPAD2 -> 2;
             case DIGIT3, NUMPAD3 -> 3;

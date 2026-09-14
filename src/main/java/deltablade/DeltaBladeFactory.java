@@ -11,6 +11,7 @@ import deltablade.components.EnemyComponent;
 import deltablade.components.ExplosionComponent;
 import deltablade.components.ExtraLetterPickupComponent;
 import deltablade.components.MeteorRockComponent;
+import deltablade.components.MissileComponent;
 import deltablade.components.PickupComponent;
 import deltablade.components.RankMarkerComponent;
 import deltablade.components.UfoAnimComponent;
@@ -489,6 +490,49 @@ public class DeltaBladeFactory implements EntityFactory {
                 .collidable()
                 .with(new PickupComponent(PickupComponent.PickupType.SCOOP))
                 .build();
+    }
+
+    @Spawns("missilePickup")
+    public Entity newMissilePickup(SpawnData data) {
+        return FXGL.entityBuilder(data)
+                .type(EntityType.PICKUP)
+                .viewWithBBox(safeTexture("pickup_missile.png", PICKUP_SIZE, PICKUP_SIZE, Color.ORANGERED))
+                .zIndex(60)
+                .collidable()
+                .with(new PickupComponent(PickupComponent.PickupType.MISSILE))
+                .build();
+    }
+
+    @Spawns("playerMissile")
+    public Entity newPlayerMissile(SpawnData data) {
+        Image img = EmbeddedTextures.getImage("player_missile.png", 256, 256);
+        Node sprite;
+        if (img != null && !img.isError()) {
+            ImageView iv = new ImageView(img);
+            iv.setFitWidth(32);
+            iv.setFitHeight(32);
+            iv.setSmooth(false);
+            iv.setRotate(MissileComponent.ART_OFFSET_DEG);
+            sprite = iv;
+        } else {
+            sprite = safeTexture("pickup_missile.png", 32, 32, Color.ORANGERED);
+            sprite.setRotate(MissileComponent.ART_OFFSET_DEG);
+        }
+        Ellipse flame = new Ellipse(3.2, 7);
+        flame.setFill(Color.rgb(255, 170, 50, 0.9));
+        flame.setTranslateX(16);
+        flame.setTranslateY(28);
+        Group view = new Group(flame, sprite);
+        Entity missile = FXGL.entityBuilder(data)
+                .type(EntityType.PLAYER_MISSILE)
+                .viewWithBBox(view)
+                .zIndex(82)
+                .collidable()
+                .with(new MissileComponent())
+                .build();
+        missile.getTransformComponent().setRotationOrigin(new Point2D(
+                missile.getWidth() / 2.0, missile.getHeight() / 2.0));
+        return missile;
     }
 
     @Spawns("shieldPickup")

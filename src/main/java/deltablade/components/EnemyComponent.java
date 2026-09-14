@@ -565,7 +565,11 @@ public class EnemyComponent extends Component {
     }
 
     public void hit() {
-        health--;
+        hit(1);
+    }
+
+    public void hit(int amount) {
+        health -= Math.max(1, amount);
     }
     
     public boolean isDead() {

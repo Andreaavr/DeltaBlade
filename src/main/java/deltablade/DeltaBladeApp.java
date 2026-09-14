@@ -8,6 +8,7 @@ import deltablade.components.BackgroundScrollComponent;
 import deltablade.components.BulletComponent;
 import deltablade.components.EnemyComponent;
 import deltablade.components.ExtraLetterPickupComponent;
+import deltablade.components.MissileComponent;
 import deltablade.components.PickupComponent;
 import deltablade.components.PlayerComponent;
 import deltablade.components.RankMarkerComponent;
@@ -65,6 +66,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private boolean movingUp = false;
     private boolean movingDown = false;
     private boolean holdingFire = false;
+    private long lastMissileTapAt = 0;
     private boolean gameOver = false;
     private boolean showingTitleScreen = true;
     private boolean gameStarted = false;
@@ -242,15 +244,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         getInput().addAction(new UserAction("Fire") {
             @Override
             protected void onActionBegin() {
-                holdingFire = true;
-                if (!gameOver) {
-                    fire();
-                }
+                onFirePressed();
             }
             @Override
             protected void onAction() {
                 holdingFire = true;
-                if (!gameOver && !minigameActive && getb(GameVars.AUTOFIRE)) {
+                if (!gameOver && !minigameActive && findActiveMissile() == null && getb(GameVars.AUTOFIRE)) {
                     fire();
                 }
             }
@@ -260,6 +259,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             }
         }, KeyCode.SPACE);
         
+        bindTestDigit("Test 0", KeyCode.DIGIT0, KeyCode.NUMPAD0);
         bindTestDigit("Test 1", KeyCode.DIGIT1, KeyCode.NUMPAD1);
         bindTestDigit("Test 2", KeyCode.DIGIT2, KeyCode.NUMPAD2);
         bindTestDigit("Test 3", KeyCode.DIGIT3, KeyCode.NUMPAD3);
@@ -273,15 +273,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         getInput().addAction(new UserAction("Fire X") {
             @Override
             protected void onActionBegin() {
-                holdingFire = true;
-                if (!gameOver) {
-                    fire();
-                }
+                onFirePressed();
             }
             @Override
             protected void onAction() {
                 holdingFire = true;
-                if (!gameOver && !minigameActive && getb(GameVars.AUTOFIRE)) {
+                if (!gameOver && !minigameActive && findActiveMissile() == null && getb(GameVars.AUTOFIRE)) {
                     fire();
                 }
             }
@@ -356,6 +353,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         activeMinigame = null;
         stopWarpVisuals();
         holdingFire = false;
+        lastMissileTapAt = 0;
         movingUp = false;
         movingDown = false;
         frameCount = 0;
@@ -977,12 +975,113 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
     
     private static final double BULLET_SPEED = -500;
+
+    private void onFirePressed() {
+        holdingFire = true;
+        if (gameOver) {
+            return;
+        }
+        if (tryMissileFirePress()) {
+            return;
+        }
+        fire();
+    }
+
+    private boolean tryMissileFirePress() {
+        Entity missile = findActiveMissile();
+        if (missile == null) {
+            lastMissileTapAt = 0;
+            return false;
+        }
+        long now = System.nanoTime();
+        if (lastMissileTapAt > 0 && (now - lastMissileTapAt) / 1_000_000_000.0 <= GameVars.MISSILE_DOUBLE_TAP) {
+            lastMissileTapAt = 0;
+            if (missile.hasComponent(MissileComponent.class)) {
+                missile.getComponent(MissileComponent.class).requestDetonate();
+            }
+            return true;
+        }
+        lastMissileTapAt = now;
+        return true;
+    }
+
+    private Entity findActiveMissile() {
+        for (Entity missile : getGameWorld().getEntitiesByType(EntityType.PLAYER_MISSILE)) {
+            if (missile.isActive() && missile.hasComponent(MissileComponent.class)
+                    && !missile.getComponent(MissileComponent.class).isDetonated()) {
+                return missile;
+            }
+        }
+        return null;
+    }
+
+    private void launchPlayerMissile() {
+        if (player == null || !player.isActive() || !player.hasComponent(PlayerComponent.class)) {
+            return;
+        }
+        Entity live = findActiveMissile();
+        if (live != null) {
+            return;
+        }
+        PlayerComponent pc = player.getComponent(PlayerComponent.class);
+        spawn("playerMissile", new com.almasb.fxgl.entity.SpawnData(pc.getCenterX() - 16, pc.getTopY() - 28));
+        lastMissileTapAt = 0;
+        SoundHelper.play("missile_launch.wav");
+    }
+
+    public void detonatePlayerMissile(Entity missile) {
+        if (missile == null || !missile.isActive()) {
+            return;
+        }
+        double cx = missile.getX() + missile.getWidth() / 2.0;
+        double cy = missile.getY() + missile.getHeight() / 2.0;
+        missile.removeFromWorld();
+        lastMissileTapAt = 0;
+        spawnExplosion(cx, cy, "ship");
+        spawnShockwaveRing(cx, cy, "ship");
+        triggerScreenShake("ship");
+        SoundHelper.play("explode_ship.wav");
+
+        double radius = GameVars.MISSILE_BLAST_RADIUS;
+        double radiusSq = radius * radius;
+        for (Entity enemy : List.copyOf(getGameWorld().getEntitiesByType(EntityType.ENEMY))) {
+            if (!enemy.isActive() || !enemy.hasComponent(EnemyComponent.class)) {
+                continue;
+            }
+            EnemyComponent ec = enemy.getComponent(EnemyComponent.class);
+            if (ec.isScooped()) {
+                continue;
+            }
+            double ex = enemy.getX() + enemy.getWidth() / 2.0;
+            double ey = enemy.getY() + enemy.getHeight() / 2.0;
+            double dx = ex - cx;
+            double dy = ey - cy;
+            if (dx * dx + dy * dy > radiusSq) {
+                continue;
+            }
+            boolean chunky = ec.getType() == EnemyComponent.EnemyType.TOUGH || ec.isBoss();
+            ec.hit(GameVars.MISSILE_BLAST_HITS);
+            if (chunky && !ec.isDead()) {
+                spawnExplosion(ex, ey, "boss_hit");
+                spawnChipDamageSparks(ex, ey);
+                flashEnemySprite(enemy);
+            } else if (!ec.isDead()) {
+                spawnExplosion(ex, ey, "hit");
+            }
+            if (ec.isDead()) {
+                finishEnemyKill(enemy, ec);
+            }
+        }
+    }
     
     private void fire() {
         if (minigameActive) {
             if (activeMinigame != null) {
                 activeMinigame.onFirePress();
             }
+            return;
+        }
+        if (findActiveMissile() != null) {
             return;
         }
         if (player == null || gameOver || showingTitleScreen || optionsOpen || warping) return;
@@ -1364,6 +1463,18 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             }
         });
 
+        onCollisionBegin(EntityType.PLAYER_MISSILE, EntityType.ENEMY, (missile, enemy) -> {
+            if (!enemy.isActive() || !enemy.hasComponent(EnemyComponent.class)) {
+                return;
+            }
+            if (enemy.getComponent(EnemyComponent.class).isScooped()) {
+                return;
+            }
+            if (missile.isActive() && missile.hasComponent(MissileComponent.class)) {
+                missile.getComponent(MissileComponent.class).requestDetonate();
+            }
+        });
+
         onCollisionBegin(EntityType.ENEMY_BULLET, EntityType.ENEMY, (bullet, enemy) -> {
             if (!enemy.isActive() || !enemy.hasComponent(EnemyComponent.class)) {
                 return;
@@ -1503,6 +1614,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             return;
         }
         roll -= GameVars.SCOOP_DROP_CHANCE;
+
+        if (roll < GameVars.MISSILE_DROP_CHANCE) {
+            spawn("missilePickup", x - 14, y - 14);
+            return;
+        }
+        roll -= GameVars.MISSILE_DROP_CHANCE;
 
         if (roll < GameVars.PICKUP_DROP_CHANCE) {
             String pickupType = random.nextBoolean() ? "weaponPickup" : "ammoPickup";
@@ -1693,6 +1810,15 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 inc(GameVars.SCORE, 25);
                 showBanner("SCOOP", Color.LIMEGREEN, 1.1);
                 SoundHelper.play("scoop.wav");
+            }
+            case MISSILE -> {
+                inc(GameVars.SCORE, 25);
+                if (findActiveMissile() == null) {
+                    launchPlayerMissile();
+                    showBanner("MISSILE  SPACE LENKEN", Color.ORANGERED, 1.2);
+                } else {
+                    showBanner("MISSILE LIVE", Color.ORANGERED, 1.0);
+                }
             }
             default -> {}
         }
@@ -2090,6 +2216,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         for (EntityType type : List.of(
                 EntityType.ENEMY,
                 EntityType.PLAYER_BULLET,
+                EntityType.PLAYER_MISSILE,
                 EntityType.ENEMY_BULLET,
                 EntityType.PICKUP,
                 EntityType.RANK_MARKER,
@@ -2564,12 +2691,20 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
         
         PlayerComponent pc = player.getComponent(PlayerComponent.class);
-        
-        if (movingLeft) {
-            pc.moveLeft(tpf);
+        Entity missile = findActiveMissile();
+        if (missile != null && missile.hasComponent(MissileComponent.class)) {
+            MissileComponent mc = missile.getComponent(MissileComponent.class);
+            mc.setSteering(holdingFire);
+            mc.setTurnInput(movingLeft, movingRight);
         }
-        if (movingRight) {
-            pc.moveRight(tpf);
+        boolean steeringMissile = holdingFire && missile != null;
+        if (!steeringMissile) {
+            if (movingLeft) {
+                pc.moveLeft(tpf);
+            }
+            if (movingRight) {
+                pc.moveRight(tpf);
+            }
         }
         pc.updateIdle();
         if (scoopHitLock > 0) {

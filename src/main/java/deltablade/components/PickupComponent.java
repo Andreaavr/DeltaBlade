@@ -14,7 +14,8 @@ public class PickupComponent extends Component {
         COGNITIVE,
         EXTRA_TIME,
         SHIELD,
-        SCOOP
+        SCOOP,
+        MISSILE
     }
     
     private PickupType type;
