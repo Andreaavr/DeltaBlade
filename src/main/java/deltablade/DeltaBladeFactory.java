@@ -14,6 +14,7 @@ import deltablade.components.ExtraLetterPickupComponent;
 import deltablade.components.MeteorRockComponent;
 import deltablade.components.MissileComponent;
 import deltablade.components.PickupComponent;
+import deltablade.components.PlasmaOrbComponent;
 import deltablade.components.RankMarkerComponent;
 import deltablade.components.UfoAnimComponent;
 import deltablade.components.BackgroundScrollComponent;
@@ -355,6 +356,24 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    @Spawns("skullPickup")
+    public Entity newSkullPickup(SpawnData data) {
+        Node view = safeTexture("skull.png", PICKUP_SIZE, PICKUP_SIZE, Color.DARKRED);
+        Circle glow = new Circle(PICKUP_SIZE / 2.0 + 4, Color.rgb(180, 20, 20, 0.28));
+        glow.setTranslateX(PICKUP_SIZE / 2.0);
+        glow.setTranslateY(PICKUP_SIZE / 2.0);
+        Group group = new Group(glow, view);
+        // ~35% der Skulls rasen runter — schwerer zu vermeiden
+        double fallSpeed = Math.random() < 0.35 ? 260 : 80;
+        return FXGL.entityBuilder(data)
+                .type(EntityType.PICKUP)
+                .viewWithBBox(group)
+                .zIndex(60)
+                .collidable()
+                .with(new PickupComponent(PickupComponent.PickupType.SKULL, fallSpeed))
+                .build();
+    }
+
     @Spawns("meteorPickup")
     public Entity newMeteorPickup(SpawnData data) {
         return FXGL.entityBuilder(data)
@@ -374,6 +393,39 @@ public class DeltaBladeFactory implements EntityFactory {
                 .zIndex(60)
                 .collidable()
                 .with(new PickupComponent(PickupComponent.PickupType.COGNITIVE))
+                .build();
+    }
+
+    @Spawns("plasmaOrb")
+    public Entity newPlasmaOrb(SpawnData data) {
+        double speedX = data.hasKey("speedX") ? data.<Double>get("speedX") : 0.0;
+        double speedY = data.hasKey("speedY") ? data.<Double>get("speedY") : -280.0;
+        int pierce = data.hasKey("pierce") ? data.<Integer>get("pierce") : 1;
+        int core = data.hasKey("coreDamage") ? data.<Integer>get("coreDamage") : 3;
+        int splash = data.hasKey("splashDamage") ? data.<Integer>get("splashDamage") : 2;
+        double radius = data.hasKey("splashRadius") ? data.<Double>get("splashRadius") : 64.0;
+
+        Circle coreOrb = new Circle(14);
+        coreOrb.setFill(new RadialGradient(
+                0, 0, 0.35, 0.35, 0.9, true, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.WHITE),
+                new Stop(0.35, Color.MEDIUMPURPLE),
+                new Stop(0.75, Color.DARKVIOLET),
+                new Stop(1, Color.rgb(20, 8, 30))
+        ));
+        Circle halo = new Circle(20, Color.rgb(180, 80, 255, 0.22));
+        Group view = new Group(halo, coreOrb);
+        halo.setTranslateX(14);
+        halo.setTranslateY(14);
+        coreOrb.setTranslateX(14);
+        coreOrb.setTranslateY(14);
+
+        return FXGL.entityBuilder(data)
+                .type(EntityType.PLAYER_PLASMA)
+                .viewWithBBox(view)
+                .zIndex(55)
+                .collidable()
+                .with(new PlasmaOrbComponent(speedX, speedY, pierce, core, splash, radius))
                 .build();
     }
 

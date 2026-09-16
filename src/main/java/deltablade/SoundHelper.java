@@ -41,7 +41,7 @@ public final class SoundHelper {
             "autofire.wav", "extra.wav", "extra_life.wav", "extra_time.wav",
             "bonus_round.wav", "bonus_perfect.wav", "get_ready.wav", "rank_wave.wav",
             "rank_up.wav", "rank_marker.wav", "hurry_warning.wav", "ufo_appear.wav",
-            "missile_launch.wav"
+            "missile_launch.wav", "shop.wav", "bad_drop.wav"
     };
 
     private static final Map<String, Sample> samples = new ConcurrentHashMap<>();

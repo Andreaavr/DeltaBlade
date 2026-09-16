@@ -708,6 +708,7 @@ public class WaveManager {
             squad.bonusResolved = true;
             if (squad.escaped == 0) {
                 bonusPerfectStreak++;
+                inc(GameVars.BONUS_PERFECT_CLEARS, 1);
                 int award = isBonusWaveFullyClean()
                         ? GameVars.BONUS_ROUND_PERFECT_SCORE
                         : GameVars.BONUS_PERFECT_BASE << Math.min(bonusPerfectStreak - 1, 6);

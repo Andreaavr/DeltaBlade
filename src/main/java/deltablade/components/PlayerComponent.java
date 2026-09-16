@@ -4,7 +4,6 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.component.Component;
 import deltablade.GameVars;
 import javafx.scene.Group;
-import javafx.scene.effect.Glow;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
@@ -21,6 +20,8 @@ public class PlayerComponent extends Component {
     private boolean missileShield = false;
     private double shieldPulse = 0;
     private Group shieldView;
+    private Circle shieldRing;
+    private Circle shieldHalo;
     private int scoopCharges = 0;
     
     private double fireCooldown = 0;
@@ -35,12 +36,16 @@ public class PlayerComponent extends Component {
     public void onAdded() {
         double radius = SHIELD_SIZE / 2.0;
         Circle fill = new Circle(radius, Color.rgb(80, 220, 255, 0.12));
-        Circle ring = new Circle(radius);
-        ring.setFill(Color.TRANSPARENT);
-        ring.setStroke(Color.rgb(120, 240, 255));
-        ring.setStrokeWidth(2.4);
-        ring.setEffect(new Glow(0.55));
-        shieldView = new Group(fill, ring);
+        // No JavaFX Glow — it tanks FPS while the shield is visible.
+        shieldHalo = new Circle(radius + 4);
+        shieldHalo.setFill(Color.TRANSPARENT);
+        shieldHalo.setStroke(Color.rgb(120, 240, 255, 0.28));
+        shieldHalo.setStrokeWidth(4.0);
+        shieldRing = new Circle(radius);
+        shieldRing.setFill(Color.TRANSPARENT);
+        shieldRing.setStroke(Color.rgb(160, 245, 255));
+        shieldRing.setStrokeWidth(2.2);
+        shieldView = new Group(fill, shieldHalo, shieldRing);
         shieldView.setTranslateX(SHIP_SIZE / 2.0);
         shieldView.setTranslateY(SHIP_SIZE / 2.0);
         shieldView.setMouseTransparent(true);
@@ -212,13 +217,17 @@ public class PlayerComponent extends Component {
         }
         boolean on = isShielded();
         shieldView.setVisible(on);
-        if (on) {
-            double t = shieldTimer > 0 ? shieldTimer : shieldPulse;
-            double pulse = 0.72 + 0.28 * (0.5 + 0.5 * Math.sin(t * 8));
-            if (shieldTimer > 0 && shieldTimer <= 3 && !missileShield) {
-                pulse = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(shieldTimer * 14));
-            }
-            shieldView.setOpacity(pulse);
+        if (!on) {
+            return;
+        }
+        double t = shieldTimer > 0 ? shieldTimer : shieldPulse;
+        double pulse = 0.72 + 0.28 * (0.5 + 0.5 * Math.sin(t * 8));
+        if (shieldTimer > 0 && shieldTimer <= 3 && !missileShield) {
+            pulse = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(shieldTimer * 14));
+        }
+        shieldView.setOpacity(pulse);
+        if (shieldHalo != null) {
+            shieldHalo.setOpacity(0.55 + 0.45 * pulse);
         }
     }
     

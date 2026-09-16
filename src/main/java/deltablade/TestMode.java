@@ -7,6 +7,7 @@ import java.util.Optional;
 /**
  * Debug codes: tap the same number key three times
  * (000 Missile, 111 Meteor Challenge, 222 Cognitive, 333 Shield, 444 Warp, 555 UFO, 666 Bonus, 777 Attack, 888 Scoop, 999 Swarm).
+ * Sequence 890 = Money cheat.
  */
 public final class TestMode {
 
@@ -14,10 +15,14 @@ public final class TestMode {
 
     private static final long TIMEOUT_MS = 900;
     private static final int TAPS = 3;
+    private static final int[] MONEY_CODE = {8, 9, 0};
 
     private static int lastDigit;
     private static int count;
     private static long lastAt;
+
+    private static int moneySeq;
+    private static long moneySeqAt;
 
     private TestMode() {}
 
@@ -30,6 +35,15 @@ public final class TestMode {
         if (digit == lastDigit && now - lastAt < 40) {
             return Optional.empty();
         }
+
+        Optional<Drop> money = feedMoneySequence(digit, now);
+        if (money.isPresent()) {
+            lastDigit = digit;
+            lastAt = now;
+            count = 0;
+            return money;
+        }
+
         if (digit != lastDigit || now - lastAt > TIMEOUT_MS) {
             lastDigit = digit;
             count = 1;
@@ -46,6 +60,23 @@ public final class TestMode {
             return Optional.of(new Drop(null, "TEST  " + digit + digit + digit + "  ?"));
         }
         return Optional.of(drop);
+    }
+
+    private static Optional<Drop> feedMoneySequence(int digit, long now) {
+        if (now - moneySeqAt > TIMEOUT_MS) {
+            moneySeq = 0;
+        }
+        moneySeqAt = now;
+        if (digit == MONEY_CODE[moneySeq]) {
+            moneySeq++;
+            if (moneySeq >= MONEY_CODE.length) {
+                moneySeq = 0;
+                return Optional.of(new Drop("MONEY", "TEST  +$15000"));
+            }
+            return Optional.empty();
+        }
+        moneySeq = (digit == MONEY_CODE[0]) ? 1 : 0;
+        return Optional.empty();
     }
 
     public static Drop dropFor(int index) {

@@ -15,7 +15,8 @@ public class PickupComponent extends Component {
         EXTRA_TIME,
         SHIELD,
         SCOOP,
-        MISSILE
+        MISSILE,
+        SKULL
     }
     
     private PickupType type;
@@ -23,7 +24,12 @@ public class PickupComponent extends Component {
     private double pulsePhase = 0;
     
     public PickupComponent(PickupType type) {
+        this(type, 80);
+    }
+
+    public PickupComponent(PickupType type, double speed) {
         this.type = type;
+        this.speed = speed;
     }
     
     @Override

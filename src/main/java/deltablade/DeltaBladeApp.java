@@ -11,6 +11,7 @@ import deltablade.components.EnemyComponent;
 import deltablade.components.ExtraLetterPickupComponent;
 import deltablade.components.MissileComponent;
 import deltablade.components.PickupComponent;
+import deltablade.components.PlasmaOrbComponent;
 import deltablade.components.PlayerComponent;
 import deltablade.components.RankMarkerComponent;
 import deltablade.components.StarComponent;
@@ -24,6 +25,7 @@ import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.ParallelTransition;
+import javafx.animation.PauseTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.SequentialTransition;
 import javafx.animation.Timeline;
@@ -45,6 +47,7 @@ import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
 import javafx.scene.paint.Stop;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
@@ -83,11 +86,31 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private boolean warping = false;
     private double warpElapsed = 0;
     private Rectangle warpFlash;
+    private boolean shopOpen = false;
+    private ShopOverlay shopOverlay;
+    private Node shopRoot;
+    private SettlementOverlay settlementOverlay;
+    private Node settlementRoot;
+    private double controlReverseRemaining = 0;
+    private double fireJamRemaining = 0;
+    private double laserHeat = 0;
+    private double laserCooldown = 0;
+    private double laserTickTimer = 0;
+    private boolean laserShotCounted = false;
+    private double sweepAngle = 0;
+    private double sweepActive = 0;
+    private double sweepPause = 0;
+    private double plasmaCooldown = 0;
+    private double arcCooldown = 0;
+    private final List<Line> laserBeams = new ArrayList<>();
     private int extraTimeMax = GameVars.LEVEL_TIME_INITIAL;
     private double extraTime = GameVars.LEVEL_TIME_INITIAL;
     private boolean extraTimeWarned = false;
     private boolean ufoSpawnedThisWave = false;
     private double extraTimePulse = 0;
+    /** Seconds remaining after HURRY UP before the UFO may spawn. */
+    private double hurryUfoDelay = 0;
+    private boolean pendingHurryUfo = false;
     private double scoopHitLock = 0;
     
     private static final Random random = new Random();
@@ -151,6 +174,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         vars.put(GameVars.METEOR_WINS, 0);
         vars.put(GameVars.RANK, 0);
         vars.put(GameVars.RANK_MASK, 0);
+        vars.put(GameVars.SHOTS_FIRED, 0);
+        vars.put(GameVars.HITS_LANDED, 0);
+        vars.put(GameVars.SHOP_WEAPON, 0);
+        vars.put(GameVars.BOSS_KILLS, 0);
+        vars.put(GameVars.BONUS_PERFECT_CLEARS, 0);
     }
     
     @Override
@@ -566,6 +594,22 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 return;
             }
             scene.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
+                if (settlementOverlay != null) {
+                    KeyCode code = e.getCode();
+                    if (code == KeyCode.SPACE || code == KeyCode.ENTER || code == KeyCode.X) {
+                        settlementOverlay.handleConfirm();
+                        e.consume();
+                        return;
+                    }
+                    e.consume();
+                    return;
+                }
+                if (shopOverlay != null) {
+                    if (shopOverlay.handleKey(e)) {
+                        e.consume();
+                        return;
+                    }
+                }
                 if (highScoreOverlay != null) {
                     KeyCode code = e.getCode();
                     boolean fireHeld = holdingFire && (code == KeyCode.SPACE || code == KeyCode.X);
@@ -578,7 +622,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                         return;
                     }
                 }
-                if (enteringHighScoreName()) {
+                if (enteringHighScoreName() || shopOpen) {
                     e.consume();
                     return;
                 }
@@ -611,7 +655,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
     
     private void showOptions() {
-        if (optionsOpen || enteringHighScoreName()) {
+        if (optionsOpen || enteringHighScoreName() || shopOpen || settlementOverlay != null) {
             return;
         }
         OptionsOverlay overlay = new OptionsOverlay(this::hideOptions);
@@ -691,11 +735,14 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         
         activeBanners.add(banner);
         getGameScene().addUINode(banner);
-        
-        runOnce(() -> {
+
+        // JavaFX timeline — must work while the game engine is paused (shop/options).
+        PauseTransition hide = new PauseTransition(Duration.seconds(durationSeconds));
+        hide.setOnFinished(e -> {
             getGameScene().removeUINode(banner);
             activeBanners.remove(banner);
-        }, Duration.seconds(durationSeconds));
+        });
+        hide.play();
     }
     
     private void hideTitleScreen() {
@@ -746,6 +793,23 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         set(GameVars.METEOR_WINS, 0);
         set(GameVars.RANK, 0);
         set(GameVars.RANK_MASK, 0);
+        set(GameVars.SHOTS_FIRED, 0);
+        set(GameVars.HITS_LANDED, 0);
+        set(GameVars.SHOP_WEAPON, 0);
+        set(GameVars.BOSS_KILLS, 0);
+        set(GameVars.BONUS_PERFECT_CLEARS, 0);
+        controlReverseRemaining = 0;
+        fireJamRemaining = 0;
+        clearLaserBeams();
+        laserHeat = 0;
+        laserCooldown = 0;
+        laserTickTimer = 0;
+        laserShotCounted = false;
+        sweepAngle = 0;
+        sweepActive = 0;
+        sweepPause = 0;
+        hideShopOverlay();
+        hideSettlementOverlay();
         extraTimeMax = GameVars.LEVEL_TIME_INITIAL;
         refillWaveTimer();
         if (player != null && player.hasComponent(PlayerComponent.class)) {
@@ -757,6 +821,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         for (String var : GameVars.EXTRA_VARS) {
             set(var, 0);
         }
+        hurryUfoDelay = 0;
+        pendingHurryUfo = false;
         updateRankHud();
     }
     
@@ -1126,19 +1192,38 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         if (findActiveMissile() != null) {
             return;
         }
-        if (player == null || gameOver || showingTitleScreen || optionsOpen || warping) return;
-        
+        if (player == null || gameOver || showingTitleScreen || optionsOpen || warping || shopOpen) {
+            return;
+        }
+        if (fireJamRemaining > 0) {
+            return;
+        }
+
+        ShopWeapon shopWeapon = currentShopWeapon();
+        if (shopWeapon == ShopWeapon.PLASMA_ORB || shopWeapon == ShopWeapon.ARC_LANCE) {
+            fireShopImpulse(shopWeapon);
+            return;
+        }
+        if (shopWeapon == ShopWeapon.NEEDLE_LASER
+                || shopWeapon == ShopWeapon.TWIN_BEAM
+                || shopWeapon == ShopWeapon.SWEEP_LASER) {
+            // Continuous beams are driven from onUpdate while fire is held / autofire.
+            return;
+        }
+
         PlayerComponent pc = player.getComponent(PlayerComponent.class);
         int grade = geti(GameVars.WEAPON_GRADE);
-        
-        if (!pc.canFire(grade)) return;
-        
+
+        if (!pc.canFire(grade)) {
+            return;
+        }
+
         pc.onFired();
         SoundHelper.play("shot.wav");
-        
+
         double centerX = pc.getCenterX();
         double topY = pc.getTopY();
-        
+
         if (grade == 1) {
             spawnPlayerShot(centerX - 6, topY, 0);
         } else if (grade == 2) {
@@ -1181,6 +1266,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 .put("speedX", speedX)
                 .put("speedY", speedY));
         inc(GameVars.ACTIVE_BULLETS, 1);
+        inc(GameVars.SHOTS_FIRED, 1);
     }
 
     @Override
@@ -1496,6 +1582,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             }
             bullet.getComponent(BulletComponent.class).onHit();
             bullet.removeFromWorld();
+            inc(GameVars.HITS_LANDED, 1);
             ec.hit();
 
             double hitX = bullet.getX() + bullet.getWidth() / 2;
@@ -1556,6 +1643,28 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             if (bullet.isActive()) {
                 bullet.removeFromWorld();
             }
+            inc(GameVars.HITS_LANDED, 1);
+        });
+
+        onCollisionBegin(EntityType.PLAYER_PLASMA, EntityType.ENEMY, (orb, enemy) -> {
+            if (!orb.isActive() || !orb.hasComponent(PlasmaOrbComponent.class)) {
+                return;
+            }
+            if (!enemy.isActive() || !enemy.hasComponent(EnemyComponent.class)) {
+                return;
+            }
+            EnemyComponent ec = enemy.getComponent(EnemyComponent.class);
+            if (ec.isScooped() || ec.isTuckedBehindMeteor()) {
+                return;
+            }
+            applyPlasmaHit(orb, enemy);
+        });
+
+        onCollisionBegin(EntityType.PLAYER_PLASMA, EntityType.METEOR, (orb, meteor) -> {
+            if (orb.isActive()) {
+                orb.removeFromWorld();
+            }
+            inc(GameVars.HITS_LANDED, 1);
         });
 
         onCollisionBegin(EntityType.ENEMY_BULLET, EntityType.ENEMY, (bullet, enemy) -> {
@@ -1629,6 +1738,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         pc.makeInvulnerable();
         
         set(GameVars.AUTOFIRE, false);
+        clearShopWeapon();
 
         if (player != null) {
             double explosionX = player.getX() + player.getWidth() / 2;
@@ -1674,7 +1784,13 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             return;
         }
         roll -= GameVars.MINIGAME_DROP_CHANCE;
-        
+
+        if (roll < GameVars.SKULL_DROP_CHANCE) {
+            spawn("skullPickup", x - 14, y - 14);
+            return;
+        }
+        roll -= GameVars.SKULL_DROP_CHANCE;
+
         if (roll < GameVars.AUTOFIRE_DROP_CHANCE) {
             if (!getb(GameVars.AUTOFIRE)) {
                 spawn("autofirePickup", x - 14, y - 14);
@@ -1861,6 +1977,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 showBanner("MUNI", Color.CYAN, 1.2);
                 SoundHelper.play("ammo.wav");
             }
+            case EXTRA_LIFE -> {
+                inc(GameVars.LIVES, 1);
+                inc(GameVars.SCORE, 100);
+                showExtraLifeFlash();
+                SoundHelper.play("extra_life.wav");
+            }
             case AUTOFIRE -> {
                 set(GameVars.AUTOFIRE, true);
                 inc(GameVars.SCORE, 100);
@@ -1906,6 +2028,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                     showBanner("MISSILE LIVE", Color.ORANGERED, 1.0);
                 }
             }
+            case SKULL -> applySkullCurse();
             default -> {}
         }
     }
@@ -1948,7 +2071,6 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         updateRankHud();
         if (mask == (1 << GameVars.RANK_COLOR_COUNT) - 1) {
             inc(GameVars.RANK, 1);
-            inc(GameVars.SCORE, GameVars.RANK_UP_SCORE);
             set(GameVars.RANK_MASK, 0);
             showBanner(RankNames.banner(geti(GameVars.RANK)), Color.GOLD, 2.0);
             SoundHelper.play("rank_up.wav");
@@ -2000,28 +2122,68 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
         gameOver = true;
         clearScoops();
+        clearLaserBeams();
         cancelGetReady();
         if (waveManager != null) {
             waveManager.stop();
         }
-        final int score = geti(GameVars.SCORE);
         final int wave = geti(GameVars.LEVEL);
         Platform.runLater(() -> {
             clearWaveEntities();
+            showSettlementThenHiscore(wave);
+        });
+    }
+
+    private void showSettlementThenHiscore(int wave) {
+        hideSettlementOverlay();
+        List<SettlementOverlay.Line> lines = buildSettlementLines();
+        int baseScore = geti(GameVars.SCORE);
+        settlementOverlay = new SettlementOverlay(baseScore, lines, finalScore -> {
+            hideSettlementOverlay();
+            set(GameVars.SCORE, finalScore);
             HighScoreClient.fetch(ignored -> {
                 if (!gameOver || showingTitleScreen) {
                     return;
                 }
-                boolean localOk = HighScoreStore.qualifies(score);
+                boolean localOk = HighScoreStore.qualifies(finalScore);
                 boolean globalOk = HighScoreClient.hasCache()
-                        && HighScoreStore.qualifies(score, HighScoreClient.cachedEntries());
+                        && HighScoreStore.qualifies(finalScore, HighScoreClient.cachedEntries());
                 if (localOk || globalOk) {
-                    showHighScoreNameEntry(score, wave);
+                    showHighScoreNameEntry(finalScore, wave);
                 } else {
                     showHighScoreTable(null, null, false, true);
                 }
             });
         });
+        settlementRoot = settlementOverlay.getRoot();
+        getGameScene().addUINode(settlementRoot);
+    }
+
+    private List<SettlementOverlay.Line> buildSettlementLines() {
+        int shots = Math.max(0, geti(GameVars.SHOTS_FIRED));
+        int hits = Math.max(0, geti(GameVars.HITS_LANDED));
+        double hitRate = shots == 0 ? 0.0 : Math.min(1.0, (double) hits / (double) shots);
+        int accuracyBonus = (int) Math.floor(hitRate * hitRate * GameVars.SETTLEMENT_ACCURACY_CAP);
+
+        List<SettlementOverlay.Line> lines = new ArrayList<>();
+        lines.add(new SettlementOverlay.Line("RANK", geti(GameVars.RANK) * GameVars.SETTLEMENT_RANK));
+        lines.add(new SettlementOverlay.Line("ACCURACY", accuracyBonus));
+        lines.add(new SettlementOverlay.Line("COMBOS", geti(GameVars.SQUAD_COMBOS) * GameVars.SETTLEMENT_COMBO));
+        lines.add(new SettlementOverlay.Line("METEOR", geti(GameVars.METEOR_WINS) * GameVars.SETTLEMENT_METEOR));
+        lines.add(new SettlementOverlay.Line("COGNITIVE", geti(GameVars.COGNITIVE_WINS) * GameVars.SETTLEMENT_COGNITIVE));
+        lines.add(new SettlementOverlay.Line("WAVES", Math.max(0, geti(GameVars.LEVEL) - 1) * GameVars.SETTLEMENT_WAVE));
+        lines.add(new SettlementOverlay.Line("LIVES", Math.max(0, geti(GameVars.LIVES)) * GameVars.SETTLEMENT_LIFE));
+        lines.add(new SettlementOverlay.Line("CASH", Math.max(0, geti(GameVars.MONEY)) * GameVars.SETTLEMENT_CASH_MULT));
+        lines.add(new SettlementOverlay.Line("PERFECT", geti(GameVars.BONUS_PERFECT_CLEARS) * GameVars.SETTLEMENT_PERFECT));
+        return lines;
+    }
+
+    private void hideSettlementOverlay() {
+        if (settlementRoot != null) {
+            getGameScene().removeUINode(settlementRoot);
+            settlementRoot = null;
+        }
+        settlementOverlay = null;
     }
 
     private void startTitleHiRotate() {
@@ -2149,6 +2311,20 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
         if (drop.spawnName() == null) {
             showBanner(drop.banner(), Color.LIGHTGRAY, 1.2);
+            return;
+        }
+        if ("MONEY".equals(drop.spawnName())) {
+            if (gameOver || optionsOpen) {
+                return;
+            }
+            if (!gameStarted || showingTitleScreen) {
+                if (showingTitleScreen) {
+                    startActualGame(false);
+                }
+            }
+            inc(GameVars.MONEY, 15_000);
+            showBanner(drop.banner(), Color.GOLD, 1.2);
+            SoundHelper.play("money.wav");
             return;
         }
         if ("WARP".equals(drop.spawnName())) {
@@ -2327,6 +2503,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 EntityType.ENEMY,
                 EntityType.PLAYER_BULLET,
                 EntityType.PLAYER_MISSILE,
+                EntityType.PLAYER_PLASMA,
                 EntityType.ENEMY_BULLET,
                 EntityType.PICKUP,
                 EntityType.RANK_MARKER,
@@ -2426,8 +2603,548 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private void finishWarp() {
         stopWarpVisuals();
         MusicHelper.applyFromStore();
-        // Shop comes later; warp is the hook, then the next wave cycle.
-        continueToNextWave();
+        openShopAfterWarp();
+    }
+
+    private void openShopAfterWarp() {
+        if (gameOver || showingTitleScreen) {
+            return;
+        }
+        hideShopOverlay();
+        ShopOverlay.RunStats stats = new ShopOverlay.RunStats(
+                geti(GameVars.MONEY),
+                geti(GameVars.RANK),
+                geti(GameVars.LEVEL),
+                geti(GameVars.METEOR_WINS),
+                geti(GameVars.COGNITIVE_WINS),
+                geti(GameVars.SQUAD_COMBOS),
+                geti(GameVars.BOSS_KILLS),
+                currentShopWeapon(),
+                geti(GameVars.WEAPON_GRADE),
+                geti(GameVars.AMMO_CAP),
+                getb(GameVars.AUTOFIRE)
+        );
+        shopOverlay = new ShopOverlay(stats, this::purchaseShopItem, equipped -> {
+            hideShopOverlay();
+            continueToNextWave();
+        });
+        shopRoot = shopOverlay.getRoot();
+        getGameScene().addUINode(shopRoot);
+        shopOpen = true;
+        SoundHelper.play("shop.wav");
+        if (gameStarted && !showingTitleScreen) {
+            getGameController().pauseEngine();
+            enginePausedByOptions = true;
+        }
+    }
+
+    private boolean purchaseShopItem(ShopItem item) {
+        if (item == null) {
+            return false;
+        }
+        if (!item.isUnlocked(geti(GameVars.RANK), geti(GameVars.LEVEL), geti(GameVars.METEOR_WINS),
+                geti(GameVars.COGNITIVE_WINS), geti(GameVars.SQUAD_COMBOS), geti(GameVars.BOSS_KILLS))) {
+            return false;
+        }
+        if (geti(GameVars.MONEY) < item.price()) {
+            return false;
+        }
+        return switch (item.kind()) {
+            case WEAPON -> purchaseShopWeapon(item.weapon());
+            case GRADE -> {
+                int target = item.targetGrade();
+                if (geti(GameVars.WEAPON_GRADE) >= target) {
+                    yield false;
+                }
+                inc(GameVars.MONEY, -item.price());
+                set(GameVars.WEAPON_GRADE, target);
+                showBanner(item.displayName(), Color.GOLD, 1.1);
+                SoundHelper.play("weapon.wav");
+                yield true;
+            }
+            case AUTOFIRE -> {
+                if (getb(GameVars.AUTOFIRE)) {
+                    yield false;
+                }
+                inc(GameVars.MONEY, -item.price());
+                set(GameVars.AUTOFIRE, true);
+                showBanner("AUTO", Color.CYAN, 1.1);
+                SoundHelper.play("autofire.wav");
+                yield true;
+            }
+            case CONSUMABLE -> purchaseShopConsumable(item);
+        };
+    }
+
+    private boolean purchaseShopConsumable(ShopItem item) {
+        if (item == ShopItem.EXTRA_AMMO) {
+            if (geti(GameVars.AMMO_CAP) >= GameVars.MAX_AMMO_CAP) {
+                return false;
+            }
+            inc(GameVars.MONEY, -item.price());
+            inc(GameVars.AMMO_CAP, 1);
+            showBanner("MUNI", Color.CYAN, 1.1);
+            SoundHelper.play("ammo.wav");
+            return true;
+        }
+        if (item == ShopItem.EXTRA_TIME) {
+            inc(GameVars.MONEY, -item.price());
+            changeLevelTime(5);
+            showBanner("TIME +5", Color.LIMEGREEN, 1.1);
+            SoundHelper.play("extra_time.wav");
+            return true;
+        }
+        if (item == ShopItem.EXTRA_LIFE) {
+            inc(GameVars.MONEY, -item.price());
+            inc(GameVars.LIVES, 1);
+            showExtraLifeFlash();
+            SoundHelper.play("extra_life.wav");
+            return true;
+        }
+        return false;
+    }
+
+    private boolean purchaseShopWeapon(ShopWeapon weapon) {
+        if (weapon == null || weapon == ShopWeapon.NONE) {
+            return false;
+        }
+        if (!weapon.isUnlocked(geti(GameVars.RANK), geti(GameVars.LEVEL), geti(GameVars.METEOR_WINS),
+                geti(GameVars.COGNITIVE_WINS), geti(GameVars.SQUAD_COMBOS), geti(GameVars.BOSS_KILLS))) {
+            return false;
+        }
+        if (geti(GameVars.MONEY) < weapon.price()) {
+            return false;
+        }
+        if (currentShopWeapon() == weapon) {
+            return false;
+        }
+        inc(GameVars.MONEY, -weapon.price());
+        set(GameVars.SHOP_WEAPON, weapon.ordinal());
+        clearLaserBeams();
+        laserHeat = 0;
+        laserCooldown = 0;
+        showBanner(weapon.displayName(), Color.CYAN, 1.2);
+        SoundHelper.play("weapon.wav");
+        return true;
+    }
+
+    private void hideShopOverlay() {
+        if (shopRoot != null) {
+            getGameScene().removeUINode(shopRoot);
+            shopRoot = null;
+        }
+        shopOverlay = null;
+        if (shopOpen && enginePausedByOptions) {
+            getGameController().resumeEngine();
+            enginePausedByOptions = false;
+        }
+        shopOpen = false;
+    }
+
+    private ShopWeapon currentShopWeapon() {
+        return ShopWeapon.fromId(geti(GameVars.SHOP_WEAPON));
+    }
+
+    private void clearShopWeapon() {
+        set(GameVars.SHOP_WEAPON, ShopWeapon.NONE.ordinal());
+        clearLaserBeams();
+        laserHeat = 0;
+        laserCooldown = 0;
+        laserTickTimer = 0;
+        laserShotCounted = false;
+        sweepActive = 0;
+        sweepPause = 0;
+        plasmaCooldown = 0;
+        arcCooldown = 0;
+    }
+
+    private void clearLaserBeams() {
+        for (Line beam : laserBeams) {
+            getGameScene().removeUINode(beam);
+        }
+        laserBeams.clear();
+    }
+
+    private void ensureLaserBeamCount(int count, Color color) {
+        while (laserBeams.size() < count) {
+            Line beam = new Line();
+            beam.setStroke(color);
+            beam.setStrokeWidth(3.2);
+            beam.setOpacity(0.9);
+            beam.setMouseTransparent(true);
+            getGameScene().addUINode(beam);
+            laserBeams.add(beam);
+        }
+        while (laserBeams.size() > count) {
+            Line beam = laserBeams.remove(laserBeams.size() - 1);
+            getGameScene().removeUINode(beam);
+        }
+        for (Line beam : laserBeams) {
+            beam.setStroke(color);
+            beam.setVisible(true);
+        }
+    }
+
+    private void updateCurses(double tpf) {
+        if (controlReverseRemaining > 0) {
+            controlReverseRemaining = Math.max(0, controlReverseRemaining - tpf);
+        }
+        if (fireJamRemaining > 0) {
+            fireJamRemaining = Math.max(0, fireJamRemaining - tpf);
+        }
+        if (plasmaCooldown > 0) {
+            plasmaCooldown = Math.max(0, plasmaCooldown - tpf);
+        }
+        if (arcCooldown > 0) {
+            arcCooldown = Math.max(0, arcCooldown - tpf);
+        }
+    }
+
+    private void updateShopWeapons(double tpf) {
+        ShopWeapon weapon = currentShopWeapon();
+        if (weapon == ShopWeapon.NONE || weapon == ShopWeapon.PLASMA_ORB || weapon == ShopWeapon.ARC_LANCE) {
+            clearLaserBeams();
+            return;
+        }
+        if (fireJamRemaining > 0 || findActiveMissile() != null) {
+            clearLaserBeams();
+            return;
+        }
+        boolean wantFire = holdingFire || getb(GameVars.AUTOFIRE);
+        if (weapon == ShopWeapon.SWEEP_LASER) {
+            updateSweepLaser(tpf, wantFire);
+            return;
+        }
+        updateContinuousLaser(tpf, wantFire, weapon == ShopWeapon.TWIN_BEAM);
+    }
+
+    private void updateContinuousLaser(double tpf, boolean wantFire, boolean twin) {
+        if (laserCooldown > 0) {
+            laserCooldown = Math.max(0, laserCooldown - tpf);
+            clearLaserBeams();
+            laserShotCounted = false;
+            return;
+        }
+        if (!wantFire) {
+            clearLaserBeams();
+            laserHeat = Math.max(0, laserHeat - tpf * 1.2);
+            laserShotCounted = false;
+            return;
+        }
+        if (!laserShotCounted) {
+            inc(GameVars.SHOTS_FIRED, 1);
+            laserShotCounted = true;
+        }
+        laserHeat += tpf;
+        double heatLimit = 3.0;
+        double coolDown = twin ? 0.5 : 3.0;
+        if (laserHeat >= heatLimit) {
+            laserHeat = 0;
+            laserCooldown = coolDown;
+            clearLaserBeams();
+            return;
+        }
+
+        PlayerComponent pc = player.getComponent(PlayerComponent.class);
+        double originY = pc.getTopY();
+        Color color = twin ? Color.AQUA : Color.CYAN;
+        if (twin) {
+            ensureLaserBeamCount(2, color);
+            fireLaserColumn(laserBeams.get(0), pc.getCenterX() - 14, originY, 0, 1, tpf);
+            fireLaserColumn(laserBeams.get(1), pc.getCenterX() + 14, originY, 0, 1, tpf);
+        } else {
+            ensureLaserBeamCount(1, color);
+            fireLaserColumn(laserBeams.get(0), pc.getCenterX(), originY, 0, 2, tpf);
+        }
+    }
+
+    private void updateSweepLaser(double tpf, boolean wantFire) {
+        if (sweepPause > 0) {
+            sweepPause = Math.max(0, sweepPause - tpf);
+            clearLaserBeams();
+            laserShotCounted = false;
+            return;
+        }
+        if (!wantFire) {
+            clearLaserBeams();
+            sweepActive = 0;
+            laserShotCounted = false;
+            return;
+        }
+        if (!laserShotCounted) {
+            inc(GameVars.SHOTS_FIRED, 1);
+            laserShotCounted = true;
+        }
+        sweepActive += tpf;
+        if (sweepActive >= 2.0) {
+            sweepActive = 0;
+            sweepPause = 0.8;
+            clearLaserBeams();
+            return;
+        }
+        sweepAngle = Math.sin(sweepActive * Math.PI * 2.0 / 1.2) * 55.0;
+        PlayerComponent pc = player.getComponent(PlayerComponent.class);
+        ensureLaserBeamCount(1, Color.ORANGE);
+        fireLaserColumn(laserBeams.get(0), pc.getCenterX(), pc.getTopY(), sweepAngle, 2, tpf);
+    }
+
+    private void fireLaserColumn(Line beam, double originX, double originY, double angleDeg, int damage, double tpf) {
+        double rad = Math.toRadians(angleDeg);
+        double dirX = Math.sin(rad);
+        double dirY = -Math.cos(rad);
+        double endX = originX + dirX * getAppHeight();
+        double endY = originY + dirY * getAppHeight();
+
+        Entity nearest = null;
+        double nearestDist = Double.MAX_VALUE;
+        for (Entity enemy : getGameWorld().getEntitiesByType(EntityType.ENEMY)) {
+            if (!enemy.isActive() || !enemy.hasComponent(EnemyComponent.class)) {
+                continue;
+            }
+            EnemyComponent ec = enemy.getComponent(EnemyComponent.class);
+            if (ec.isScooped() || ec.isTuckedBehindMeteor()) {
+                continue;
+            }
+            double cx = enemy.getX() + enemy.getWidth() / 2.0;
+            double cy = enemy.getY() + enemy.getHeight() / 2.0;
+            double dx = cx - originX;
+            double dy = cy - originY;
+            double proj = dx * dirX + dy * dirY;
+            if (proj < 0) {
+                continue;
+            }
+            double perp = Math.abs(dx * -dirY + dy * dirX);
+            if (perp > Math.max(enemy.getWidth(), enemy.getHeight()) * 0.55) {
+                continue;
+            }
+            if (proj < nearestDist) {
+                nearestDist = proj;
+                nearest = enemy;
+            }
+        }
+
+        if (nearest != null) {
+            endX = nearest.getX() + nearest.getWidth() / 2.0;
+            endY = nearest.getY() + nearest.getHeight() / 2.0;
+        }
+        beam.setStartX(originX);
+        beam.setStartY(originY);
+        beam.setEndX(endX);
+        beam.setEndY(endY);
+
+        laserTickTimer += tpf;
+        double tickEvery = twinOrNeedleTick(damage);
+        if (nearest != null && laserTickTimer >= tickEvery) {
+            laserTickTimer = 0;
+            damageEnemy(nearest, damage);
+            inc(GameVars.HITS_LANDED, 1);
+        }
+    }
+
+    private double twinOrNeedleTick(int damage) {
+        return damage >= 2 ? 0.10 : 0.10;
+    }
+
+    private void fireShopImpulse(ShopWeapon weapon) {
+        if (weapon == ShopWeapon.PLASMA_ORB) {
+            if (plasmaCooldown > 0) {
+                return;
+            }
+            int cap = geti(GameVars.AMMO_CAP);
+            int active = geti(GameVars.ACTIVE_BULLETS);
+            if (active + 2 > cap) {
+                return;
+            }
+            PlayerComponent pc = player.getComponent(PlayerComponent.class);
+            pc.onFired();
+            plasmaCooldown = 0.28;
+            spawn("plasmaOrb", new com.almasb.fxgl.entity.SpawnData(pc.getCenterX() - 14, pc.getTopY() - 10)
+                    .put("speedX", 0.0)
+                    .put("speedY", -280.0)
+                    .put("pierce", 1)
+                    .put("coreDamage", 3)
+                    .put("splashDamage", 2)
+                    .put("splashRadius", 64.0));
+            inc(GameVars.ACTIVE_BULLETS, 2);
+            inc(GameVars.SHOTS_FIRED, 1);
+            SoundHelper.play("shot.wav");
+            return;
+        }
+        if (weapon == ShopWeapon.ARC_LANCE) {
+            if (arcCooldown > 0) {
+                return;
+            }
+            arcCooldown = 0.30;
+            inc(GameVars.SHOTS_FIRED, 1);
+            fireArcLance();
+            SoundHelper.play("weapon.wav");
+        }
+    }
+
+    private void fireArcLance() {
+        PlayerComponent pc = player.getComponent(PlayerComponent.class);
+        double ox = pc.getCenterX();
+        double oy = pc.getTopY();
+        List<Entity> hit = new ArrayList<>();
+        Entity current = nearestEnemyFrom(ox, oy, 240, hit);
+        int jumps = 0;
+        while (current != null && jumps < 5) {
+            hit.add(current);
+            damageEnemy(current, 2);
+            inc(GameVars.HITS_LANDED, 1);
+            spawnExplosion(current.getX() + current.getWidth() / 2.0,
+                    current.getY() + current.getHeight() / 2.0, "hit");
+            jumps++;
+            double cx = current.getX() + current.getWidth() / 2.0;
+            double cy = current.getY() + current.getHeight() / 2.0;
+            current = nearestEnemyFrom(cx, cy, 100, hit);
+        }
+    }
+
+    private Entity nearestEnemyFrom(double x, double y, double maxDist, List<Entity> exclude) {
+        Entity best = null;
+        double bestDist = maxDist;
+        for (Entity enemy : getGameWorld().getEntitiesByType(EntityType.ENEMY)) {
+            if (!enemy.isActive() || !enemy.hasComponent(EnemyComponent.class) || exclude.contains(enemy)) {
+                continue;
+            }
+            EnemyComponent ec = enemy.getComponent(EnemyComponent.class);
+            if (ec.isScooped() || ec.isTuckedBehindMeteor()) {
+                continue;
+            }
+            double cx = enemy.getX() + enemy.getWidth() / 2.0;
+            double cy = enemy.getY() + enemy.getHeight() / 2.0;
+            double dist = Math.hypot(cx - x, cy - y);
+            if (dist <= bestDist) {
+                bestDist = dist;
+                best = enemy;
+            }
+        }
+        return best;
+    }
+
+    private void applyPlasmaHit(Entity orb, Entity enemy) {
+        PlasmaOrbComponent plasma = orb.getComponent(PlasmaOrbComponent.class);
+        EnemyComponent ec = enemy.getComponent(EnemyComponent.class);
+        damageEnemy(enemy, plasma.getCoreDamage());
+        inc(GameVars.HITS_LANDED, 1);
+        double cx = enemy.getX() + enemy.getWidth() / 2.0;
+        double cy = enemy.getY() + enemy.getHeight() / 2.0;
+        applySplashDamage(cx, cy, plasma.getSplashRadius(), plasma.getSplashDamage(), enemy);
+        spawnExplosion(cx, cy, "hit");
+        if (plasma.hitAndShouldRemove()) {
+            plasma.releaseAmmoSlots();
+            if (orb.isActive()) {
+                orb.removeFromWorld();
+            }
+        }
+    }
+
+    private void applySplashDamage(double x, double y, double radius, int damage, Entity ignore) {
+        for (Entity enemy : List.copyOf(getGameWorld().getEntitiesByType(EntityType.ENEMY))) {
+            if (enemy == ignore || !enemy.isActive() || !enemy.hasComponent(EnemyComponent.class)) {
+                continue;
+            }
+            EnemyComponent ec = enemy.getComponent(EnemyComponent.class);
+            if (ec.isScooped()) {
+                continue;
+            }
+            double cx = enemy.getX() + enemy.getWidth() / 2.0;
+            double cy = enemy.getY() + enemy.getHeight() / 2.0;
+            if (Math.hypot(cx - x, cy - y) <= radius) {
+                damageEnemy(enemy, damage);
+                inc(GameVars.HITS_LANDED, 1);
+            }
+        }
+    }
+
+    private void damageEnemy(Entity enemy, int amount) {
+        if (enemy == null || !enemy.isActive() || !enemy.hasComponent(EnemyComponent.class)) {
+            return;
+        }
+        EnemyComponent ec = enemy.getComponent(EnemyComponent.class);
+        if (ec.isScooped() || ec.isDead()) {
+            return;
+        }
+        ec.hit(amount);
+        if (ec.isDead()) {
+            finishEnemyKill(enemy, ec);
+        }
+    }
+
+    private void applySkullCurse() {
+        SoundHelper.play("bad_drop.wav");
+        int roll = random.nextInt(9);
+        switch (roll) {
+            case 0 -> {
+                clearShopWeapon();
+                if (geti(GameVars.WEAPON_GRADE) > 1) {
+                    inc(GameVars.WEAPON_GRADE, -1);
+                }
+                showBanner("WEAPON DOWN", Color.ORANGERED, 1.4);
+            }
+            case 1 -> {
+                pendingHurryUfo = true;
+                hurryUfoDelay = 0;
+                spawnHurryUpUfo();
+                showBanner("UFO NOW", Color.ORANGERED, 1.4);
+            }
+            case 2 -> {
+                controlReverseRemaining = GameVars.CURSE_REVERSE_SECONDS;
+                showBanner("REVERSE", Color.ORANGERED, 1.4);
+            }
+            case 3 -> {
+                fireJamRemaining = GameVars.CURSE_JAM_SECONDS;
+                clearLaserBeams();
+                showBanner("JAM", Color.ORANGERED, 1.4);
+            }
+            case 4 -> {
+                changeLevelTime(-5);
+                showBanner("TIME DRAIN", Color.ORANGERED, 1.4);
+            }
+            case 5 -> {
+                int cap = Math.max(GameVars.INITIAL_AMMO_CAP, geti(GameVars.AMMO_CAP) - 2);
+                set(GameVars.AMMO_CAP, cap);
+                showBanner("AMMO LEAK", Color.ORANGERED, 1.4);
+            }
+            case 6 -> {
+                set(GameVars.MONEY, Math.max(0, geti(GameVars.MONEY) - 50));
+                showBanner("MONEY STING", Color.ORANGERED, 1.4);
+            }
+            case 7 -> {
+                int mask = geti(GameVars.RANK_MASK);
+                if (mask != 0) {
+                    List<Integer> bits = new ArrayList<>();
+                    for (int i = 0; i < GameVars.RANK_COLOR_COUNT; i++) {
+                        if ((mask & (1 << i)) != 0) {
+                            bits.add(i);
+                        }
+                    }
+                    if (!bits.isEmpty()) {
+                        int bit = bits.get(random.nextInt(bits.size()));
+                        set(GameVars.RANK_MASK, mask & ~(1 << bit));
+                        updateRankHud();
+                    }
+                }
+                showBanner("RANK BLEED", Color.ORANGERED, 1.4);
+            }
+            default -> {
+                spawnSkullSwarm();
+                showBanner("SWARM", Color.ORANGERED, 1.4);
+            }
+        }
+    }
+
+    private void spawnSkullSwarm() {
+        int count = 3 + random.nextInt(3);
+        for (int i = 0; i < count; i++) {
+            double x = GameVars.RAIL_WIDTH + 20 + random.nextDouble() * (getAppWidth() - GameVars.RAIL_WIDTH * 2 - 40);
+            double y = -40 - random.nextDouble() * 80;
+            spawn("enemy", new com.almasb.fxgl.entity.SpawnData(x, y)
+                    .put("enemyType", EnemyComponent.EnemyType.FAST)
+                    .put("level", geti(GameVars.LEVEL)));
+            inc(GameVars.ENEMIES_REMAINING, 1);
+        }
     }
 
     private void continueToNextWave() {
@@ -2705,6 +3422,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             double deathX = enemy.getX() + enemy.getWidth() / 2;
             double deathY = enemy.getY() + enemy.getHeight() / 2;
             if (ec.isBoss()) {
+                inc(GameVars.BOSS_KILLS, 1);
                 spawnBossDeathSequence(deathX, deathY);
                 spawnBossCoins(deathX, deathY);
                 trySpawnRankMarker(deathX, deathY, ec.getType());
@@ -2843,7 +3561,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     @Override
     protected void onUpdate(double tpf) {
         updateShieldHud();
-        if (showingTitleScreen || gameOver || optionsOpen || player == null) return;
+        if (showingTitleScreen || gameOver || optionsOpen || shopOpen || settlementOverlay != null || player == null) return;
         
         frameCount++;
         if (frameCount <= WARMUP_FRAMES) {
@@ -2885,17 +3603,21 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         if (missile != null && missile.hasComponent(MissileComponent.class)) {
             MissileComponent mc = missile.getComponent(MissileComponent.class);
             mc.setSteering(holdingFire);
-            mc.setTurnInput(movingLeft, movingRight);
+            boolean left = controlReverseRemaining > 0 ? movingRight : movingLeft;
+            boolean right = controlReverseRemaining > 0 ? movingLeft : movingRight;
+            mc.setTurnInput(left, right);
             pc.setMissileShield(true);
         } else if (pc.isMissileShielded()) {
             pc.setMissileShield(false);
         }
         boolean steeringMissile = holdingFire && missile != null;
         if (!steeringMissile) {
-            if (movingLeft) {
+            boolean left = controlReverseRemaining > 0 ? movingRight : movingLeft;
+            boolean right = controlReverseRemaining > 0 ? movingLeft : movingRight;
+            if (left) {
                 pc.moveLeft(tpf);
             }
-            if (movingRight) {
+            if (right) {
                 pc.moveRight(tpf);
             }
         }
@@ -2905,6 +3627,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
         updateScoopCatch();
         updateMeteorMissileSupply(tpf);
+        updateCurses(tpf);
+        updateShopWeapons(tpf);
 
         updateGetReady(tpf);
         
@@ -2916,36 +3640,57 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
 
     private void updateExtraTime(double tpf) {
-        if (extraTime <= 0) {
-            updateExtraTimeBar();
-            return;
+        if (hurryUfoDelay > 0) {
+            hurryUfoDelay = Math.max(0, hurryUfoDelay - tpf);
         }
-        extraTime = Math.max(0, extraTime - tpf);
-        extraTimePulse += tpf;
+        if (extraTime > 0) {
+            extraTime = Math.max(0, extraTime - tpf);
+            extraTimePulse += tpf;
+        }
         if (!extraTimeWarned && extraTime <= 5) {
-            extraTimeWarned = true;
-            SoundHelper.play("hurry_warning.wav");
-            showBanner("HURRY UP", Color.ORANGERED, 1.2);
+            triggerHurryUpWarning();
         }
         if (extraTime <= 0) {
             extraTime = 0;
+            if (!extraTimeWarned) {
+                triggerHurryUpWarning();
+            }
+            if (hurryUfoDelay <= 0) {
+                pendingHurryUfo = true;
+            }
+        }
+        if (pendingHurryUfo && hurryUfoDelay <= 0) {
             boolean bonus = waveManager != null && waveManager.getCurrentWaveType() == WaveManager.WaveType.BONUS;
-            if (!bonus) {
+            if (bonus) {
+                pendingHurryUfo = false;
+            } else {
                 spawnHurryUpUfo();
             }
         }
         updateExtraTimeBar();
     }
 
-    private void spawnHurryUpUfo() {
-        if (ufoSpawnedThisWave || gameOver || showingTitleScreen || warping || minigameActive || waveTransition) {
+    private void triggerHurryUpWarning() {
+        if (extraTimeWarned) {
             return;
         }
-        if (getReadyRemaining > 0 || !hasLiveCombatEnemies()) {
-            checkWaveComplete();
+        extraTimeWarned = true;
+        hurryUfoDelay = Math.max(hurryUfoDelay, GameVars.HURRY_UFO_DELAY);
+        SoundHelper.play("hurry_warning.wav");
+        showBanner("HURRY UP", Color.ORANGERED, 1.2);
+    }
+
+    private void spawnHurryUpUfo() {
+        if (ufoSpawnedThisWave || gameOver || showingTitleScreen || warping || minigameActive) {
+            return;
+        }
+        if (waveTransition || getReadyRemaining > 0) {
+            // Keep pending so we retry when combat resumes / wave settles.
+            pendingHurryUfo = true;
             return;
         }
         ufoSpawnedThisWave = true;
+        pendingHurryUfo = false;
         double x = getAppWidth() / 2.0 - 48;
         double y = 56;
         spawn("enemy", new com.almasb.fxgl.entity.SpawnData(x, y)
@@ -3404,6 +4149,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private void refillWaveTimer() {
         extraTime = extraTimeMax;
         extraTimeWarned = false;
+        hurryUfoDelay = 0;
+        pendingHurryUfo = false;
         updateExtraTimeBar();
     }
 
@@ -3411,10 +4158,24 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         if (delta > 0) {
             extraTimeMax += delta;
             extraTime += delta;
+            if (extraTime > 5) {
+                extraTimeWarned = false;
+                hurryUfoDelay = 0;
+                pendingHurryUfo = false;
+            }
         } else if (delta < 0) {
             extraTimeMax = Math.max(GameVars.LEVEL_TIME_MIN, extraTimeMax + delta);
             extraTime = Math.max(0, extraTime + delta);
-            extraTimeWarned = extraTime <= 5;
+            if (!extraTimeWarned && extraTime <= 5) {
+                triggerHurryUpWarning();
+            }
+            if (extraTime <= 0) {
+                if (!extraTimeWarned) {
+                    triggerHurryUpWarning();
+                } else {
+                    hurryUfoDelay = Math.max(hurryUfoDelay, GameVars.HURRY_UFO_DELAY);
+                }
+            }
         }
         updateExtraTimeBar();
     }
