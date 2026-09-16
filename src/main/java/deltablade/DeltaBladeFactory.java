@@ -7,6 +7,7 @@ import com.almasb.fxgl.entity.SpawnData;
 import com.almasb.fxgl.entity.Spawns;
 import deltablade.components.BulletComponent;
 import deltablade.components.CoinComponent;
+import deltablade.components.CoverMeteorComponent;
 import deltablade.components.EnemyComponent;
 import deltablade.components.ExplosionComponent;
 import deltablade.components.ExtraLetterPickupComponent;
@@ -27,6 +28,7 @@ import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelReader;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
 import javafx.scene.paint.LinearGradient;
@@ -381,20 +383,24 @@ public class DeltaBladeFactory implements EntityFactory {
         double baseSpeed = data.hasKey("baseSpeed") ? data.<Double>get("baseSpeed") : 120.0;
         double driftX = data.hasKey("driftX") ? data.<Double>get("driftX") : 0.0;
         double spin = data.hasKey("spin") ? data.<Double>get("spin") : 40.0;
-        int tint = data.hasKey("tint") ? data.<Integer>get("tint") : 0;
+        int variant = data.hasKey("variant") ? data.<Integer>get("variant") : 0;
+        variant = Math.floorMod(variant, 4);
 
-        Image rock = EmbeddedTextures.getImage("asteroid1.png", 16, 16);
+        Image rock = EmbeddedTextures.getImage("meteor_" + variant + ".png", 128, 128);
         Node view;
+        double displayW = size;
+        double displayH = size;
         if (rock != null && !rock.isError()) {
+            double nw = Math.max(1, rock.getWidth());
+            double nh = Math.max(1, rock.getHeight());
+            double scale = size / Math.max(nw, nh);
+            displayW = Math.max(16, nw * scale);
+            displayH = Math.max(16, nh * scale);
             ImageView imageView = new ImageView(rock);
-            imageView.setFitWidth(size);
-            imageView.setFitHeight(size);
+            imageView.setFitWidth(displayW);
+            imageView.setFitHeight(displayH);
+            imageView.setPreserveRatio(true);
             imageView.setSmooth(false);
-            javafx.scene.effect.ColorAdjust adjust = new javafx.scene.effect.ColorAdjust();
-            adjust.setHue(tint == 1 ? -0.18 : tint == 2 ? 0.1 : 0.0);
-            adjust.setSaturation(-0.15);
-            adjust.setBrightness(tint == 2 ? -0.1 : 0.05);
-            imageView.setEffect(adjust);
             view = imageView;
         } else {
             javafx.scene.shape.Polygon poly = new javafx.scene.shape.Polygon(
@@ -409,12 +415,102 @@ public class DeltaBladeFactory implements EntityFactory {
             view = poly;
         }
 
-        return FXGL.entityBuilder(data)
+        Entity meteor = FXGL.entityBuilder(data)
                 .type(EntityType.MINIGAME_HAZARD)
                 .viewWithBBox(view)
                 .zIndex(70)
                 .with(new MeteorRockComponent(baseSpeed, driftX, spin))
                 .build();
+        meteor.getTransformComponent().setRotationOrigin(new Point2D(displayW / 2.0, displayH / 2.0));
+        return meteor;
+    }
+
+    @Spawns("coverMeteor")
+    public Entity newCoverMeteor(SpawnData data) {
+        int variant = data.hasKey("variant") ? data.<Integer>get("variant") : 1;
+        double scale = data.hasKey("scale") ? data.<Double>get("scale") : 1.0;
+        double spin = data.hasKey("spin") ? data.<Double>get("spin") : 12.0;
+        variant = Math.floorMod(variant, 4);
+
+        String name = "meteor_" + variant + ".png";
+        Image rock = EmbeddedTextures.getImage(name, 128, 128);
+        Node view;
+        double displayW;
+        double displayH;
+        if (rock != null && !rock.isError()) {
+            displayW = Math.max(16, rock.getWidth() * scale);
+            displayH = Math.max(16, rock.getHeight() * scale);
+            ImageView imageView = new ImageView(rock);
+            imageView.setFitWidth(displayW);
+            imageView.setFitHeight(displayH);
+            imageView.setPreserveRatio(true);
+            imageView.setSmooth(false);
+            view = imageView;
+        } else {
+            displayW = 72 * scale;
+            displayH = 72 * scale;
+            view = safeTexture("asteroid1.png", (int) displayW, (int) displayH, Color.GRAY);
+        }
+
+        double[] box = meteorHitBox(rock, displayW, displayH);
+        Entity meteor = FXGL.entityBuilder(data)
+                .type(EntityType.METEOR)
+                .view(view)
+                .bbox(new HitBox("BODY", new Point2D(box[0], box[1]), BoundingShape.box(box[2], box[3])))
+                .zIndex(68)
+                .collidable()
+                .with(new CoverMeteorComponent(spin,
+                        (rock != null && !rock.isError()) ? rock : null, displayW, displayH))
+                .build();
+        meteor.getTransformComponent().setRotationOrigin(new Point2D(displayW / 2.0, displayH / 2.0));
+        return meteor;
+    }
+
+    private static double[] meteorHitBox(Image rock, double displayW, double displayH) {
+        double inset = 0.22;
+        double x = displayW * inset;
+        double y = displayH * inset;
+        double w = displayW * (1 - 2 * inset);
+        double h = displayH * (1 - 2 * inset);
+        if (rock == null || rock.getPixelReader() == null) {
+            return new double[] {x, y, Math.max(12, w), Math.max(12, h)};
+        }
+        PixelReader reader = rock.getPixelReader();
+        int iw = (int) rock.getWidth();
+        int ih = (int) rock.getHeight();
+        int minX = iw;
+        int minY = ih;
+        int maxX = 0;
+        int maxY = 0;
+        boolean any = false;
+        for (int py = 0; py < ih; py++) {
+            for (int px = 0; px < iw; px++) {
+                if (reader.getColor(px, py).getOpacity() < 0.35) {
+                    continue;
+                }
+                any = true;
+                minX = Math.min(minX, px);
+                minY = Math.min(minY, py);
+                maxX = Math.max(maxX, px);
+                maxY = Math.max(maxY, py);
+            }
+        }
+        if (!any) {
+            return new double[] {x, y, Math.max(12, w), Math.max(12, h)};
+        }
+        double sx = displayW / iw;
+        double sy = displayH / ih;
+        x = minX * sx;
+        y = minY * sy;
+        w = (maxX - minX + 1) * sx;
+        h = (maxY - minY + 1) * sy;
+        double padX = Math.max(4, w * 0.22);
+        double padY = Math.max(4, h * 0.22);
+        x += padX;
+        y += padY;
+        w = Math.max(10, w - padX * 2);
+        h = Math.max(10, h - padY * 2);
+        return new double[] {x, y, w, h};
     }
 
     private static Group orbPickup(Color outer, Color inner, String letter) {

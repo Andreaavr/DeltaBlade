@@ -25,7 +25,7 @@ import static com.almasb.fxgl.dsl.FXGL.spawn;
 
 public class MeteorStormGame implements Minigame {
 
-    private static final double GOAL_DISTANCE = 420;
+    private static final double GOAL_DISTANCE = 640;
     private static final Random RANDOM = new Random();
 
     private MinigameHost host;
@@ -35,9 +35,11 @@ public class MeteorStormGame implements Minigame {
     private double spawnTimer;
     private double thrustSum;
     private double thrustTime;
+    private double holdTime;
     private final List<NodeHud> hud = new ArrayList<>();
     private Rectangle distanceFill;
     private Text speedText;
+    private Text holdText;
 
     private record NodeHud(javafx.scene.Node node) {}
 
@@ -50,6 +52,7 @@ public class MeteorStormGame implements Minigame {
         this.spawnTimer = 0.4;
         this.thrustSum = 0;
         this.thrustTime = 0;
+        this.holdTime = 0;
         host.hidePlayer(false);
         buildHud();
         host.displayBanner("METEOR STORM", Color.ORANGERED, 1.6);
@@ -69,9 +72,13 @@ public class MeteorStormGame implements Minigame {
         double thrust = host.holdingFire() ? 2.2 : 0.9;
         thrustSum += thrust * tpf;
         thrustTime += tpf;
+        if (host.holdingFire()) {
+            holdTime += tpf;
+        }
         distance += 14 * thrust * tpf;
 
         double progress = Math.min(1.0, distance / GOAL_DISTANCE);
+        double rush = endRush(progress);
         if (distanceFill != null) {
             distanceFill.setHeight(Math.max(4, 220 * progress));
             distanceFill.setTranslateY(hudBarBottom() - distanceFill.getHeight());
@@ -80,17 +87,18 @@ public class MeteorStormGame implements Minigame {
             speedText.setText(host.holdingFire() ? "SCHUB" : "GLIDE");
             speedText.setFill(host.holdingFire() ? Color.ORANGE : Color.rgb(160, 180, 200));
         }
+        updateHoldHud();
 
         for (Entity rock : getGameWorld().getEntitiesByType(EntityType.MINIGAME_HAZARD)) {
             if (rock.isActive() && rock.hasComponent(MeteorRockComponent.class)) {
-                rock.getComponent(MeteorRockComponent.class).setSpeedScale(thrust);
+                rock.getComponent(MeteorRockComponent.class).setSpeedScale(thrust * rush);
             }
         }
 
         spawnTimer -= tpf;
         if (spawnTimer <= 0) {
-            spawnWave(progress, thrust);
-            spawnTimer = Math.max(0.26, 0.68 - progress * 0.36);
+            spawnWave(progress);
+            spawnTimer = Math.max(0.12, (0.70 - progress * 0.34) / rush);
         }
 
         if (playerHitRock()) {
@@ -106,41 +114,56 @@ public class MeteorStormGame implements Minigame {
     @Override
     public void cleanup() {
         active = false;
-        for (EntityType type : List.of(EntityType.MINIGAME_HAZARD, EntityType.COIN)) {
-            for (Entity entity : List.copyOf(getGameWorld().getEntitiesByType(type))) {
-                if (entity.isActive()) {
-                    entity.removeFromWorld();
-                }
-            }
-        }
+        clearStormLoot();
         for (NodeHud item : hud) {
             host.removeUi(item.node());
         }
         hud.clear();
     }
 
-    private void spawnWave(double progress, double thrust) {
-        int count = 1 + (progress > 0.35 ? 1 : 0) + (RANDOM.nextDouble() < progress * 0.45 ? 1 : 0);
+    private void spawnWave(double progress) {
+        int count = 1
+                + (progress > 0.28 ? 1 : 0)
+                + (progress > 0.68 ? 1 : 0)
+                + (RANDOM.nextDouble() < progress * 0.5 ? 1 : 0);
         double left = host.playLeft() + 8;
         double right = host.playRight() - 40;
 
         for (int i = 0; i < count; i++) {
-            double size = 28 + RANDOM.nextDouble() * 28;
+            double size = 30 + RANDOM.nextDouble() * 34;
             double x = left + RANDOM.nextDouble() * Math.max(20, right - left);
             double y = -size - RANDOM.nextDouble() * 40;
-            double baseSpeed = 90 + progress * 110 + RANDOM.nextDouble() * 40;
+            double baseSpeed = 88 + progress * 70 + RANDOM.nextDouble() * 40;
             spawn("meteorRock", new com.almasb.fxgl.entity.SpawnData(x, y)
                     .put("size", size)
                     .put("baseSpeed", baseSpeed)
-                    .put("driftX", (RANDOM.nextDouble() - 0.5) * 40)
+                    .put("driftX", (RANDOM.nextDouble() - 0.5) * 48)
                     .put("spin", (RANDOM.nextDouble() - 0.5) * 180)
-                    .put("tint", RANDOM.nextInt(3)));
+                    .put("variant", RANDOM.nextInt(4)));
         }
 
         if (RANDOM.nextDouble() < 0.22 + progress * 0.1) {
             String type = RANDOM.nextDouble() < 0.7 ? "white" : (RANDOM.nextDouble() < 0.7 ? "green" : "blue");
             double cx = left + 16 + RANDOM.nextDouble() * Math.max(20, right - left - 16);
             host.spawnCoinAt(cx, -12, type);
+        }
+    }
+
+    private static double endRush(double progress) {
+        if (progress < 0.62) {
+            return 1.0;
+        }
+        double t = (progress - 0.62) / 0.38;
+        return 1.0 + t * t * 1.2;
+    }
+
+    private void clearStormLoot() {
+        for (EntityType type : List.of(EntityType.MINIGAME_HAZARD, EntityType.COIN)) {
+            for (Entity entity : List.copyOf(getGameWorld().getEntitiesByType(type))) {
+                if (entity.isActive()) {
+                    entity.removeFromWorld();
+                }
+            }
         }
     }
 
@@ -176,14 +199,15 @@ public class MeteorStormGame implements Minigame {
 
     private void win() {
         finished = true;
+        clearStormLoot();
         double avg = thrustTime > 0 ? thrustSum / thrustTime : 0.9;
         int score = 600 + (int) (avg * 220);
         int money = 40 + (int) (avg * 28);
         String banner = "STORM CLEAR  +" + score;
-        if (avg >= 1.8) {
+        if (holdRatio() >= 0.95) {
             score += 350;
             money += 30;
-            banner = "SUPER STORM  +" + score;
+            banner = "BONUS  +" + score;
         }
         inc(GameVars.METEOR_WINS, 1);
         host.finishMinigame(true, score, money, banner, Color.ORANGE);
@@ -191,6 +215,7 @@ public class MeteorStormGame implements Minigame {
 
     private void fail() {
         finished = true;
+        clearStormLoot();
         int score = 80;
         host.finishMinigame(false, score, 10, "CRASH  +" + score, Color.ORANGERED);
     }
@@ -226,12 +251,38 @@ public class MeteorStormGame implements Minigame {
         speedText.setTranslateX(host.playLeft() + 12);
         speedText.setTranslateY(host.playBottom() - 18);
 
-        Group group = new Group(bg, distanceFill, caption, speedText);
+        holdText = new Text("HOLD  0%");
+        holdText.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
+        holdText.setFill(Color.rgb(160, 180, 200));
+        holdText.setEffect(new DropShadow(6, Color.BLACK));
+        holdText.setTranslateX(host.playLeft() + 12);
+        holdText.setTranslateY(host.playBottom() - 34);
+
+        Group group = new Group(bg, distanceFill, caption, speedText, holdText);
         host.addUi(group);
         hud.add(new NodeHud(group));
     }
 
     private double hudBarBottom() {
         return 70 + 220;
+    }
+
+    private double holdRatio() {
+        return thrustTime > 0 ? holdTime / thrustTime : 0;
+    }
+
+    private void updateHoldHud() {
+        if (holdText == null) {
+            return;
+        }
+        double ratio = holdRatio();
+        int pct = (int) Math.floor(ratio * 100 + 1e-6);
+        if (ratio >= 0.95) {
+            holdText.setText("BONUS  " + pct + "%");
+            holdText.setFill(Color.GOLD);
+        } else {
+            holdText.setText("HOLD  " + pct + "%");
+            holdText.setFill(pct >= 80 ? Color.ORANGE : Color.rgb(160, 180, 200));
+        }
     }
 }

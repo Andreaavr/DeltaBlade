@@ -6,6 +6,7 @@ import com.almasb.fxgl.entity.Entity;
 import com.almasb.fxgl.input.UserAction;
 import deltablade.components.BackgroundScrollComponent;
 import deltablade.components.BulletComponent;
+import deltablade.components.CoverMeteorComponent;
 import deltablade.components.EnemyComponent;
 import deltablade.components.ExtraLetterPickupComponent;
 import deltablade.components.MissileComponent;
@@ -67,6 +68,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private boolean movingDown = false;
     private boolean holdingFire = false;
     private long lastMissileTapAt = 0;
+    private double meteorMissileCooldown = 0;
     private boolean gameOver = false;
     private boolean showingTitleScreen = true;
     private boolean gameStarted = false;
@@ -354,6 +356,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         stopWarpVisuals();
         holdingFire = false;
         lastMissileTapAt = 0;
+        meteorMissileCooldown = 0;
         movingUp = false;
         movingDown = false;
         frameCount = 0;
@@ -841,6 +844,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         waveTransition = false;
         refillWaveTimer();
         ufoSpawnedThisWave = false;
+        meteorMissileCooldown = 0.35;
         waveManager.startWave(geti(GameVars.LEVEL));
     }
 
@@ -879,6 +883,10 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             case MONSTER -> {
                 message = "SWARM - WAVE " + geti(GameVars.LEVEL);
                 color = Color.MEDIUMPURPLE;
+            }
+            case METEOR -> {
+                message = "METEOR CHALLENGE";
+                color = Color.SANDYBROWN;
             }
             default -> {
                 message = "WAVE " + geti(GameVars.LEVEL);
@@ -1025,6 +1033,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
         PlayerComponent pc = player.getComponent(PlayerComponent.class);
         spawn("playerMissile", new com.almasb.fxgl.entity.SpawnData(pc.getCenterX() - 16, pc.getTopY() - 28));
+        pc.setMissileShield(true);
         lastMissileTapAt = 0;
         SoundHelper.play("missile_launch.wav");
     }
@@ -1037,6 +1046,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         double cy = missile.getY() + missile.getHeight() / 2.0;
         missile.removeFromWorld();
         lastMissileTapAt = 0;
+        dropMissileShield();
         spawnExplosion(cx, cy, "ship");
         spawnShockwaveRing(cx, cy, "ship");
         triggerScreenShake("ship");
@@ -1072,6 +1082,38 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 finishEnemyKill(enemy, ec);
             }
         }
+    }
+
+    private void missileHitMeteor(Entity missile, Entity meteor) {
+        if (missile == null || !missile.isActive() || meteor == null || !meteor.isActive()) {
+            return;
+        }
+        if (missile.hasComponent(MissileComponent.class)) {
+            if (missile.getComponent(MissileComponent.class).isDetonated()) {
+                return;
+            }
+            missile.getComponent(MissileComponent.class).markDetonated();
+        }
+        double cx = missile.getX() + missile.getWidth() / 2.0;
+        double cy = missile.getY() + missile.getHeight() / 2.0;
+        missile.removeFromWorld();
+        lastMissileTapAt = 0;
+        dropMissileShield();
+        spawnExplosion(cx, cy, "hit");
+        SoundHelper.play("explode_ship.wav");
+        if (!meteor.hasComponent(CoverMeteorComponent.class)) {
+            return;
+        }
+        CoverMeteorComponent rock = meteor.getComponent(CoverMeteorComponent.class);
+        if (!rock.hit()) {
+            return;
+        }
+        double mx = meteor.getX() + meteor.getWidth() / 2.0;
+        double my = meteor.getY() + meteor.getHeight() / 2.0;
+        meteor.removeFromWorld();
+        spawnExplosion(mx, my, "ship");
+        spawnShockwaveRing(mx, my, "ship");
+        inc(GameVars.SCORE, 75);
     }
     
     private void fire() {
@@ -1440,6 +1482,18 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             if (ec.isScooped()) {
                 return;
             }
+            if (ec.isTuckedBehindMeteor()) {
+                return;
+            }
+            if (shotBlockedByMeteor(bullet)) {
+                if (bullet.isActive() && bullet.hasComponent(BulletComponent.class)) {
+                    bullet.getComponent(BulletComponent.class).onHit();
+                }
+                if (bullet.isActive()) {
+                    bullet.removeFromWorld();
+                }
+                return;
+            }
             bullet.getComponent(BulletComponent.class).onHit();
             bullet.removeFromWorld();
             ec.hit();
@@ -1470,8 +1524,37 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             if (enemy.getComponent(EnemyComponent.class).isScooped()) {
                 return;
             }
+            EnemyComponent mec = enemy.getComponent(EnemyComponent.class);
+            if (mec.isTuckedBehindMeteor()) {
+                Entity cover = meteorCoveringShot(missile);
+                if (cover == null) {
+                    cover = nearestCoverMeteor(enemy);
+                }
+                if (cover != null) {
+                    missileHitMeteor(missile, cover);
+                }
+                return;
+            }
+            Entity cover = meteorCoveringShot(missile);
+            if (cover != null) {
+                missileHitMeteor(missile, cover);
+                return;
+            }
             if (missile.isActive() && missile.hasComponent(MissileComponent.class)) {
                 missile.getComponent(MissileComponent.class).requestDetonate();
+            }
+        });
+
+        onCollisionBegin(EntityType.PLAYER_MISSILE, EntityType.METEOR, (missile, meteor) -> {
+            missileHitMeteor(missile, meteor);
+        });
+
+        onCollisionBegin(EntityType.PLAYER_BULLET, EntityType.METEOR, (bullet, meteor) -> {
+            if (bullet.isActive() && bullet.hasComponent(BulletComponent.class)) {
+                bullet.getComponent(BulletComponent.class).onHit();
+            }
+            if (bullet.isActive()) {
+                bullet.removeFromWorld();
             }
         });
 
@@ -1566,6 +1649,9 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
     
     private void trySpawnPickup(double x, double y, EnemyComponent.EnemyType enemyType) {
+        if (isMeteorChallenge()) {
+            return;
+        }
         boolean extraLetterInWorld = !getGameWorld().getEntitiesByType(EntityType.EXTRA_LETTER_PICKUP).isEmpty();
         boolean extraLetterSpawnedThisWave = geti(GameVars.EXTRA_LETTER_SPAWNED_THIS_WAVE) > 0;
         
@@ -2137,6 +2223,30 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             SoundHelper.play("scoop.wav");
             return;
         }
+        if ("METEOR_CHALLENGE".equals(drop.spawnName())) {
+            if (gameOver || optionsOpen || minigameActive || warping) {
+                return;
+            }
+            if (!gameStarted || showingTitleScreen || player == null) {
+                if (showingTitleScreen) {
+                    startActualGame(false);
+                }
+                if (player == null) {
+                    return;
+                }
+            }
+            cancelGetReady();
+            clearWaveEntities();
+            refillWaveTimer();
+            ufoSpawnedThisWave = false;
+            waveTransition = false;
+            meteorMissileCooldown = 0.4;
+            waveManager.startWave(geti(GameVars.LEVEL), WaveManager.WaveType.METEOR);
+            showWaveAnnouncement();
+            SoundHelper.play("get_ready.wav");
+            showBanner(drop.banner(), Color.SANDYBROWN, 1.2);
+            return;
+        }
         if ("MONSTER".equals(drop.spawnName())) {
             if (gameOver || optionsOpen || minigameActive || warping) {
                 return;
@@ -2222,6 +2332,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 EntityType.RANK_MARKER,
                 EntityType.EXTRA_LETTER_PICKUP,
                 EntityType.COIN,
+                EntityType.METEOR,
                 EntityType.MINIGAME_HAZARD)) {
             for (Entity entity : List.copyOf(getGameWorld().getEntitiesByType(type))) {
                 if (entity.isActive()) {
@@ -2231,6 +2342,13 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
         set(GameVars.ACTIVE_BULLETS, 0);
         set(GameVars.ENEMIES_REMAINING, 0);
+        dropMissileShield();
+    }
+
+    private void dropMissileShield() {
+        if (player != null && player.isActive() && player.hasComponent(PlayerComponent.class)) {
+            player.getComponent(PlayerComponent.class).setMissileShield(false);
+        }
     }
 
     @Override
@@ -2330,6 +2448,78 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             case FIGHTERS, MIXED, PEARL, RANK, BONUS, KAMIKAZE, MONSTER -> true;
             default -> false;
         };
+    }
+
+    public boolean isMeteorChallenge() {
+        return waveManager != null && waveManager.getCurrentWaveType() == WaveManager.WaveType.METEOR;
+    }
+
+    private boolean shotBlockedByMeteor(Entity shot) {
+        return meteorCoveringShot(shot) != null;
+    }
+
+    private Entity meteorCoveringShot(Entity shot) {
+        if (shot == null || !shot.isActive()) {
+            return null;
+        }
+        for (Entity meteor : getGameWorld().getEntitiesByType(EntityType.METEOR)) {
+            if (!meteor.isActive() || !meteor.hasComponent(CoverMeteorComponent.class)) {
+                continue;
+            }
+            if (meteor.getComponent(CoverMeteorComponent.class).coversShot(shot)) {
+                return meteor;
+            }
+        }
+        return null;
+    }
+
+    private Entity nearestCoverMeteor(Entity around) {
+        if (around == null) {
+            return null;
+        }
+        double ax = around.getX() + around.getWidth() / 2.0;
+        double ay = around.getY() + around.getHeight() / 2.0;
+        Entity best = null;
+        double bestD = 90 * 90;
+        for (Entity meteor : getGameWorld().getEntitiesByType(EntityType.METEOR)) {
+            if (!meteor.isActive()) {
+                continue;
+            }
+            double dx = (meteor.getX() + meteor.getWidth() / 2.0) - ax;
+            double dy = (meteor.getY() + meteor.getHeight() / 2.0) - ay;
+            double d = dx * dx + dy * dy;
+            if (d < bestD) {
+                bestD = d;
+                best = meteor;
+            }
+        }
+        return best;
+    }
+
+    private void updateMeteorMissileSupply(double tpf) {
+        if (!isMeteorChallenge() || waveTransition || getReadyRemaining > 0 || gameOver || minigameActive) {
+            return;
+        }
+        if (findActiveMissile() != null) {
+            return;
+        }
+        for (Entity pickup : getGameWorld().getEntitiesByType(EntityType.PICKUP)) {
+            if (!pickup.isActive() || !pickup.hasComponent(PickupComponent.class)) {
+                continue;
+            }
+            if (pickup.getComponent(PickupComponent.class).getType() == PickupComponent.PickupType.MISSILE) {
+                return;
+            }
+        }
+        meteorMissileCooldown -= tpf;
+        if (meteorMissileCooldown > 0) {
+            return;
+        }
+        meteorMissileCooldown = GameVars.METEOR_MISSILE_GAP;
+        double left = GameVars.RAIL_WIDTH + 16;
+        double span = Math.max(40, getAppWidth() - 2.0 * GameVars.RAIL_WIDTH - 48);
+        double x = left + random.nextDouble() * span;
+        spawn("missilePickup", x, -28);
     }
 
     private int playerScoopCharges() {
@@ -2696,6 +2886,9 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             MissileComponent mc = missile.getComponent(MissileComponent.class);
             mc.setSteering(holdingFire);
             mc.setTurnInput(movingLeft, movingRight);
+            pc.setMissileShield(true);
+        } else if (pc.isMissileShielded()) {
+            pc.setMissileShield(false);
         }
         boolean steeringMissile = holdingFire && missile != null;
         if (!steeringMissile) {
@@ -2711,6 +2904,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             scoopHitLock = Math.max(0, scoopHitLock - tpf);
         }
         updateScoopCatch();
+        updateMeteorMissileSupply(tpf);
 
         updateGetReady(tpf);
         
@@ -3285,8 +3479,17 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             return;
         }
         double remaining = 0;
+        boolean missileOn = false;
         if (player != null && player.isActive() && player.hasComponent(PlayerComponent.class)) {
-            remaining = player.getComponent(PlayerComponent.class).getShieldRemaining();
+            PlayerComponent pc = player.getComponent(PlayerComponent.class);
+            remaining = pc.getShieldRemaining();
+            missileOn = pc.isMissileShielded();
+        }
+        if (missileOn && remaining <= 0) {
+            shieldHudText.setText("∞");
+            shieldHudText.setFill(Color.AQUA);
+            shieldHudText.setOpacity(1);
+            return;
         }
         int shown = (int) Math.ceil(remaining);
         shieldHudText.setText(String.valueOf(shown));

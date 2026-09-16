@@ -18,6 +18,8 @@ public class PlayerComponent extends Component {
     private double invulnerableTimer = 0;
     private static final double INVULNERABLE_DURATION = 2.0;
     private double shieldTimer = 0;
+    private boolean missileShield = false;
+    private double shieldPulse = 0;
     private Group shieldView;
     private int scoopCharges = 0;
     
@@ -57,6 +59,7 @@ public class PlayerComponent extends Component {
             fireAnimTimer -= tpf;
         }
 
+        shieldPulse += tpf;
         if (shieldTimer > 0) {
             shieldTimer = Math.max(0, shieldTimer - tpf);
         }
@@ -157,7 +160,16 @@ public class PlayerComponent extends Component {
     }
 
     public boolean isShielded() {
-        return shieldTimer > 0;
+        return shieldTimer > 0 || missileShield;
+    }
+
+    public boolean isMissileShielded() {
+        return missileShield;
+    }
+
+    public void setMissileShield(boolean on) {
+        missileShield = on;
+        updateShieldView();
     }
 
     public double getShieldRemaining() {
@@ -166,6 +178,7 @@ public class PlayerComponent extends Component {
 
     public void clearShield() {
         shieldTimer = 0;
+        missileShield = false;
         updateShieldView();
     }
 
@@ -197,11 +210,12 @@ public class PlayerComponent extends Component {
         if (shieldView == null) {
             return;
         }
-        boolean on = shieldTimer > 0;
+        boolean on = isShielded();
         shieldView.setVisible(on);
         if (on) {
-            double pulse = 0.72 + 0.28 * (0.5 + 0.5 * Math.sin(shieldTimer * 8));
-            if (shieldTimer <= 3) {
+            double t = shieldTimer > 0 ? shieldTimer : shieldPulse;
+            double pulse = 0.72 + 0.28 * (0.5 + 0.5 * Math.sin(t * 8));
+            if (shieldTimer > 0 && shieldTimer <= 3 && !missileShield) {
                 pulse = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(shieldTimer * 14));
             }
             shieldView.setOpacity(pulse);

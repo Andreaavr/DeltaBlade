@@ -53,6 +53,9 @@ public final class GameVars {
     public static final double MISSILE_BLAST_RADIUS = 112;
     public static final int MISSILE_BLAST_HITS = 2;
     public static final double MISSILE_DOUBLE_TAP = 0.28;
+    public static final int METEOR_HITS = 3;
+    public static final double METEOR_FIRE_SCALE = 0.32;
+    public static final double METEOR_MISSILE_GAP = 1.15;
     public static final int LEVEL_TIME_INITIAL = 30;
     public static final int LEVEL_TIME_PICKUP = 1;
     public static final int LEVEL_TIME_DEATH_PENALTY = 5;

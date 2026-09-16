@@ -47,6 +47,10 @@ public class MissileComponent extends Component {
         return detonated;
     }
 
+    public void markDetonated() {
+        detonated = true;
+    }
+
     @Override
     public void onAdded() {
         if (entity != null) {

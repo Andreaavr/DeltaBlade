@@ -10,5 +10,6 @@ public enum EntityType {
     RANK_MARKER,
     EXTRA_LETTER_PICKUP,
     COIN,
+    METEOR,
     MINIGAME_HAZARD
 }

@@ -21,7 +21,8 @@ public class WaveManager {
         BONUS,
         BOSS,
         KAMIKAZE,
-        MONSTER
+        MONSTER,
+        METEOR
     }
 
     public enum FormationType {
@@ -109,6 +110,11 @@ public class WaveManager {
             case BOSS -> setupBossWave(level);
             case KAMIKAZE -> setupKamikazeWave(level);
             case MONSTER -> setupMonsterWave(level);
+            case METEOR -> setupMeteorWave(level);
+        }
+
+        if (currentWaveType == WaveType.METEOR) {
+            spawnCoverMeteors();
         }
 
         set(GameVars.ENEMIES_REMAINING, totalEnemiesInWave);
@@ -239,6 +245,72 @@ public class WaveManager {
         totalEnemiesInWave = totalKamikaze;
         squadsToSpawn = 2 + cycle % 2;
         squadSpawnDelay = 1.5;
+    }
+
+    private void setupMeteorWave(int level) {
+        int cycle = Math.max(1, (level - 1) / 8 + 1);
+        int total = Math.min(6 + cycle, 8);
+        placeMeteorHideSlots(total);
+        totalEnemiesInWave = formationSlots.size();
+        squadsToSpawn = 2;
+        squadSpawnDelay = 2.4;
+    }
+
+    private void spawnCoverMeteors() {
+        List<double[]> rocks = coverMeteorLayout();
+        for (int i = 0; i < rocks.size(); i++) {
+            double[] rock = rocks.get(i);
+            double spin = (i % 2 == 0 ? -1 : 1) * (6 + i * 2);
+            spawn("coverMeteor", new SpawnData(rock[1], rock[2])
+                    .put("variant", (int) rock[0])
+                    .put("scale", rock[5])
+                    .put("spin", spin));
+        }
+    }
+
+    /** variant, x, y, w, h, scale, cx, cy */
+    private List<double[]> coverMeteorLayout() {
+        double left = GameVars.RAIL_WIDTH + 18;
+        double playW = getAppWidth() - 2.0 * GameVars.RAIL_WIDTH - 36;
+        double playH = getAppHeight();
+        // variant, nx, ny, scale — cluster sits mid-field so ships can tuck behind
+        double[][] spec = {
+                {1, 0.18, 0.24, 0.92},
+                {0, 0.50, 0.20, 1.15},
+                {3, 0.84, 0.23, 1.35},
+                {2, 0.34, 0.35, 1.45},
+                {1, 0.70, 0.37, 0.72},
+                {0, 0.12, 0.48, 1.05},
+                {3, 0.48, 0.50, 1.25},
+                {2, 0.86, 0.46, 1.55}
+        };
+        List<double[]> rocks = new ArrayList<>();
+        for (double[] row : spec) {
+            int variant = (int) row[0];
+            double scale = row[3];
+            double[] nativeSize = switch (variant) {
+                case 0 -> new double[] {81, 69};
+                case 1 -> new double[] {125, 118};
+                case 2 -> new double[] {46, 39};
+                default -> new double[] {52, 47};
+            };
+            double w = nativeSize[0] * scale;
+            double h = nativeSize[1] * scale;
+            double cx = left + row[1] * playW;
+            double cy = row[2] * playH;
+            rocks.add(new double[] {variant, cx - w / 2.0, cy - h / 2.0, w, h, scale, cx, cy});
+        }
+        return rocks;
+    }
+
+    private void placeMeteorHideSlots(int total) {
+        List<double[]> rocks = new ArrayList<>(coverMeteorLayout());
+        rocks.sort((a, b) -> Double.compare(b[3] * b[4], a[3] * a[4]));
+        int n = Math.min(total, rocks.size());
+        for (int i = 0; i < n; i++) {
+            double[] rock = rocks.get(i);
+            formationSlots.add(new Point2D(rock[6] - 24, rock[7] - 24));
+        }
     }
 
     private void placeFlythroughSlots(int total, double startY, double spacingY) {
@@ -501,6 +573,7 @@ public class WaveManager {
         int squadIndex = Math.max(0, activeSquads.size() - 1);
         return switch (currentWaveType) {
             case FIGHTERS, MIXED, BONUS, MONSTER -> mixedPath(squadIndex);
+            case METEOR -> new EntryPath(getAppWidth() / 2.0, -50, EntryPath.Type.FROM_CENTER);
             case PEARL -> pearlPath(squadIndex);
             case RANK -> squadIndex % 2 == 0
                     ? new EntryPath(getAppWidth() / 2.0, -50, EntryPath.Type.FROM_CENTER)
@@ -575,6 +648,10 @@ public class WaveManager {
 
         if (currentWaveType == WaveType.MONSTER) {
             return EnemyComponent.EnemyType.MONSTER;
+        }
+
+        if (currentWaveType == WaveType.METEOR) {
+            return slotIndex % 3 == 1 ? EnemyComponent.EnemyType.FAST : EnemyComponent.EnemyType.BASIC;
         }
 
         if (currentWaveType == WaveType.MIXED) {

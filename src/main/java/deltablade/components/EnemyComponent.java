@@ -57,6 +57,12 @@ public class EnemyComponent extends Component {
     private double baseY;
     private double hoverPhase;
     private double hoverAmplitude = 15;
+    private double coverPeekWait;
+    private double coverPeekT;
+    private boolean coverPeeking;
+    private int coverPeekDir = 1;
+    private double coverPeekDist;
+    private double coverPeekEase;
     
     private double diveSpeed = 150;
     private double diveTargetX;
@@ -97,6 +103,7 @@ public class EnemyComponent extends Component {
         this.entrySpeed = 60 + level * 5;
         this.speedX = type.speed * levelMultiplier * (random.nextBoolean() ? 1 : -1);
         this.hoverPhase = random.nextDouble() * Math.PI * 2;
+        this.coverPeekWait = 0.7 + random.nextDouble() * 2.8;
         this.diveSpeed = 90 + level * 10;
         this.minFormationTime = 3.0 + random.nextDouble() * 2.0;
         
@@ -173,7 +180,7 @@ public class EnemyComponent extends Component {
 
     public void setEntryData(double targetX, double targetY, WaveManager.EntryPath path, int squadId) {
         this.targetX = targetX;
-        this.targetY = Math.min(targetY, formationCeiling());
+        this.targetY = formationHoldY(targetY);
         this.entryPath = path;
         this.squadId = squadId;
         this.state = State.ENTERING;
@@ -291,7 +298,7 @@ public class EnemyComponent extends Component {
             } else {
                 state = State.FORMATION;
             }
-            baseY = Math.min(targetY, formationCeiling());
+            baseY = formationHoldY(targetY);
             formationHoldTime = 0;
             
             notifySettled();
@@ -331,14 +338,17 @@ public class EnemyComponent extends Component {
         formationHoldTime += tpf;
         
         hoverPhase += tpf * 2;
-        baseY = Math.min(baseY, formationCeiling());
-        double hoverY = Math.min(baseY + Math.sin(hoverPhase) * hoverAmplitude, formationCeiling() + 6);
-        entity.setY(hoverY);
-        
-        entity.translateX(speedX * tpf);
-        
-        if (entity.getX() <= 0 || entity.getRightX() >= FXGL.getAppWidth()) {
-            speedX = -speedX;
+        boolean cover = meteorCover();
+        if (cover) {
+            updateMeteorPeek(tpf);
+        } else {
+            baseY = Math.min(baseY, formationCeiling());
+            double hoverY = Math.min(baseY + Math.sin(hoverPhase) * hoverAmplitude, formationCeiling() + 6);
+            entity.setY(hoverY);
+            entity.translateX(speedX * tpf);
+            if (entity.getX() <= 0 || entity.getRightX() >= FXGL.getAppWidth()) {
+                speedX = -speedX;
+            }
         }
         
         if (isBonusRunner && formationHoldTime > minFormationTime) {
@@ -347,7 +357,7 @@ public class EnemyComponent extends Component {
             return;
         }
 
-        if (formationHoldTime > minFormationTime) {
+        if (formationHoldTime > minFormationTime && !meteorCover()) {
             double diveChance = 0.001 * (1 + FXGL.geti("level") * 0.2);
             if (random.nextDouble() < diveChance) {
                 startDive();
@@ -355,6 +365,55 @@ public class EnemyComponent extends Component {
         }
     }
     
+    private void updateMeteorPeek(double tpf) {
+        if (!coverPeeking) {
+            coverPeekWait -= tpf;
+            if (coverPeekWait <= 0) {
+                coverPeeking = true;
+                coverPeekT = 0;
+                coverPeekDir = random.nextBoolean() ? 1 : -1;
+                coverPeekDist = 22 + random.nextDouble() * 20;
+            }
+        } else {
+            coverPeekT += tpf;
+            if (coverPeekT >= 1.25) {
+                coverPeeking = false;
+                coverPeekWait = 1.4 + random.nextDouble() * 3.2;
+            }
+        }
+
+        double ease = 0;
+        if (coverPeeking) {
+            if (coverPeekT < 0.32) {
+                ease = smoothstep(coverPeekT / 0.32);
+            } else if (coverPeekT < 0.78) {
+                ease = 1;
+            } else {
+                ease = 1 - smoothstep((coverPeekT - 0.78) / 0.47);
+            }
+        }
+
+        double minX = deltablade.GameVars.RAIL_WIDTH + 4;
+        double maxX = FXGL.getAppWidth() - entity.getWidth() - deltablade.GameVars.RAIL_WIDTH - 4;
+        double peekX = targetX + coverPeekDir * coverPeekDist * ease;
+        entity.setX(Math.max(minX, Math.min(maxX, peekX)));
+        entity.setY(baseY + Math.sin(hoverPhase) * 4 + ease * 10);
+        coverPeekEase = ease;
+    }
+
+    /** True while sitting behind a cover meteor, not far enough out to be shot. */
+    public boolean isTuckedBehindMeteor() {
+        if (!meteorCover() || isUfo || scooped) {
+            return false;
+        }
+        return state == State.FORMATION && coverPeekEase < 0.42;
+    }
+
+    private static double smoothstep(double t) {
+        t = Math.max(0, Math.min(1, t));
+        return t * t * (3 - 2 * t);
+    }
+
     private void startDive() {
         state = State.DIVING;
         
@@ -389,8 +448,12 @@ public class EnemyComponent extends Component {
     private void updateFiring(double tpf) {
         fireTimer += tpf;
         boolean angled = type == EnemyType.FAST || type == EnemyType.TOUGH;
+        boolean cover = meteorCover();
         if (angled) {
             double gap = waveLevel <= 20 ? 2.4 - (waveLevel - 1) * 0.05 : 1.3;
+            if (cover && !isUfo) {
+                gap *= 2.4;
+            }
             if (fireTimer >= gap) {
                 fireTimer = 0;
                 fireNow();
@@ -398,6 +461,9 @@ public class EnemyComponent extends Component {
             return;
         }
         double effectiveFireRate = isBoss ? type.fireRate * 1.5 : type.fireRate;
+        if (cover && !isUfo) {
+            effectiveFireRate *= deltablade.GameVars.METEOR_FIRE_SCALE;
+        }
         if (fireTimer > 0.5 && random.nextDouble() < effectiveFireRate * tpf * 60) {
             fireTimer = 0;
             fireNow();
@@ -605,12 +671,24 @@ public class EnemyComponent extends Component {
         return FXGL.getAppHeight() * deltablade.GameVars.FORMATION_MAX_Y_RATIO;
     }
 
+    private double formationHoldY(double y) {
+        return meteorCover() ? y : Math.min(y, formationCeiling());
+    }
+
     private boolean canFireWhileClimbing() {
         if (state != State.ENTERING || entryPath == null
                 || entryPath.type != WaveManager.EntryPath.Type.FROM_BELOW) {
             return false;
         }
         return entity.getBottomY() < FXGL.getAppHeight() - 130;
+    }
+
+    private boolean meteorCover() {
+        try {
+            return FXGL.<deltablade.DeltaBladeApp>getAppCast().isMeteorChallenge();
+        } catch (Exception ignored) {
+            return false;
+        }
     }
     
     public int getSquadId() {
