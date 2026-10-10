@@ -94,6 +94,8 @@ public final class GameVars {
     public static final int BOSS_SCORE = 1000;
     /** Alle wie viele Level ein grosser Boss kommt. */
     public static final int BOSS_EVERY = 5;
+    /** Alle wie viele Level Warp + Shop kommen (wie frueher: 10, 20, 30 ...). */
+    public static final int WARP_EVERY = 10;
     /** Boss = normales Gegner-Bild, aber viel groesser. */
     public static final int BOSS_DRAW_SIZE = 160;
     public static final int BOSS_HP_BASE = 25;

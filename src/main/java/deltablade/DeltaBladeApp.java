@@ -2206,7 +2206,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
         waveTransition = true;
         set(GameVars.ENEMIES_REMAINING, 0);
-        if (waveManager.getCurrentWaveType() == WaveManager.WaveType.KAMIKAZE) {
+        // Warp + Shop: frueher hing das an der Kamikaze-Welle in Level 10, 20, 30 ...
+        // Seit die Wellen-Reihenfolge zufaellig ist, kommt der Warp fest alle WARP_EVERY Level
+        // (und zusaetzlich nach jeder Kamikaze-Welle).
+        int lvl = geti(GameVars.LEVEL);
+        if ((lvl > 0 && lvl % GameVars.WARP_EVERY == 0)
+                || waveManager.getCurrentWaveType() == WaveManager.WaveType.KAMIKAZE) {
             startWarp();
             return;
         }
