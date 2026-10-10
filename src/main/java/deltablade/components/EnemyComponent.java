@@ -80,6 +80,13 @@ public class EnemyComponent extends Component {
     private int bossNo = 1;
     private int maxHealth = 1;
     private double bossShotTimer = 1.5;
+    private int bossPhase = 1;
+    private double bossHelperTimer = 3.0;
+    private double bossSpecialTimer = 2.5;
+    private boolean bossRingNext = true;
+    private double beamWarmup = 0;
+    private double beamLeft = 0;
+    private double beamTick = 0;
     private double bossSwayPhase = 0;
     private double bossDiveTimer = 0;
     private double bossReturnY = 0;
@@ -662,7 +669,10 @@ public class EnemyComponent extends Component {
     }
     
     private void updateBossHover(double tpf) {
-        bossSwayPhase += tpf * 1.5;
+        if (isBeaming()) {
+            return;
+        }
+        bossSwayPhase += tpf * (bossPhase == 3 ? 2.7 : 1.5);
         bossDiveTimer += tpf;
         
         double swayX = Math.sin(bossSwayPhase) * 80;
@@ -681,22 +691,115 @@ public class EnemyComponent extends Component {
         if (entity.getX() < minX) entity.setX(minX);
         if (entity.getX() > maxX) entity.setX(maxX);
         
-        if (bossDiveTimer > 4.0 && random.nextDouble() < 0.02) {
+        if (bossDiveTimer > (bossPhase == 1 ? 4.0 : 2.5) && random.nextDouble() < 0.02) {
             bossDiveTimer = 0;
             state = State.BOSS_DIVE;
             bossDiving = true;
         }
     }
     
-    /** Boss-Angriff Phase 1: Faecher aus 3-5 Schuessen. */
+    /**
+     * Boss-Angriffe.
+     * Phase 1 (volle Leben): Faecher aus 3-5 Schuessen.
+     * Phase 2 (ab halben Leben): dazu Helfer, die herabstuerzen.
+     * Phase 3 (unter einem Viertel): schneller, rot, Kugel-Kreis und Strahl.
+     */
     private void updateBossAttack(double tpf) {
-        bossShotTimer -= tpf;
-        if (bossShotTimer > 0) {
+        double ratio = health / (double) Math.max(1, maxHealth);
+        int phase = ratio > 0.5 ? 1 : ratio > 0.25 ? 2 : 3;
+        if (phase != bossPhase) {
+            bossPhase = phase;
+            onBossPhaseChange(phase);
+        }
+
+        // Strahl laeuft gerade? Dann nur den.
+        if (beamWarmup > 0 || beamLeft > 0) {
+            updateBeam(tpf);
             return;
         }
-        bossShotTimer = Math.max(0.9, 1.8 - bossNo * 0.08);
-        int count = 3 + Math.min(2, bossNo / 2);
-        bossFan(count, 60, 230);
+
+        bossShotTimer -= tpf;
+        if (bossShotTimer <= 0) {
+            double gap = Math.max(0.9, 1.8 - bossNo * 0.08);
+            if (bossPhase == 3) {
+                gap *= 0.7;
+            }
+            bossShotTimer = gap;
+            int count = 3 + Math.min(2, bossNo / 2) + (bossPhase == 3 ? 1 : 0);
+            bossFan(count, 60, bossPhase == 3 ? 270 : 230);
+        }
+
+        if (bossPhase >= 2) {
+            bossHelperTimer -= tpf;
+            if (bossHelperTimer <= 0) {
+                bossHelperTimer = bossPhase == 3 ? 7.0 : 5.5;
+                int helpers = 2 + Math.min(2, bossNo / 2);
+                FXGL.<deltablade.DeltaBladeApp>getAppCast().spawnBossHelpers(entity, helpers);
+            }
+        }
+
+        if (bossPhase == 3) {
+            bossSpecialTimer -= tpf;
+            if (bossSpecialTimer <= 0) {
+                bossSpecialTimer = 3.2;
+                if (bossRingNext) {
+                    bossRing(14 + Math.min(6, bossNo), 190);
+                } else {
+                    beamWarmup = 0.7;
+                }
+                bossRingNext = !bossRingNext;
+            }
+        }
+    }
+
+    private void onBossPhaseChange(int phase) {
+        var app = FXGL.<deltablade.DeltaBladeApp>getAppCast();
+        if (phase == 2) {
+            app.bossAnnounce("BOSS RUFT HILFE!");
+        } else if (phase == 3) {
+            app.bossAnnounce("BOSS WIRD WUETEND!");
+            javafx.scene.effect.Lighting red = new javafx.scene.effect.Lighting(
+                    new javafx.scene.effect.Light.Distant(45, 50, javafx.scene.paint.Color.rgb(255, 90, 90)));
+            entity.getViewComponent().getParent().setEffect(red);
+            diveSpeed *= 1.3;
+        }
+    }
+
+    /** Kreis aus Kugeln in alle Richtungen. */
+    private void bossRing(int count, double speed) {
+        double cx = entity.getX() + entity.getWidth() / 2.0;
+        double cy = entity.getY() + entity.getHeight() / 2.0;
+        double off = random.nextDouble() * Math.PI;
+        for (int i = 0; i < count; i++) {
+            double a = off + i * Math.PI * 2 / count;
+            FXGL.<deltablade.DeltaBladeApp>getAppCast().spawnBossBullet(cx, cy, Math.cos(a) * speed, Math.sin(a) * speed);
+        }
+        deltablade.SoundHelper.play("enemy_shot.wav");
+    }
+
+    /** Strahl: kurz zittern (Warnung), dann ein dichter Schuss-Strom gerade nach unten. */
+    private void updateBeam(double tpf) {
+        if (beamWarmup > 0) {
+            beamWarmup -= tpf;
+            entity.translateX((random.nextDouble() - 0.5) * 6);
+            if (beamWarmup <= 0) {
+                beamLeft = 1.3;
+                beamTick = 0;
+            }
+            return;
+        }
+        beamLeft -= tpf;
+        beamTick -= tpf;
+        if (beamTick <= 0) {
+            beamTick = 0.05;
+            double cx = entity.getX() + entity.getWidth() / 2.0;
+            double by = entity.getY() + entity.getHeight() * 0.85;
+            FXGL.<deltablade.DeltaBladeApp>getAppCast().spawnBossBullet(cx, by, 0, 430);
+        }
+    }
+
+    public boolean isBeaming() {
+        return beamWarmup > 0 || beamLeft > 0;
     }
 
     private void bossFan(int count, double spreadDeg, double speed) {

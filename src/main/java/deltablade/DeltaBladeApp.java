@@ -1531,6 +1531,30 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 .put("kind", kind));
     }
 
+    public void bossAnnounce(String text) {
+        showBanner(text, Color.ORANGERED, 1.4);
+        SoundHelper.play("explode_ship.wav");
+    }
+
+    /** Boss Phase 2+: kleine Helfer stuerzen sich auf den Spieler. */
+    public void spawnBossHelpers(Entity boss, int count) {
+        if (boss == null || !boss.isActive() || player == null) {
+            return;
+        }
+        double cx = boss.getX() + boss.getWidth() / 2.0;
+        double by = boss.getY() + boss.getHeight() * 0.7;
+        int level = geti(GameVars.LEVEL);
+        for (int i = 0; i < count; i++) {
+            double ox = (i - (count - 1) / 2.0) * 40;
+            inc(GameVars.ENEMIES_REMAINING, 1);
+            spawn("enemy", new com.almasb.fxgl.entity.SpawnData(cx + ox - 24, by)
+                    .put("enemyType", EnemyComponent.EnemyType.FAST)
+                    .put("level", level)
+                    .put("diveNow", true)
+                    .put("diveTargetX", player.getX() + ox));
+        }
+    }
+
     /** Boss-Schuss mit freier Richtung. */
     public void spawnBossBullet(double x, double y, double vx, double vy) {
         spawnEnemyBullet(x, y, vx, vy, false);
