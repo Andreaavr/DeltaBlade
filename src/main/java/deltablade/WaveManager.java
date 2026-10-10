@@ -98,6 +98,7 @@ public class WaveManager {
         this.squadSpawnDelay = 2.5;
         this.bonusPerfectStreak = 0;
         this.stopped = false;
+        this.groupDiveTimer = 3.0;
 
         currentWaveType = forcedType != null ? forcedType : resolveWaveType(level);
 
@@ -453,11 +454,43 @@ public class WaveManager {
         return 1.0 + 0.06 * Math.sin(formationClock * 1.4);
     }
 
+    private double groupDiveTimer = 3.0;
+
+    /** Schritt 6: In Abstaenden stuerzen 1-3 benachbarte Schiffe zusammen herab. */
+    private void updateGroupDives(double tpf) {
+        groupDiveTimer -= tpf;
+        if (groupDiveTimer > 0) {
+            return;
+        }
+        double gap = Math.max(1.3, 4.6 - currentLevel * 0.15);
+        groupDiveTimer = gap * (0.8 + Math.random() * 0.4);
+
+        List<Entity> ready = new ArrayList<>();
+        for (Entity e : getGameWorld().getEntitiesByType(EntityType.ENEMY)) {
+            if (e.isActive() && e.hasComponent(EnemyComponent.class)
+                    && e.getComponent(EnemyComponent.class).canGroupDive()) {
+                ready.add(e);
+            }
+        }
+        if (ready.isEmpty()) {
+            return;
+        }
+        int maxGroup = currentLevel < 3 ? 1 : currentLevel < 6 ? 2 : 3;
+        int size = 1 + (int) (Math.random() * maxGroup);
+        Entity leader = ready.get((int) (Math.random() * ready.size()));
+        ready.sort((a, b) -> Double.compare(a.distance(leader), b.distance(leader)));
+        int side = leader.getCenter().getX() < getAppWidth() / 2.0 ? -1 : 1;
+        for (int i = 0; i < Math.min(size, ready.size()); i++) {
+            ready.get(i).getComponent(EnemyComponent.class).scheduleGroupDive(i * 0.22, side);
+        }
+    }
+
     public void update(double tpf) {
         formationClock += tpf;
         if (stopped) {
             return;
         }
+        updateGroupDives(tpf);
         if (!initialDelayPassed) {
             squadSpawnTimer += tpf;
             if (squadSpawnTimer >= initialDelay) {

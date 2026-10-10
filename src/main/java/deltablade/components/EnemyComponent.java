@@ -70,6 +70,8 @@ public class EnemyComponent extends Component {
     private double diveTargetX;
     private double diveTime;
     private int diveSide = 1;
+    private double pendingDive = -1;
+    private int pendingSide = 0;
     private double heading;
     
     private double fireTimer = 0;
@@ -442,7 +444,19 @@ public class EnemyComponent extends Component {
             return;
         }
 
-        if (formationHoldTime > minFormationTime && !meteorCover()) {
+        if (pendingDive >= 0) {
+            pendingDive -= tpf;
+            if (pendingDive < 0) {
+                startDive();
+                if (pendingSide != 0) {
+                    diveSide = pendingSide;
+                }
+            }
+            return;
+        }
+
+        // Schiffe mit Rueckkehr stuerzen in Gruppen (gesteuert vom WaveManager).
+        if (formationHoldTime > minFormationTime && !meteorCover() && !canWrapDive()) {
             double diveChance = 0.001 * (1 + FXGL.geti("level") * 0.2);
             if (random.nextDouble() < diveChance) {
                 startDive();
@@ -550,6 +564,17 @@ public class EnemyComponent extends Component {
             FXGL.<deltablade.DeltaBladeApp>getAppCast().onEnemyLeftScreen(squadId);
             entity.removeFromWorld();
         }
+    }
+
+    /** Kann dieses Schiff jetzt bei einem Gruppen-Sturzflug mitmachen? */
+    public boolean canGroupDive() {
+        return state == State.FORMATION && !scooped && pendingDive < 0
+                && formationHoldTime > minFormationTime && canWrapDive();
+    }
+
+    public void scheduleGroupDive(double delay, int side) {
+        pendingDive = Math.max(0, delay);
+        pendingSide = side;
     }
 
     /** Wer darf unten raus und oben wieder rein? Kamikaze, Bonus, UFO, Boss nicht. */
