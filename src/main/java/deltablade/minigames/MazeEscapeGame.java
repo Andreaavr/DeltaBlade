@@ -109,6 +109,7 @@ public class MazeEscapeGame implements Minigame {
     // Geheimer Bonus: alle Extras im Maze eingesammelt.
     private boolean perfectRun;
     private int perfectScore;
+    private static final int SCORE_MULT = 10;
     private int perfectMoney;
     private Text perfectText;
     private static final double SHIELD_SECONDS = GameVars.SHIELD_DURATION;
@@ -1546,20 +1547,20 @@ public class MazeEscapeGame implements Minigame {
         int leftover = Math.max(0, (int) Math.ceil(timeLeft));
         int turrets = silencedTurretCount();
         int picked = collectedKinds.size();
-        // Immediate clear score in the thousands (good run ~2k–5k+).
-        int timeScore = leftover * 70;
-        int turretScore = turrets * 280;
-        int bonusScore = picked * 150;
-        int score = 1800 + timeScore + turretScore + bonusScore + moneyCollected * 4;
+        // Alle Punkte x10 (SCORE_MULT); Geld bleibt gleich.
+        int timeScore = leftover * 70 * SCORE_MULT;
+        int turretScore = turrets * 280 * SCORE_MULT;
+        int bonusScore = picked * 150 * SCORE_MULT;
+        int score = 1800 * SCORE_MULT + timeScore + turretScore + bonusScore + moneyCollected * 4 * SCORE_MULT;
         int money = 60 + leftover * 2 + turrets * 12 + picked * 8;
         if (shieldUp()) {
-            score += 350;
+            score += 350 * SCORE_MULT;
             money += 20;
         }
         // Geheimer Super-Bonus: wirklich ALLE Extras im Maze geholt.
         perfectRun = !bonuses.isEmpty() && bonuses.stream().allMatch(b -> b.taken);
         if (perfectRun) {
-            perfectScore = score * 4 + 5000;
+            perfectScore = score * 4 + 5000 * SCORE_MULT;
             perfectMoney = 500 + money * 3;
             score += perfectScore;
             money += perfectMoney;
@@ -1579,13 +1580,13 @@ public class MazeEscapeGame implements Minigame {
         boolean lite = turrets > 0 || picked > 0 || moneyCollected > 0;
         int score;
         int money;
-        int turretPts = turrets * 80;
-        int bonusPts = picked * 70;
+        int turretPts = turrets * 80 * SCORE_MULT;
+        int bonusPts = picked * 70 * SCORE_MULT;
         if (lite) {
-            score = 200 + turretPts + bonusPts + moneyCollected;
+            score = 200 * SCORE_MULT + turretPts + bonusPts + moneyCollected * SCORE_MULT;
             money = 20 + turrets * 5 + picked * 4 + moneyCollected / 2;
         } else {
-            score = 100;
+            score = 100 * SCORE_MULT;
             money = 10;
             turretPts = 0;
             bonusPts = 0;
