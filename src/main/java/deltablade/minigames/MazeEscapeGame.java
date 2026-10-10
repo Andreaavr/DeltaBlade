@@ -104,7 +104,7 @@ public class MazeEscapeGame implements Minigame {
 
     private double timeLeft;
     private int moneyCollected;
-    private boolean shotLoaded;
+    private int shotsLoaded;
     private double shieldTime;
     // Geheimer Bonus: alle Extras im Maze eingesammelt.
     private boolean perfectRun;
@@ -225,7 +225,7 @@ public class MazeEscapeGame implements Minigame {
         this.finished = false;
         this.timeLeft = TIME_LIMIT;
         this.moneyCollected = 0;
-        this.shotLoaded = false;
+        this.shotsLoaded = 0;
         this.shieldTime = 0;
         this.fireGraceLeft = FIRE_GRACE;
         this.hurryWarned = false;
@@ -355,7 +355,7 @@ public class MazeEscapeGame implements Minigame {
         if (activeBolt != null) {
             return;
         }
-        if (!shotLoaded) {
+        if (shotsLoaded <= 0) {
             if (noShotBannerCd <= 0) {
                 noShotBannerCd = 0.85;
                 host.displayBanner("NO SHOT", Color.LIGHTGRAY, 0.7);
@@ -844,8 +844,8 @@ public class MazeEscapeGame implements Minigame {
             hudMoney.setText("$" + moneyCollected);
         }
         if (hudShot != null) {
-            hudShot.setText(shotLoaded ? "SHOT READY" : "SHOT ---");
-            hudShot.setFill(shotLoaded ? Color.ORANGE : Color.rgb(120, 120, 140));
+            hudShot.setText(shotsLoaded > 0 ? "SHOT x" + shotsLoaded : "SHOT ---");
+            hudShot.setFill(shotsLoaded > 0 ? Color.ORANGE : Color.rgb(120, 120, 140));
         }
         if (hudShield != null) {
             hudShield.setText(shieldUp() ? "SHIELD " + (int) Math.ceil(shieldTime) : "SHIELD ---");
@@ -876,7 +876,8 @@ public class MazeEscapeGame implements Minigame {
         Collections.shuffle(onPath, RANDOM);
 
         List<BonusKind> kinds = new ArrayList<>(List.of(
-                BonusKind.SHOT, BonusKind.SHIELD, BonusKind.TIME,
+                BonusKind.SHOT, BonusKind.SHOT, BonusKind.SHOT,
+                BonusKind.SHIELD, BonusKind.SHIELD, BonusKind.SHIELD, BonusKind.TIME,
                 BonusKind.MONEY, BonusKind.MONEY, BonusKind.MONEY,
                 BonusKind.WEAPON, BonusKind.AMMO, BonusKind.TIME
         ));
@@ -1343,7 +1344,7 @@ public class MazeEscapeGame implements Minigame {
                     SoundHelper.play("shield.wav");
                 }
                 case SHOT -> {
-                    shotLoaded = true;
+                    shotsLoaded++;
                     SoundHelper.play("missile_launch.wav");
                 }
                 case WEAPON -> {
@@ -1429,7 +1430,7 @@ public class MazeEscapeGame implements Minigame {
             return;
         }
 
-        shotLoaded = false;
+        shotsLoaded = Math.max(0, shotsLoaded - 1);
         refreshHud();
         SoundHelper.play("shot.wav");
 
