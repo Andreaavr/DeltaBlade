@@ -53,6 +53,7 @@ public class EnemyComponent extends Component {
     private double entryProgress = 0;
     private double entrySpeed = 200;
     private double entryCurvePhase = 0;
+    private int flightIndex = 0;
     
     private double speedX;
     private double baseY;
@@ -279,6 +280,10 @@ public class EnemyComponent extends Component {
             updateBeadMarch(tpf);
             return;
         }
+        if (entryPath != null && entryPath.flight != null) {
+            updateFlight(tpf);
+            return;
+        }
 
         entryProgress += tpf * entrySpeed / 300.0;
         entryCurvePhase += tpf * 4;
@@ -292,6 +297,62 @@ public class EnemyComponent extends Component {
         
         if (dist < 5 || (entryProgress >= 1.0 && dist < 30)) {
             entity.setPosition(targetX, targetY);
+            settleAfterEntry();
+            return;
+        }
+        moveEnteringStep(tpf, dx, dy, dist);
+    }
+
+    /** Schritt 3: Schiff fliegt einen festen Flugweg ab, dann auf seinen Platz. */
+    private void updateFlight(double tpf) {
+        double speed = Math.min(300, 200 + waveLevel * 4);
+        double step = speed * tpf;
+        java.util.List<javafx.geometry.Point2D> pts = entryPath.flight;
+        double cx = entity.getX() + entity.getWidth() / 2.0;
+        double cy = entity.getY() + entity.getHeight() / 2.0;
+        while (step > 0) {
+            double tx;
+            double ty;
+            boolean last = flightIndex >= pts.size();
+            if (last) {
+                if (baseY == 0) {
+                    baseY = targetY;
+                }
+                tx = slotX() + entity.getWidth() / 2.0;
+                ty = slotY() + entity.getHeight() / 2.0;
+            } else {
+                tx = pts.get(flightIndex).getX();
+                ty = pts.get(flightIndex).getY();
+            }
+            double dx = tx - cx;
+            double dy = ty - cy;
+            double d = Math.hypot(dx, dy);
+            if (d <= step) {
+                cx = tx;
+                cy = ty;
+                step -= d;
+                if (last) {
+                    entity.setPosition(cx - entity.getWidth() / 2.0, cy - entity.getHeight() / 2.0);
+                    double sx = entity.getX();
+                    settleAfterEntry();
+                    entity.setX(sx);
+                    return;
+                }
+                flightIndex++;
+            } else {
+                double vx = dx / d;
+                double vy = dy / d;
+                cx += vx * step;
+                cy += vy * step;
+                faceToward(vx * speed, vy * speed, tpf);
+                step = 0;
+            }
+        }
+        entity.setPosition(cx - entity.getWidth() / 2.0, cy - entity.getHeight() / 2.0);
+    }
+
+    private void settleAfterEntry() {
+        {
             if (isBoss) {
                 state = State.BOSS_HOVER;
                 baseY = targetY;
@@ -310,9 +371,10 @@ public class EnemyComponent extends Component {
             formationHoldTime = 0;
             
             notifySettled();
-            return;
         }
-        
+    }
+
+    private void moveEnteringStep(double tpf, double dx, double dy, double dist) {
         double moveSpeed = entrySpeed * tpf;
         
         double curveOffset = 0;

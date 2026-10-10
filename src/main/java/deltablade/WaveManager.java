@@ -523,12 +523,16 @@ public class WaveManager {
             double laneShift = 0;
             if (paired) {
                 laneShift = (index % 2 == 0 ? -0.5 : 0.5) * path.pairGap;
+            } else if (path.flight != null) {
+                laneShift = 0;
             } else if (currentWaveType != WaveType.PEARL) {
                 laneShift = (index - (squadSize - 1) / 2.0) * 42;
             }
             double startX = path.startX + laneShift;
             double startY;
-            if (currentWaveType == WaveType.PEARL) {
+            if (path.flight != null) {
+                startY = path.startY;
+            } else if (currentWaveType == WaveType.PEARL) {
                 double trail = pairIndex * 44;
                 startY = path.type == EntryPath.Type.FROM_BELOW ? path.startY + trail : path.startY - trail;
             } else {
@@ -571,7 +575,8 @@ public class WaveManager {
             if (currentWaveType == WaveType.PEARL || index == 0) {
                 spawnEnemy.run();
             } else {
-                double delay = currentWaveType == WaveType.KAMIKAZE || currentWaveType == WaveType.BONUS
+                double delay = path.flight != null ? index * 0.30
+                        : currentWaveType == WaveType.KAMIKAZE || currentWaveType == WaveType.BONUS
                         ? index * 0.28
                         : index * 0.42;
                 runOnce(spawnEnemy, javafx.util.Duration.seconds(delay));
@@ -613,6 +618,12 @@ public class WaveManager {
     }
 
     private EntryPath mixedPath(int squadIndex) {
+        // Ab Level 2 (und jede 2. Gruppe in Level 1): Galaga-Flugwege.
+        if (currentLevel >= 2 || squadIndex % 2 == 1) {
+            FlightPaths.Kind[] kinds = FlightPaths.Kind.values();
+            FlightPaths.Kind kind = kinds[Math.floorMod(currentLevel * 3 + squadIndex, kinds.length)];
+            return EntryPath.flight(kind, squadIndex % 2 == 1);
+        }
         return switch (Math.floorMod(squadIndex + currentLevel, 4)) {
             case 0 -> new EntryPath(-50, 100, EntryPath.Type.FROM_LEFT_CURVE);
             case 1 -> new EntryPath(getAppWidth() + 50, 100, EntryPath.Type.FROM_RIGHT_CURVE);
@@ -796,6 +807,18 @@ public class WaveManager {
         public final Type type;
         public final double pairGap;
         public final boolean beadString;
+        /** Optionaler Flugweg (Bogen, Schleife ...). null = alte einfache Anflugart. */
+        public List<Point2D> flight;
+        public String flightName;
+
+        public static EntryPath flight(FlightPaths.Kind kind, boolean mirror) {
+            List<Point2D> pts = FlightPaths.build(kind, mirror);
+            Point2D first = pts.get(0);
+            EntryPath p = new EntryPath(first.getX(), first.getY(), Type.FROM_CENTER);
+            p.flight = pts;
+            p.flightName = kind.name();
+            return p;
+        }
 
         public EntryPath(double startX, double startY, Type type) {
             this(startX, startY, type, 0, false);
