@@ -33,6 +33,7 @@ public class EnemyComponent extends Component {
         ENTERING,
         FORMATION,
         DIVING,
+        RETURNING,
         BOSS_HOVER,
         BOSS_DIVE,
         UFO_SWEEP
@@ -66,6 +67,9 @@ public class EnemyComponent extends Component {
     
     private double diveSpeed = 150;
     private double diveTargetX;
+    private double diveTime;
+    private int diveSide = 1;
+    private double heading;
     
     private double fireTimer = 0;
     private double formationHoldTime = 0;
@@ -190,6 +194,8 @@ public class EnemyComponent extends Component {
     
     @Override
     public void onAdded() {
+        entity.getTransformComponent().setRotationOrigin(
+                new javafx.geometry.Point2D(entity.getWidth() / 2.0, entity.getHeight() / 2.0));
         if (diveOnAdd) {
             state = State.DIVING;
             baseY = entity.getY();
@@ -239,6 +245,7 @@ public class EnemyComponent extends Component {
             case ENTERING -> updateEntering(tpf);
             case FORMATION -> updateFormation(tpf);
             case DIVING -> updateDiving(tpf);
+            case RETURNING -> updateReturning(tpf);
             case BOSS_HOVER -> updateBossHover(tpf);
             case BOSS_DIVE -> updateBossDive(tpf);
             case UFO_SWEEP -> updateUfoSweep(tpf);
@@ -416,6 +423,9 @@ public class EnemyComponent extends Component {
 
     private void startDive() {
         state = State.DIVING;
+        diveTime = 0;
+        double cx = entity.getX() + entity.getWidth() / 2.0;
+        diveSide = cx < FXGL.getAppWidth() / 2.0 ? -1 : 1;
         
         try {
             var player = FXGL.getGameWorld().getSingleton(deltablade.EntityType.PLAYER);
@@ -426,11 +436,24 @@ public class EnemyComponent extends Component {
     }
     
     private void updateDiving(double tpf) {
-        double dx = diveTargetX - entity.getX();
-        double horizontalSpeed = Math.signum(dx) * Math.min(Math.abs(dx), 100) * tpf;
-        
-        entity.translateX(horizontalSpeed);
-        entity.translateY(diveSpeed * tpf);
+        diveTime += tpf;
+        double vx;
+        double vy;
+        if (canWrapDive() && diveTime < 0.6) {
+            // Galaga-Bogen: erst kurz nach oben/aussen, dann runter.
+            double t = diveTime / 0.6;
+            vx = diveSide * 150 * (1 - t);
+            vy = -110 * (1 - t) + diveSpeed * t;
+        } else {
+            double dx = diveTargetX - entity.getX();
+            vx = Math.signum(dx) * Math.min(Math.abs(dx), 100);
+            vy = diveSpeed;
+        }
+        entity.translateX(vx * tpf);
+        entity.translateY(vy * tpf);
+        if (canWrapDive()) {
+            faceToward(vx, vy, tpf);
+        }
 
         if (canSplit && !hasSplit && isMonster && waveLevel >= deltablade.GameVars.MONSTER_SPLIT_MIN_LEVEL
                 && entity.getY() > FXGL.getAppHeight() * 0.40) {
@@ -440,8 +463,73 @@ public class EnemyComponent extends Component {
         }
         
         if (entity.getY() > FXGL.getAppHeight()) {
+            if (canWrapDive()) {
+                // Unten raus, oben wieder rein, zurueck auf den Platz.
+                entity.setY(-entity.getHeight() - 10);
+                state = State.RETURNING;
+                return;
+            }
             FXGL.<deltablade.DeltaBladeApp>getAppCast().onEnemyLeftScreen(squadId);
             entity.removeFromWorld();
+        }
+    }
+
+    /** Wer darf unten raus und oben wieder rein? Kamikaze, Bonus, UFO, Boss nicht. */
+    private boolean canWrapDive() {
+        return !isKamikaze && !isBonusRunner && !isUfo && !isBoss && !diveOnAdd
+                && entryPath != null && !meteorCover();
+    }
+
+    private void updateReturning(double tpf) {
+        double tx = slotX();
+        double ty = slotY();
+        double dx = tx - entity.getX();
+        double dy = ty - entity.getY();
+        double dist = Math.hypot(dx, dy);
+        double speed = Math.max(150, entrySpeed * 1.6);
+        if (dist < Math.max(6, speed * tpf)) {
+            entity.setPosition(tx, ty);
+            entity.setRotation(0);
+            heading = 0;
+            state = State.FORMATION;
+            formationHoldTime = 0;
+            return;
+        }
+        double vx = dx / dist * speed;
+        double vy = dy / dist * speed;
+        entity.translate(vx * tpf, vy * tpf);
+        faceToward(vx, vy, tpf);
+    }
+
+    /** Formations-Platz (X). */
+    private double slotX() {
+        return targetX;
+    }
+
+    /** Formations-Platz (Y). */
+    private double slotY() {
+        return baseY;
+    }
+
+    /** Schiff dreht sich sanft in Flugrichtung (Bild schaut nach unten). */
+    private void faceToward(double vx, double vy, double tpf) {
+        if (Math.abs(vx) + Math.abs(vy) < 1) {
+            return;
+        }
+        double want = Math.toDegrees(Math.atan2(vy, vx)) - 90;
+        double diff = ((want - heading) % 360 + 540) % 360 - 180;
+        heading += diff * Math.min(1, tpf * 10);
+        entity.setRotation(heading);
+    }
+
+    private void relaxRotation(double tpf) {
+        if (heading != 0) {
+            double diff = ((-heading) % 360 + 540) % 360 - 180;
+            heading += diff * Math.min(1, tpf * 8);
+            if (Math.abs(heading) < 0.5) {
+                heading = 0;
+            }
+            entity.setRotation(heading);
         }
     }
     
