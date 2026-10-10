@@ -3092,8 +3092,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             laserShotCounted = true;
         }
         laserHeat += tpf;
-        double heatLimit = 3.0;
-        double coolDown = twin ? 0.5 : 1.0;
+        double heatLimit = twin ? 3.0 : 2.0;
+        double coolDown = twin ? 0.5 : 1.5;
         if (laserHeat >= heatLimit) {
             laserHeat = 0;
             laserCooldown = coolDown;
@@ -3197,8 +3197,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
     }
 
+    private static final double NEEDLE_TICK = 0.14;
+
     private double twinOrNeedleTick(int damage) {
-        return damage >= 2 ? 0.10 : 0.10;
+        // Needle (Schaden 2) tickt seltener: ~14 statt 20 Schaden pro Sekunde. Twin unveraendert.
+        return damage >= 2 ? NEEDLE_TICK : 0.10;
     }
 
     private void fireShopImpulse(ShopWeapon weapon) {
