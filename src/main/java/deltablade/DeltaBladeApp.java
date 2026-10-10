@@ -1625,6 +1625,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         bossBarFill.setFill(ratio > 0.5 ? Color.ORANGE : ratio > 0.25 ? Color.ORANGERED : Color.RED);
         bossBarLabel.setText("BOSS " + boss.getBossNumber());
         bossBar.setVisible(true);
+        // Nach Neustart werden alle UI-Knoten entfernt -> Balken wieder einhaengen.
+        if (bossBar.getParent() == null) {
+            getGameScene().addUINode(bossBar);
+        }
+        // Immer ganz oben zeichnen (Banner, Laser, HUD kommen spaeter dazu).
+        bossBar.toFront();
     }
 
     public void splitMonster(Entity parent, EnemyComponent parentEc) {
