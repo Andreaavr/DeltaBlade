@@ -62,7 +62,7 @@ public final class SettlementOverlay {
                         + "-fx-background-radius: 10;"
                         + "-fx-border-radius: 10;");
 
-        Text title = mono("ENDABRECHNUNG", 26, Color.CYAN);
+        Text title = mono("FINAL TALLY", 26, Color.CYAN);
         title.setEffect(new DropShadow(12, Color.rgb(40, 180, 255, 0.7)));
         Text base = mono("SCORE  " + format(baseScore), 16, Color.LIGHTGRAY);
 
@@ -84,7 +84,7 @@ public final class SettlementOverlay {
         total.setOpacity(0);
         panel.getChildren().addAll(spacer(), total);
 
-        Text hint = mono("SPACE / ENTER  WEITER", 12, Color.rgb(160, 180, 200));
+        Text hint = mono("SPACE / ENTER  CONTINUE", 12, Color.rgb(160, 180, 200));
         hint.setOpacity(0);
         panel.getChildren().add(hint);
 

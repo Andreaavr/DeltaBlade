@@ -782,9 +782,9 @@ public class EnemyComponent extends Component {
     private void onBossPhaseChange(int phase) {
         var app = FXGL.<deltablade.DeltaBladeApp>getAppCast();
         if (phase == 2) {
-            app.bossAnnounce("BOSS RUFT HILFE!");
+            app.bossAnnounce("BOSS CALLS FOR HELP!");
         } else if (phase == 3) {
-            app.bossAnnounce("BOSS WIRD WUETEND!");
+            app.bossAnnounce("BOSS IS ENRAGED!");
             javafx.scene.effect.Lighting red = new javafx.scene.effect.Lighting(
                     new javafx.scene.effect.Light.Distant(45, 50, javafx.scene.paint.Color.rgb(255, 90, 90)));
             entity.getViewComponent().getParent().setEffect(red);

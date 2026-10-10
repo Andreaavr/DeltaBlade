@@ -23,13 +23,13 @@ final class MusicLocations {
 
     private static final String README_NAME = "LIESMICH.txt";
     private static final String README = """
-            DeltaBlade — eigene Musik
+            DeltaBlade - your own music
 
-            Lege MP3-, WAV- oder M4A-Dateien in diesen Ordner.
-            Unterordner werden ignoriert.
+            Put MP3, WAV or M4A files into this folder.
+            Subfolders are ignored.
 
-            Danach im Spiel: OPTIONEN → Titel mit < > wählen.
-            Der Ordner lässt sich dort auch mit „ORDNER ÖFFNEN“ anzeigen.
+            Then in the game: OPTIONS -> pick a TRACK with < >.
+            You can also open this folder there with "OPEN FOLDER".
             """;
 
     private MusicLocations() {}

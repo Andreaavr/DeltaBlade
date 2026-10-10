@@ -139,7 +139,7 @@ public class CognitiveTestGame implements Minigame {
 
         timeLeft -= tpf;
         if (timerText != null) {
-            timerText.setText(String.format("ZEIT %04.1f", Math.max(0, timeLeft)));
+            timerText.setText(String.format("TIME %04.1f", Math.max(0, timeLeft)));
             timerText.setFill(timeLeft < 8 ? Color.ORANGERED : Color.CYAN);
         }
 
@@ -250,7 +250,7 @@ public class CognitiveTestGame implements Minigame {
             }
         }
 
-        timerText = new Text(String.format("ZEIT %04.1f", timeLeft));
+        timerText = new Text(String.format("TIME %04.1f", timeLeft));
         timerText.setFont(Font.font("Monospace", FontWeight.BOLD, 16));
         timerText.setFill(Color.CYAN);
         timerText.setEffect(new DropShadow(10, Color.CYAN));
@@ -259,7 +259,7 @@ public class CognitiveTestGame implements Minigame {
         host.addUi(timerText);
         ui.add(timerText);
 
-        hintText = new Text("KLICK / FEUER = WENDEN");
+        hintText = new Text("CLICK / FIRE = FLIP");
         hintText.setFont(Font.font("Monospace", FontWeight.BOLD, 10));
         hintText.setFill(Color.rgb(140, 190, 210));
         hintText.setTranslateX(host.playRight() - 168);
@@ -458,7 +458,7 @@ public class CognitiveTestGame implements Minigame {
         awaitingCashout = true;
         cashoutTimer = 2.6;
         if (hintText != null) {
-            hintText.setText("B / RECHTSKLICK = ZEITBONUS");
+            hintText.setText("B / RIGHT CLICK = TIME BONUS");
             hintText.setFill(Color.GOLD);
         }
         host.displayBanner("CLEAR  B = BONUS", Color.CYAN, 2.0);

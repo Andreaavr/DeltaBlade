@@ -487,7 +487,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         Button startButton = createMenuButton("START GAME");
         startButton.setOnAction(e -> startActualGame());
         
-        Button optionsButton = createMenuButton("OPTIONEN");
+        Button optionsButton = createMenuButton("OPTIONS");
         optionsButton.setOnAction(e -> showOptions());
 
         Button hiscoreButton = createMenuButton("HISCORE");
@@ -499,17 +499,17 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         menuBox.setTranslateX(getAppWidth() / 2.0 - 130);
         menuBox.setTranslateY(240);
         
-        Text controls = new Text("Pfeiltasten/A,D = Bewegen | SPACE/X = Feuer (tippen)");
+        Text controls = new Text("ARROWS/A,D = MOVE | SPACE/X = FIRE (TAP)");
         controls.setFont(Font.font("Monospace", 12));
         controls.setFill(Color.GRAY);
         centerHorizontally(controls, 455);
         
-        Text extraInfo = new Text("B = Schüsse gleichzeitig | W = Waffe | EXTRA = Leben");
+        Text extraInfo = new Text("B = SHOTS AT ONCE | W = WEAPON | EXTRA = LIFE");
         extraInfo.setFont(Font.font("Monospace", 12));
         extraInfo.setFill(Color.GOLD);
         centerHorizontally(extraInfo, 478);
         
-        Text optionsHint = new Text("ESC = Optionen");
+        Text optionsHint = new Text("ESC = OPTIONS");
         optionsHint.setFont(Font.font("Monospace", 11));
         optionsHint.setFill(Color.rgb(120, 160, 190));
         centerHorizontally(optionsHint, 500);
@@ -957,19 +957,19 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 color = Color.MEDIUMPURPLE;
             }
             case KREISEL -> {
-                message = "KREISEL - WAVE " + geti(GameVars.LEVEL);
+                message = "SPINNER - WAVE " + geti(GameVars.LEVEL);
                 color = Color.LIGHTGREEN;
             }
             case ZANGE -> {
-                message = "ZANGE - WAVE " + geti(GameVars.LEVEL);
+                message = "PINCER - WAVE " + geti(GameVars.LEVEL);
                 color = Color.DEEPSKYBLUE;
             }
             case WASSERFALL -> {
-                message = "WASSERFALL - WAVE " + geti(GameVars.LEVEL);
+                message = "CASCADE - WAVE " + geti(GameVars.LEVEL);
                 color = Color.LIGHTSKYBLUE;
             }
             case STURM -> {
-                message = "STURM - WAVE " + geti(GameVars.LEVEL);
+                message = "RUSH - WAVE " + geti(GameVars.LEVEL);
                 color = Color.ORANGE;
             }
             case METEOR -> {
@@ -1018,7 +1018,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
 
     private void showScorePopup(int amount, Color color, double fontSize) {
-        Text text = new Text("+" + String.format(Locale.GERMAN, "%,d", amount));
+        Text text = new Text("+" + String.format(Locale.US, "%,d", amount));
         text.setFont(Font.font("Monospace", FontWeight.BOLD, fontSize));
         text.setFill(Color.WHITE);
         text.setStroke(color);
@@ -2075,7 +2075,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                     inc(GameVars.WEAPON_GRADE, 1);
                 }
                 inc(GameVars.SCORE, 50);
-                showBanner("WAFFE", Color.GOLD, 1.2);
+                showBanner("WEAPON", Color.GOLD, 1.2);
                 SoundHelper.play("weapon.wav");
             }
             case EXTRA_AMMO -> {
@@ -2083,7 +2083,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                     inc(GameVars.AMMO_CAP, 1);
                 }
                 inc(GameVars.SCORE, 25);
-                showBanner("MUNI", Color.CYAN, 1.2);
+                showBanner("AMMO", Color.CYAN, 1.2);
                 SoundHelper.play("ammo.wav");
             }
             case EXTRA_LIFE -> {
@@ -2136,7 +2136,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 inc(GameVars.SCORE, 25);
                 if (findActiveMissile() == null) {
                     launchPlayerMissile();
-                    showBanner("MISSILE  SPACE LENKEN", Color.ORANGERED, 1.2);
+                    showBanner("MISSILE  SPACE = STEER", Color.ORANGERED, 1.2);
                 } else {
                     showBanner("MISSILE LIVE", Color.ORANGERED, 1.0);
                 }
@@ -2383,7 +2383,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
 
     private String titleHiText(boolean global) {
         var table = global ? HighScoreClient.cachedEntries() : HighScoreStore.entries();
-        String tag = global ? "GLOBAL" : "LOKAL";
+        String tag = global ? "GLOBAL" : "LOCAL";
         if (table.isEmpty()) {
             return "HI " + tag + "  ---  000000";
         }
@@ -2424,7 +2424,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
 
     private void showHighScoreTable(Integer localHighlight, Integer globalHighlight, boolean fromTitle, boolean fetchRemote) {
         hideHighScoreOverlay();
-        String closeLabel = fromTitle ? "ZURÜCK" : "R = NEUSTART";
+        String closeLabel = fromTitle ? "BACK" : "R = RESTART";
         Runnable onClose = fromTitle ? this::hideHighScoreOverlay : null;
         highScoreOverlay = HighScoreOverlay.table(localHighlight, globalHighlight, closeLabel, onClose);
         highScoreRoot = highScoreOverlay.getRoot();
@@ -2895,7 +2895,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             }
             inc(GameVars.MONEY, -item.price());
             inc(GameVars.AMMO_CAP, 1);
-            showBanner("MUNI", Color.CYAN, 1.1);
+            showBanner("AMMO", Color.CYAN, 1.1);
             SoundHelper.play("ammo.wav");
             return true;
         }
@@ -3706,7 +3706,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 int bossMoney = GameVars.BOSS_KILL_MONEY * ec.getBossNumber();
                 inc(GameVars.MONEY, bossMoney);
                 spawn(random.nextBoolean() ? "shieldPickup" : "missilePickup", deathX - 14, deathY - 14);
-                showBanner("BOSS BESIEGT  +" + ec.getScoreValue() + "  $+" + bossMoney, Color.GOLD, 2.0);
+                showBanner("BOSS DEFEATED  +" + ec.getScoreValue() + "  $+" + bossMoney, Color.GOLD, 2.0);
                 trySpawnRankMarker(deathX, deathY, ec.getType());
             } else {
                 String explosionSize = (ec.getType() == EnemyComponent.EnemyType.TOUGH) ? "big" : "ship";

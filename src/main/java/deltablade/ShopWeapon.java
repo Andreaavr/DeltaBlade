@@ -6,20 +6,20 @@ package deltablade;
  */
 public enum ShopWeapon {
     NONE(0, "", "", "", ColorTag.CYAN),
-    NEEDLE_LASER(1200, "NEEDLE LASER", "DAUERSTRAHL",
-            "Schmaler Hochleistungs-Laser. Ammo-frei, starker Tick-Schaden, kurzes Heat.",
+    NEEDLE_LASER(1200, "NEEDLE LASER", "BEAM",
+            "Thin laser. No ammo needed, overheats fast.",
             ColorTag.CYAN),
-    TWIN_BEAM(2800, "TWIN BEAM", "DOPPELSTRAHL",
-            "Zwei parallele Beams. Formation-Clear klar ueber Grade 4.",
+    TWIN_BEAM(2800, "TWIN BEAM", "TWIN BEAM",
+            "Two parallel beams. Clears formations.",
             ColorTag.AQUA),
     PLASMA_ORB(5000, "PLASMA ORB", "PLASMA",
-            "Schwere Plasma-Kugel mit Splash und Pierce. TOUGH-Killer.",
+            "Heavy plasma orb with splash and pierce. Tough-killer.",
             ColorTag.VIOLET),
-    ARC_LANCE(8000, "ARC LANCE", "BLITZ",
-            "Kettenblitz: springt zwischen Gegnern und wipt Squads.",
+    ARC_LANCE(8000, "ARC LANCE", "CHAIN",
+            "Chain lightning: jumps between enemies, wipes squads.",
             ColorTag.GOLD),
     SWEEP_LASER(12000, "SWEEP LASER", "SWEEP",
-            "Schwenkender Breitstrahl. Boss- und Clear-Finisher.",
+            "Sweeping wide beam. Boss and wave finisher.",
             ColorTag.ORANGE);
 
     public enum ColorTag { CYAN, AQUA, VIOLET, GOLD, ORANGE }
@@ -81,7 +81,7 @@ public enum ShopWeapon {
     public String unlockHint() {
         return switch (this) {
             case NONE, NEEDLE_LASER -> "";
-            case TWIN_BEAM -> "RANK 3  ODER  WAVE 8";
+            case TWIN_BEAM -> "RANK 3  OR  WAVE 8";
             case PLASMA_ORB -> "RANK 6  +  METEOR  +  COGNITIVE";
             case ARC_LANCE -> "RANK 10  +  15 COMBOS";
             case SWEEP_LASER -> "RANK 15  +  BOSS  +  WAVE 20";

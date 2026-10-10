@@ -84,7 +84,7 @@ public class MeteorStormGame implements Minigame {
             distanceFill.setTranslateY(hudBarBottom() - distanceFill.getHeight());
         }
         if (speedText != null) {
-            speedText.setText(host.holdingFire() ? "SCHUB" : "GLIDE");
+            speedText.setText(host.holdingFire() ? "THRUST" : "GLIDE");
             speedText.setFill(host.holdingFire() ? Color.ORANGE : Color.rgb(160, 180, 200));
         }
         updateHoldHud();

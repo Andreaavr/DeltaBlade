@@ -1677,7 +1677,7 @@ public class MazeEscapeGame implements Minigame {
         panel.getChildren().add(icons);
 
         if (won && perfectRun) {
-            perfectText = new Text(String.format("PERFEKT! Alle Extras gesammelt  +%d  $+%d", perfectScore, perfectMoney));
+            perfectText = new Text(String.format("PERFECT! ALL EXTRAS COLLECTED  +%d  $+%d", perfectScore, perfectMoney));
             perfectText.setFont(Font.font("Monospace", FontWeight.BOLD, 13));
             perfectText.setFill(Color.GOLD);
             perfectText.setEffect(new javafx.scene.effect.Glow(0.9));
@@ -1690,7 +1690,7 @@ public class MazeEscapeGame implements Minigame {
         totals.setFill(Color.WHITE);
         panel.getChildren().add(totals);
 
-        Text hint = new Text("SPACE / B  WEITER");
+        Text hint = new Text("SPACE / B  CONTINUE");
         hint.setFont(Font.font("Monospace", FontWeight.BOLD, 10));
         hint.setFill(Color.rgb(150, 170, 190));
         panel.getChildren().add(hint);

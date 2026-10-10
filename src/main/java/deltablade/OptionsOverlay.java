@@ -110,7 +110,7 @@ public final class OptionsOverlay {
         accent.setTranslateX(panelX);
         accent.setTranslateY(panelY);
 
-        Text title = new Text("OPTIONEN");
+        Text title = new Text("OPTIONS");
         title.setFont(Font.font("Monospace", FontWeight.BOLD, 28));
         title.setFill(Color.CYAN);
         title.setEffect(new Glow(0.45));
@@ -120,7 +120,7 @@ public final class OptionsOverlay {
         musicToggle.setPrefWidth(92);
         musicToggle.setOnAction(e -> toggleMusic());
 
-        HBox musicRow = labeledRow("Hintergrundmusik", musicToggle);
+        HBox musicRow = labeledRow("MUSIC", musicToggle);
 
         volumeValue = new Text();
         volumeValue.setFont(Font.font("Monospace", FontWeight.BOLD, 16));
@@ -138,7 +138,7 @@ public final class OptionsOverlay {
 
         HBox volumeControls = new HBox(14, volumeBar, volumeValue);
         volumeControls.setAlignment(Pos.CENTER_LEFT);
-        VBox volumeBlock = new VBox(8, sectionLabel("Musik"), volumeControls);
+        VBox volumeBlock = new VBox(8, sectionLabel("VOLUME"), volumeControls);
 
         effectValue = new Text();
         effectValue.setFont(Font.font("Monospace", FontWeight.BOLD, 16));
@@ -154,7 +154,7 @@ public final class OptionsOverlay {
 
         HBox effectControls = new HBox(14, effectBar, effectValue);
         effectControls.setAlignment(Pos.CENTER_LEFT);
-        VBox effectBlock = new VBox(8, sectionLabel("Effekte"), effectControls);
+        VBox effectBlock = new VBox(8, sectionLabel("SFX"), effectControls);
 
         trackName = new Text();
         trackName.setFont(Font.font("Monospace", FontWeight.BOLD, 14));
@@ -165,14 +165,14 @@ public final class OptionsOverlay {
 
         HBox trackRow = new HBox(12, prevTrack, trackName, nextTrack);
         trackRow.setAlignment(Pos.CENTER);
-        VBox trackBlock = new VBox(6, sectionLabel("Titel"), trackRow);
+        VBox trackBlock = new VBox(6, sectionLabel("TRACK"), trackRow);
         trackBlock.setAlignment(Pos.CENTER);
 
-        Text folderHint = new Text("Ordner: " + MusicLocations.displayPath());
+        Text folderHint = new Text("FOLDER: " + MusicLocations.displayPath());
         folderHint.setFont(Font.font("Monospace", 12));
         folderHint.setFill(Color.rgb(140, 180, 210));
 
-        Button openFolder = styledButton("ORDNER ÖFFNEN");
+        Button openFolder = styledButton("OPEN FOLDER");
         openFolder.setPrefWidth(220);
         openFolder.setOnAction(e -> {
             MusicLocations.revealUserLibrary();
@@ -183,7 +183,7 @@ public final class OptionsOverlay {
         VBox folderBlock = new VBox(8, folderHint, openFolder);
         folderBlock.setAlignment(Pos.CENTER);
 
-        Button back = styledButton("ZURÜCK");
+        Button back = styledButton("BACK");
         back.setPrefWidth(180);
         back.setOnAction(e -> onClose.run());
 
@@ -240,7 +240,7 @@ public final class OptionsOverlay {
 
     private void refreshControls() {
         boolean enabled = OptionsStore.isMusicEnabled();
-        musicToggle.setText(enabled ? "AN" : "AUS");
+        musicToggle.setText(enabled ? "ON" : "OFF");
         musicToggle.setStyle(enabled ? TOGGLE_ON : TOGGLE_OFF);
 
         volumeBar.setBarDisabled(!enabled);

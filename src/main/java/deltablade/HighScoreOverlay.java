@@ -157,7 +157,7 @@ public final class HighScoreOverlay {
                     heading("NEW HISCORE"),
                     muted(HighScoreStore.formatScore(score) + "   WAVE " + String.format("%02d", wave)),
                     buildNameRow(),
-                    muted("Tippen  Leertaste = Leerzeichen    ENTER fertig    X weiter")
+                    muted("TYPE NAME   SPACE = BLANK   ENTER = DONE   X = SKIP")
             );
             startBlink();
             Timeline arm = new Timeline(new KeyFrame(Duration.millis(350), e -> confirmArmed = true));
@@ -170,12 +170,12 @@ public final class HighScoreOverlay {
             startRotate();
             startSpaceLock();
             if (onClose != null) {
-                Button back = styledButton(closeLabel != null ? closeLabel : "ZURÜCK");
+                Button back = styledButton(closeLabel != null ? closeLabel : "BACK");
                 back.setPrefWidth(180);
                 back.setOnAction(e -> close());
                 content.getChildren().add(back);
             } else {
-                content.getChildren().add(muted(closeLabel != null ? closeLabel : "R = Neustart"));
+                content.getChildren().add(muted(closeLabel != null ? closeLabel : "R = RESTART"));
             }
         }
 
@@ -417,7 +417,7 @@ public final class HighScoreOverlay {
         if (showingGlobal && globalEntries != null) {
             return "HISCORE GLOBAL";
         }
-        return "HISCORE LOKAL";
+        return "HISCORE LOCAL";
     }
 
     private HBox buildNameRow() {

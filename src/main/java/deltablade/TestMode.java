@@ -105,6 +105,7 @@ public final class TestMode {
             {5, 0, 5}, {1, 4, 7}, {2, 5, 8}, {3, 6, 9}, {1, 5, 9}
     };
     private static final String[] WAVE_NAMES = {"BOSS", "KREISEL", "ZANGE", "WASSERFALL", "STURM"};
+    private static final String[] WAVE_LABELS = {"BOSS", "SPINNER", "PINCER", "CASCADE", "RUSH"};
     private static final int[] waveSeq = new int[WAVE_CODES.length];
     private static final long[] waveSeqAt = new long[WAVE_CODES.length];
 
@@ -118,7 +119,7 @@ public final class TestMode {
             waveSeq[i]++;
             if (waveSeq[i] >= code.length) {
                 waveSeq[i] = 0;
-                return Optional.of(new Drop("WAVE:" + WAVE_NAMES[i], "TEST  " + WAVE_NAMES[i]));
+                return Optional.of(new Drop("WAVE:" + WAVE_NAMES[i], "TEST  " + WAVE_LABELS[i]));
             }
             return Optional.empty();
         }

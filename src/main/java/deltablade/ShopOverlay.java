@@ -171,18 +171,18 @@ public final class ShopOverlay {
 
         body.getChildren().addAll(left, right);
 
-        buyButton = new Button("KAUFEN");
+        buyButton = new Button("BUY");
         styleButton(buyButton, true);
         buyButton.setOnAction(e -> tryPurchase());
 
-        Button continueButton = new Button("WEITER");
+        Button continueButton = new Button("CONTINUE");
         styleButton(continueButton, true);
         continueButton.setOnAction(e -> closeShop());
 
         HBox actions = new HBox(16, buyButton, continueButton);
         actions.setAlignment(Pos.CENTER);
 
-        Text hint = mono("UP/DOWN  WAEHLEN   ENTER KAUFEN   ESC WEITER", 11, Color.rgb(140, 160, 180));
+        Text hint = mono("UP/DOWN  SELECT   ENTER  BUY   ESC  CONTINUE", 11, Color.rgb(140, 160, 180));
         hint.setTextAlignment(TextAlignment.CENTER);
 
         panel.getChildren().addAll(header, body, actions, hint);
