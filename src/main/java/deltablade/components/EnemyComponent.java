@@ -209,6 +209,7 @@ public class EnemyComponent extends Component {
         if (entryPath == null) {
             state = State.FORMATION;
             baseY = entity.getY();
+            targetX = entity.getX();
             return;
         }
         if (beadMarching) {
@@ -350,12 +351,12 @@ public class EnemyComponent extends Component {
             updateMeteorPeek(tpf);
         } else {
             baseY = Math.min(baseY, formationCeiling());
-            double hoverY = Math.min(baseY + Math.sin(hoverPhase) * hoverAmplitude, formationCeiling() + 6);
-            entity.setY(hoverY);
-            entity.translateX(speedX * tpf);
-            if (entity.getX() <= 0 || entity.getRightX() >= FXGL.getAppWidth()) {
-                speedX = -speedX;
-            }
+            // Ganze Formation schwingt gemeinsam und "atmet" (Schritt 2).
+            double hoverY = Math.min(slotY() + Math.sin(hoverPhase) * 3, formationCeiling() + 6);
+            double k = Math.min(1, tpf * 6);
+            entity.setX(entity.getX() + (slotX() - entity.getX()) * k);
+            entity.setY(entity.getY() + (hoverY - entity.getY()) * k);
+            relaxRotation(tpf);
         }
         
         if (isBonusRunner && formationHoldTime > minFormationTime) {
@@ -503,12 +504,19 @@ public class EnemyComponent extends Component {
 
     /** Formations-Platz (X). */
     private double slotX() {
-        return targetX;
+        double w = entity.getWidth();
+        double cx = FXGL.getAppWidth() / 2.0;
+        double x = cx + (targetX + w / 2.0 - cx) * WaveManager.formationBreath() - w / 2.0
+                + WaveManager.formationSwayX();
+        double minX = deltablade.GameVars.RAIL_WIDTH + 2;
+        double maxX = FXGL.getAppWidth() - w - deltablade.GameVars.RAIL_WIDTH - 2;
+        return Math.max(minX, Math.min(maxX, x));
     }
 
     /** Formations-Platz (Y). */
     private double slotY() {
-        return baseY;
+        double top = 40;
+        return top + (baseY - top) * (1 + (WaveManager.formationBreath() - 1) * 0.6);
     }
 
     /** Schiff dreht sich sanft in Flugrichtung (Bild schaut nach unten). */

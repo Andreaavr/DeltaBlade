@@ -437,7 +437,19 @@ public class WaveManager {
         stopped = true;
     }
 
+    // Gemeinsame Formations-Bewegung: Schwingen + Atmen.
+    private static double formationClock = 0;
+
+    public static double formationSwayX() {
+        return Math.sin(formationClock * 0.9) * 30;
+    }
+
+    public static double formationBreath() {
+        return 1.0 + 0.06 * Math.sin(formationClock * 1.4);
+    }
+
     public void update(double tpf) {
+        formationClock += tpf;
         if (stopped) {
             return;
         }
