@@ -226,7 +226,7 @@ public final class ShopOverlay {
             tryPurchase();
             return true;
         }
-        if (code == KeyCode.ESCAPE || code == KeyCode.SPACE) {
+        if (code == KeyCode.ESCAPE) {
             closeShop();
             return true;
         }

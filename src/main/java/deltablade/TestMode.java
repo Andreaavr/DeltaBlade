@@ -7,7 +7,7 @@ import java.util.Optional;
 /**
  * Debug codes: tap the same number key three times
  * (000 Missile, 111 Meteor Challenge, 222 Cognitive, 333 Shield, 444 Warp, 555 UFO, 666 Bonus, 777 Attack, 888 Scoop, 999 Swarm).
- * Sequence 890 = Money cheat.
+ * Sequence 890 = Money cheat. Sequence 456 = Maze Escape minigame.
  */
 public final class TestMode {
 
@@ -16,6 +16,7 @@ public final class TestMode {
     private static final long TIMEOUT_MS = 900;
     private static final int TAPS = 3;
     private static final int[] MONEY_CODE = {8, 9, 0};
+    private static final int[] MAZE_CODE = {4, 5, 6};
 
     private static int lastDigit;
     private static int count;
@@ -23,6 +24,8 @@ public final class TestMode {
 
     private static int moneySeq;
     private static long moneySeqAt;
+    private static int mazeSeq;
+    private static long mazeSeqAt;
 
     private TestMode() {}
 
@@ -42,6 +45,13 @@ public final class TestMode {
             lastAt = now;
             count = 0;
             return money;
+        }
+        Optional<Drop> maze = feedMazeSequence(digit, now);
+        if (maze.isPresent()) {
+            lastDigit = digit;
+            lastAt = now;
+            count = 0;
+            return maze;
         }
 
         if (digit != lastDigit || now - lastAt > TIMEOUT_MS) {
@@ -76,6 +86,24 @@ public final class TestMode {
             return Optional.empty();
         }
         moneySeq = (digit == MONEY_CODE[0]) ? 1 : 0;
+        return Optional.empty();
+    }
+
+
+    private static Optional<Drop> feedMazeSequence(int digit, long now) {
+        if (now - mazeSeqAt > TIMEOUT_MS) {
+            mazeSeq = 0;
+        }
+        mazeSeqAt = now;
+        if (digit == MAZE_CODE[mazeSeq]) {
+            mazeSeq++;
+            if (mazeSeq >= MAZE_CODE.length) {
+                mazeSeq = 0;
+                return Optional.of(new Drop("MAZE_ESCAPE", "TEST  MAZE ESCAPE"));
+            }
+            return Optional.empty();
+        }
+        mazeSeq = (digit == MAZE_CODE[0]) ? 1 : 0;
         return Optional.empty();
     }
 

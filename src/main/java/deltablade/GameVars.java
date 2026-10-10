@@ -19,6 +19,7 @@ public final class GameVars {
     public static final String SQUAD_COMBOS = "squadCombos";
     public static final String COGNITIVE_WINS = "cognitiveWins";
     public static final String METEOR_WINS = "meteorWins";
+    public static final String MAZE_WINS = "mazeWins";
     public static final String RANK = "rank";
     public static final String RANK_MASK = "rankMask";
     public static final String SHOTS_FIRED = "shotsFired";
@@ -77,8 +78,8 @@ public final class GameVars {
     public static final int SETTLEMENT_COMBO = 5000;
     public static final int SETTLEMENT_METEOR = 3000;
     public static final int SETTLEMENT_COGNITIVE = 3000;
+    public static final int SETTLEMENT_MAZE = 4000;
     public static final int SETTLEMENT_WAVE = 1000;
-    public static final int SETTLEMENT_LIFE = 2000;
     public static final int SETTLEMENT_CASH_MULT = 10;
     public static final int SETTLEMENT_PERFECT = 2500;
     public static final int SETTLEMENT_ACCURACY_CAP = 100_000;

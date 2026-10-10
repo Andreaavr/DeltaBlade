@@ -12,6 +12,7 @@ public class PickupComponent extends Component {
         AUTOFIRE,
         METEOR,
         COGNITIVE,
+        MAZE,
         EXTRA_TIME,
         SHIELD,
         SCOOP,
@@ -35,11 +36,22 @@ public class PickupComponent extends Component {
     @Override
     public void onUpdate(double tpf) {
         entity.translateY(speed * tpf);
-        
-        pulsePhase += tpf * 8;
-        double scale = 1 + Math.sin(pulsePhase) * 0.15;
-        entity.setScaleX(scale);
-        entity.setScaleY(scale);
+
+        // Shield/Missile: sanfter Extra-Pulse; andere Pickups etwas knackiger.
+        boolean softExtra = type == PickupType.SHIELD || type == PickupType.MISSILE;
+        if (softExtra) {
+            pulsePhase += tpf * 3.0;
+            double wave = 0.5 + 0.5 * Math.sin(pulsePhase);
+            double scale = 1.0 + wave * 0.10;
+            entity.setScaleX(scale);
+            entity.setScaleY(scale);
+            entity.getViewComponent().setOpacity(0.78 + wave * 0.22);
+        } else {
+            pulsePhase += tpf * 8;
+            double scale = 1 + Math.sin(pulsePhase) * 0.15;
+            entity.setScaleX(scale);
+            entity.setScaleY(scale);
+        }
         
         if (entity.getY() > FXGL.getAppHeight()) {
             entity.removeFromWorld();

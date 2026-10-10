@@ -16,6 +16,7 @@ import deltablade.components.PlayerComponent;
 import deltablade.components.RankMarkerComponent;
 import deltablade.components.StarComponent;
 import deltablade.minigames.CognitiveTestGame;
+import deltablade.minigames.MazeEscapeGame;
 import deltablade.minigames.MeteorStormGame;
 import deltablade.minigames.Minigame;
 import deltablade.minigames.MinigameHost;
@@ -172,6 +173,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         vars.put(GameVars.SQUAD_COMBOS, 0);
         vars.put(GameVars.COGNITIVE_WINS, 0);
         vars.put(GameVars.METEOR_WINS, 0);
+        vars.put(GameVars.MAZE_WINS, 0);
         vars.put(GameVars.RANK, 0);
         vars.put(GameVars.RANK_MASK, 0);
         vars.put(GameVars.SHOTS_FIRED, 0);
@@ -791,6 +793,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         set(GameVars.SQUAD_COMBOS, 0);
         set(GameVars.COGNITIVE_WINS, 0);
         set(GameVars.METEOR_WINS, 0);
+        set(GameVars.MAZE_WINS, 0);
         set(GameVars.RANK, 0);
         set(GameVars.RANK_MASK, 0);
         set(GameVars.SHOTS_FIRED, 0);
@@ -1053,6 +1056,13 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private void onFirePressed() {
         holdingFire = true;
         if (gameOver) {
+            return;
+        }
+        // Minigames must get Space/X even if a missile/steer path would otherwise swallow it.
+        if (minigameActive) {
+            if (activeMinigame != null) {
+                activeMinigame.onFirePress();
+            }
             return;
         }
         if (tryMissileFirePress()) {
@@ -1780,7 +1790,10 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         double roll = random.nextDouble();
 
         if (roll < GameVars.MINIGAME_DROP_CHANCE) {
-            spawn(random.nextBoolean() ? "meteorPickup" : "cognitivePickup", x - 14, y - 14);
+            // Equal share: meteor / cognitive / maze (same rarity pool).
+            int which = random.nextInt(3);
+            String mini = which == 0 ? "meteorPickup" : (which == 1 ? "cognitivePickup" : "mazePickup");
+            spawn(mini, x - 14, y - 14);
             return;
         }
         roll -= GameVars.MINIGAME_DROP_CHANCE;
@@ -1998,6 +2011,10 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 SoundHelper.play("cognitive_test.mp3");
                 startMinigame(new CognitiveTestGame());
             }
+            case MAZE -> {
+                inc(GameVars.SCORE, 25);
+                startMinigame(new MazeEscapeGame());
+            }
             case EXTRA_TIME -> {
                 changeLevelTime(GameVars.LEVEL_TIME_PICKUP);
                 inc(GameVars.SCORE, 25);
@@ -2171,8 +2188,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         lines.add(new SettlementOverlay.Line("COMBOS", geti(GameVars.SQUAD_COMBOS) * GameVars.SETTLEMENT_COMBO));
         lines.add(new SettlementOverlay.Line("METEOR", geti(GameVars.METEOR_WINS) * GameVars.SETTLEMENT_METEOR));
         lines.add(new SettlementOverlay.Line("COGNITIVE", geti(GameVars.COGNITIVE_WINS) * GameVars.SETTLEMENT_COGNITIVE));
+        lines.add(new SettlementOverlay.Line("MAZE", geti(GameVars.MAZE_WINS) * GameVars.SETTLEMENT_MAZE));
         lines.add(new SettlementOverlay.Line("WAVES", Math.max(0, geti(GameVars.LEVEL) - 1) * GameVars.SETTLEMENT_WAVE));
-        lines.add(new SettlementOverlay.Line("LIVES", Math.max(0, geti(GameVars.LIVES)) * GameVars.SETTLEMENT_LIFE));
         lines.add(new SettlementOverlay.Line("CASH", Math.max(0, geti(GameVars.MONEY)) * GameVars.SETTLEMENT_CASH_MULT));
         lines.add(new SettlementOverlay.Line("PERFECT", geti(GameVars.BONUS_PERFECT_CLEARS) * GameVars.SETTLEMENT_PERFECT));
         return lines;
@@ -2397,6 +2414,23 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             attachScoops();
             showBanner(drop.banner(), Color.LIMEGREEN, 1.1);
             SoundHelper.play("scoop.wav");
+            return;
+        }
+
+        if ("MAZE_ESCAPE".equals(drop.spawnName())) {
+            if (gameOver || optionsOpen || minigameActive || warping) {
+                return;
+            }
+            if (!gameStarted || showingTitleScreen || player == null) {
+                if (showingTitleScreen) {
+                    startActualGame(false);
+                }
+                if (player == null) {
+                    return;
+                }
+            }
+            showBanner(drop.banner(), Color.MEDIUMPURPLE, 1.2);
+            startMinigame(new MazeEscapeGame());
             return;
         }
         if ("METEOR_CHALLENGE".equals(drop.spawnName())) {
@@ -3371,6 +3405,10 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
         if (player != null && player.isActive() && player.hasComponent(PlayerComponent.class)
                 && player.getComponent(PlayerComponent.class).isInvulnerable()) {
+            PlayerComponent shielded = player.getComponent(PlayerComponent.class);
+            if (shielded.isShielded()) {
+                shielded.pingShieldHit();
+            }
             return;
         }
         if (destroyScoopedBySlot(0) || destroyScoopedBySlot(1)) {
@@ -3715,6 +3753,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private Rectangle autoLamp;
     private Text autoLampText;
     private Text shieldHudText;
+    private Text accuracyHudText;
     private Rectangle comboPlate;
     
     private static final Color[] LETTER_COLORS = {
@@ -3872,8 +3911,18 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         DropShadow moneyShadow = new DropShadow(2, Color.BLACK);
         moneyLabel.setEffect(moneyShadow);
         getGameScene().addUINode(moneyLabel);
+
+        int accuracyY = moneyY + 16;
+        accuracyHudText = new Text("ACC --%");
+        accuracyHudText.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
+        accuracyHudText.setFill(Color.rgb(120, 220, 255));
+        accuracyHudText.setTranslateX(xOffset);
+        accuracyHudText.setTranslateY(accuracyY);
+        accuracyHudText.setEffect(new DropShadow(2, Color.BLACK));
+        getGameScene().addUINode(accuracyHudText);
+        updateAccuracyHud();
         
-        int legendY = moneyY + 20;
+        int legendY = accuracyY + 18;
         Text coinCaption = new Text("COINS");
         coinCaption.setFont(Font.font("Monospace", FontWeight.BOLD, 8));
         coinCaption.setFill(Color.rgb(160, 160, 170));
@@ -3912,9 +3961,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         getip(GameVars.AMMO_CAP).addListener((obs, o, n) -> updateBars());
         getip(GameVars.WEAPON_GRADE).addListener((obs, o, n) -> updateBars());
         getip(GameVars.LIVES).addListener((obs, o, n) -> updateBars());
+        getip(GameVars.SHOTS_FIRED).addListener((obs, o, n) -> updateAccuracyHud());
+        getip(GameVars.HITS_LANDED).addListener((obs, o, n) -> updateAccuracyHud());
         getbp(GameVars.AUTOFIRE).addListener((obs, o, n) -> updateAutoLamp());
         updateBars();
         updateAutoLamp();
+        updateAccuracyHud();
         
         int playX = railWidth;
         int playW = getAppWidth() - 2 * railWidth;
@@ -4144,6 +4196,20 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         double livesRatio = Math.min(1.0, (double) lives / 5);
         livesBar.setWidth(Math.max(1, barWidth * livesRatio));
         updateExtraTimeBar();
+    }
+
+    private void updateAccuracyHud() {
+        if (accuracyHudText == null) {
+            return;
+        }
+        int shots = Math.max(0, geti(GameVars.SHOTS_FIRED));
+        int hits = Math.max(0, geti(GameVars.HITS_LANDED));
+        if (shots <= 0) {
+            accuracyHudText.setText("ACC --%");
+            return;
+        }
+        int pct = (int) Math.round(100.0 * Math.min(1.0, (double) hits / (double) shots));
+        accuracyHudText.setText(String.format("ACC %d%%", pct));
     }
 
     private void refillWaveTimer() {

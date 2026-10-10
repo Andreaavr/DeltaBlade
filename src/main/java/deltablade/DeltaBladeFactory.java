@@ -248,7 +248,7 @@ public class DeltaBladeFactory implements EntityFactory {
     public Entity newPlayerBullet(SpawnData data) {
         double speedX = data.hasKey("speedX") ? data.<Double>get("speedX") : 0.0;
         double speedY = data.hasKey("speedY") ? data.<Double>get("speedY") : -500.0;
-        
+
         return FXGL.entityBuilder(data)
                 .type(EntityType.PLAYER_BULLET)
                 .viewWithBBox(safeTexture("bullet_player.png", BULLET_W, BULLET_H, Color.YELLOW))
@@ -395,6 +395,18 @@ public class DeltaBladeFactory implements EntityFactory {
                 .with(new PickupComponent(PickupComponent.PickupType.COGNITIVE))
                 .build();
     }
+
+    @Spawns("mazePickup")
+    public Entity newMazePickup(SpawnData data) {
+        return FXGL.entityBuilder(data)
+                .type(EntityType.PICKUP)
+                .viewWithBBox(orbPickup(Color.MEDIUMPURPLE, Color.VIOLET, "Z"))
+                .zIndex(60)
+                .collidable()
+                .with(new PickupComponent(PickupComponent.PickupType.MAZE))
+                .build();
+    }
+
 
     @Spawns("plasmaOrb")
     public Entity newPlasmaOrb(SpawnData data) {
@@ -644,7 +656,8 @@ public class DeltaBladeFactory implements EntityFactory {
     public Entity newMissilePickup(SpawnData data) {
         return FXGL.entityBuilder(data)
                 .type(EntityType.PICKUP)
-                .viewWithBBox(safeTexture("pickup_missile.png", PICKUP_SIZE, PICKUP_SIZE, Color.ORANGERED))
+                .viewWithBBox(pulsingExtraPickup(
+                        "pickup_missile.png", Color.ORANGERED, Color.rgb(255, 120, 40, 0.30)))
                 .zIndex(60)
                 .collidable()
                 .with(new PickupComponent(PickupComponent.PickupType.MISSILE))
@@ -687,11 +700,20 @@ public class DeltaBladeFactory implements EntityFactory {
     public Entity newShieldPickup(SpawnData data) {
         return FXGL.entityBuilder(data)
                 .type(EntityType.PICKUP)
-                .viewWithBBox(safeTexture("pickup_shield.png", PICKUP_SIZE, PICKUP_SIZE, Color.AQUA))
+                .viewWithBBox(pulsingExtraPickup(
+                        "pickup_shield.png", Color.AQUA, Color.rgb(80, 220, 255, 0.32)))
                 .zIndex(60)
                 .collidable()
                 .with(new PickupComponent(PickupComponent.PickupType.SHIELD))
                 .build();
+    }
+
+    private static Node pulsingExtraPickup(String texture, Color fallback, Color glowColor) {
+        Node icon = safeTexture(texture, PICKUP_SIZE, PICKUP_SIZE, fallback);
+        Circle glow = new Circle(PICKUP_SIZE / 2.0 + 5, glowColor);
+        glow.setTranslateX(PICKUP_SIZE / 2.0);
+        glow.setTranslateY(PICKUP_SIZE / 2.0);
+        return new Group(glow, icon);
     }
 
     @Spawns("autofirePickup")

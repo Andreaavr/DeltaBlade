@@ -35,16 +35,16 @@ public class PlayerComponent extends Component {
     @Override
     public void onAdded() {
         double radius = SHIELD_SIZE / 2.0;
-        Circle fill = new Circle(radius, Color.rgb(80, 220, 255, 0.12));
-        // No JavaFX Glow — it tanks FPS while the shield is visible.
-        shieldHalo = new Circle(radius + 4);
-        shieldHalo.setFill(Color.TRANSPARENT);
-        shieldHalo.setStroke(Color.rgb(120, 240, 255, 0.28));
-        shieldHalo.setStrokeWidth(4.0);
+        // No JavaFX Glow effect — opacity/scale pulse only (FPS).
+        Circle fill = new Circle(radius, Color.rgb(70, 210, 255, 0.22));
+        shieldHalo = new Circle(radius + 6);
+        shieldHalo.setFill(Color.rgb(60, 200, 255, 0.10));
+        shieldHalo.setStroke(Color.rgb(140, 245, 255, 0.55));
+        shieldHalo.setStrokeWidth(5.0);
         shieldRing = new Circle(radius);
         shieldRing.setFill(Color.TRANSPARENT);
-        shieldRing.setStroke(Color.rgb(160, 245, 255));
-        shieldRing.setStrokeWidth(2.2);
+        shieldRing.setStroke(Color.rgb(200, 255, 255, 0.95));
+        shieldRing.setStrokeWidth(2.8);
         shieldView = new Group(fill, shieldHalo, shieldRing);
         shieldView.setTranslateX(SHIP_SIZE / 2.0);
         shieldView.setTranslateY(SHIP_SIZE / 2.0);
@@ -220,15 +220,34 @@ public class PlayerComponent extends Component {
         if (!on) {
             return;
         }
-        double t = shieldTimer > 0 ? shieldTimer : shieldPulse;
-        double pulse = 0.72 + 0.28 * (0.5 + 0.5 * Math.sin(t * 8));
+        double t = shieldPulse;
+        double wave = 0.5 + 0.5 * Math.sin(t * 5.5);
+        double pulse = 0.78 + 0.22 * wave;
+        double scale = 1.0 + 0.06 * wave;
         if (shieldTimer > 0 && shieldTimer <= 3 && !missileShield) {
-            pulse = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(shieldTimer * 14));
+            // Last seconds: faster blink so expiry is obvious.
+            pulse = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(shieldTimer * 14));
+            scale = 1.0 + 0.10 * (0.5 + 0.5 * Math.sin(shieldTimer * 14));
         }
         shieldView.setOpacity(pulse);
+        shieldView.setScaleX(scale);
+        shieldView.setScaleY(scale);
         if (shieldHalo != null) {
-            shieldHalo.setOpacity(0.55 + 0.45 * pulse);
+            shieldHalo.setOpacity(0.65 + 0.35 * wave);
         }
+        if (shieldRing != null) {
+            shieldRing.setOpacity(0.85 + 0.15 * wave);
+        }
+    }
+
+    /** Brief bright flash when a hit is absorbed by the shield. */
+    public void pingShieldHit() {
+        if (!isShielded() || shieldView == null) {
+            return;
+        }
+        shieldView.setOpacity(1.0);
+        shieldView.setScaleX(1.18);
+        shieldView.setScaleY(1.18);
     }
     
     public double getCenterX() {
