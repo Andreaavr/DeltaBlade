@@ -117,7 +117,7 @@ public class DeltaBladeFactory implements EntityFactory {
 
         boolean isBoss = (type == EnemyComponent.EnemyType.BOSS);
         boolean isUfo = (type == EnemyComponent.EnemyType.UFO);
-        int size = isBoss ? BOSS_SIZE : SHIP_SIZE;
+        int size = isBoss ? GameVars.BOSS_DRAW_SIZE : SHIP_SIZE;
 
         EnemyComponent enemyComponent = new EnemyComponent(type, level);
 
@@ -188,7 +188,13 @@ public class DeltaBladeFactory implements EntityFactory {
                 view = sheetTile(SpriteSheets.SHIPS, tile, drawSize, Color.CRIMSON);
             }
         } else {
-            view = safeTexture("enemy_tough.png", size, size, Color.DARKVIOLET);
+            // Boss: vorhandenes Gegner-Bild, nur viel groesser. Jeder Boss sieht anders aus.
+            int bossNo = GameVars.bossNumber(level);
+            if (bossNo % 2 == 0) {
+                view = sheetTile(SpriteSheets.MONSTERS, (bossNo / 2) % SpriteSheets.MONSTER_TILES, size, Color.DARKVIOLET);
+            } else {
+                view = sheetTile(SpriteSheets.SHIPS, (bossNo * 5) % SpriteSheets.SHIP_TILES, size, Color.DARKVIOLET);
+            }
         }
 
         return FXGL.entityBuilder(data)

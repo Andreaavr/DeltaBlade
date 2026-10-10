@@ -1531,6 +1531,59 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 .put("kind", kind));
     }
 
+    /** Boss-Schuss mit freier Richtung. */
+    public void spawnBossBullet(double x, double y, double vx, double vy) {
+        spawnEnemyBullet(x, y, vx, vy, false);
+    }
+
+    // --- Boss-Lebensbalken oben im Bild -------------------------------------
+    private Group bossBar;
+    private javafx.scene.shape.Rectangle bossBarFill;
+    private Text bossBarLabel;
+    private static final double BOSS_BAR_W = 300;
+
+    private void updateBossBar() {
+        EnemyComponent boss = null;
+        if (!gameOver && !showingTitleScreen && !minigameActive) {
+            for (Entity e : getGameWorld().getEntitiesByType(EntityType.ENEMY)) {
+                if (e.isActive() && e.hasComponent(EnemyComponent.class)
+                        && e.getComponent(EnemyComponent.class).isBoss()) {
+                    boss = e.getComponent(EnemyComponent.class);
+                    break;
+                }
+            }
+        }
+        if (boss == null) {
+            if (bossBar != null) {
+                bossBar.setVisible(false);
+            }
+            return;
+        }
+        if (bossBar == null) {
+            javafx.scene.shape.Rectangle bg = new javafx.scene.shape.Rectangle(BOSS_BAR_W + 4, 14);
+            bg.setFill(Color.rgb(20, 10, 30, 0.85));
+            bg.setStroke(Color.rgb(255, 120, 200));
+            bg.setTranslateX(-2);
+            bg.setTranslateY(-2);
+            bossBarFill = new javafx.scene.shape.Rectangle(BOSS_BAR_W, 10);
+            bossBarFill.setFill(Color.ORANGERED);
+            bossBarLabel = new Text("BOSS");
+            bossBarLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 12));
+            bossBarLabel.setFill(Color.WHITE);
+            bossBarLabel.setTranslateY(-6);
+            bossBar = new Group(bg, bossBarFill, bossBarLabel);
+            bossBar.setMouseTransparent(true);
+            bossBar.setTranslateX((getAppWidth() - BOSS_BAR_W) / 2.0);
+            bossBar.setTranslateY(26);
+            getGameScene().addUINode(bossBar);
+        }
+        double ratio = Math.max(0, boss.getHealth() / (double) Math.max(1, boss.getMaxHealth()));
+        bossBarFill.setWidth(BOSS_BAR_W * ratio);
+        bossBarFill.setFill(ratio > 0.5 ? Color.ORANGE : ratio > 0.25 ? Color.ORANGERED : Color.RED);
+        bossBarLabel.setText("BOSS " + boss.getBossNumber());
+        bossBar.setVisible(true);
+    }
+
     public void splitMonster(Entity parent, EnemyComponent parentEc) {
         if (parent == null || !parent.isActive() || parentEc == null) {
             return;
@@ -3463,6 +3516,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 inc(GameVars.BOSS_KILLS, 1);
                 spawnBossDeathSequence(deathX, deathY);
                 spawnBossCoins(deathX, deathY);
+                // Belohnung: viel Geld + garantiert Schild oder Rakete.
+                int bossMoney = GameVars.BOSS_KILL_MONEY * ec.getBossNumber();
+                inc(GameVars.MONEY, bossMoney);
+                spawn(random.nextBoolean() ? "shieldPickup" : "missilePickup", deathX - 14, deathY - 14);
+                showBanner("BOSS BESIEGT  +" + ec.getScoreValue() + "  $+" + bossMoney, Color.GOLD, 2.0);
                 trySpawnRankMarker(deathX, deathY, ec.getType());
             } else {
                 String explosionSize = (ec.getType() == EnemyComponent.EnemyType.TOUGH) ? "big" : "ship";
@@ -3599,6 +3657,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     @Override
     protected void onUpdate(double tpf) {
         updateShieldHud();
+        updateBossBar();
         if (showingTitleScreen || gameOver || optionsOpen || shopOpen || settlementOverlay != null || player == null) return;
         
         frameCount++;

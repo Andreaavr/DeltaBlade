@@ -77,6 +77,9 @@ public class EnemyComponent extends Component {
     private double minFormationTime = 2.0;
     
     private boolean isBoss = false;
+    private int bossNo = 1;
+    private int maxHealth = 1;
+    private double bossShotTimer = 1.5;
     private double bossSwayPhase = 0;
     private double bossDiveTimer = 0;
     private double bossReturnY = 0;
@@ -114,8 +117,9 @@ public class EnemyComponent extends Component {
         
         if (type == EnemyType.BOSS) {
             this.isBoss = true;
-            int cycle = (level - 1) / 4 + 1;
-            this.health = deltablade.GameVars.BOSS_BASE_HEALTH + deltablade.GameVars.BOSS_HEALTH_PER_CYCLE * cycle;
+            this.bossNo = deltablade.GameVars.bossNumber(level);
+            this.health = deltablade.GameVars.BOSS_HP_BASE + deltablade.GameVars.BOSS_HP_PER_BOSS * bossNo;
+            this.maxHealth = this.health;
             this.speedX = type.speed * (random.nextBoolean() ? 1 : -1);
         }
         if (type == EnemyType.UFO) {
@@ -253,7 +257,11 @@ public class EnemyComponent extends Component {
             case UFO_SWEEP -> updateUfoSweep(tpf);
         }
         
-        if (!isBonusRunner && (state != State.ENTERING || canFireWhileClimbing())) {
+        if (isBoss) {
+            if (state == State.BOSS_HOVER || state == State.BOSS_DIVE) {
+                updateBossAttack(tpf);
+            }
+        } else if (!isBonusRunner && (state != State.ENTERING || canFireWhileClimbing())) {
             updateFiring(tpf);
         }
     }
@@ -680,8 +688,42 @@ public class EnemyComponent extends Component {
         }
     }
     
+    /** Boss-Angriff Phase 1: Faecher aus 3-5 Schuessen. */
+    private void updateBossAttack(double tpf) {
+        bossShotTimer -= tpf;
+        if (bossShotTimer > 0) {
+            return;
+        }
+        bossShotTimer = Math.max(0.9, 1.8 - bossNo * 0.08);
+        int count = 3 + Math.min(2, bossNo / 2);
+        bossFan(count, 60, 230);
+    }
+
+    private void bossFan(int count, double spreadDeg, double speed) {
+        double cx = entity.getX() + entity.getWidth() / 2.0;
+        double by = entity.getY() + entity.getHeight() * 0.8;
+        for (int i = 0; i < count; i++) {
+            double t = count == 1 ? 0 : i / (double) (count - 1) - 0.5;
+            double a = Math.toRadians(t * spreadDeg);
+            FXGL.<deltablade.DeltaBladeApp>getAppCast().spawnBossBullet(cx, by, Math.sin(a) * speed, Math.cos(a) * speed);
+        }
+        deltablade.SoundHelper.play("enemy_shot.wav");
+    }
+
+    public int getHealth() {
+        return health;
+    }
+
+    public int getMaxHealth() {
+        return maxHealth;
+    }
+
+    public int getBossNumber() {
+        return bossNo;
+    }
+
     private void updateBossDive(double tpf) {
-        double maxDiveY = FXGL.getAppHeight() * 0.55;
+        double maxDiveY = FXGL.getAppHeight() * 0.62 - entity.getHeight();
         
         if (bossDiving) {
             entity.translateY(diveSpeed * tpf);
@@ -801,6 +843,9 @@ public class EnemyComponent extends Component {
     }
     
     public int getScoreValue() {
+        if (isBoss) {
+            return deltablade.GameVars.BOSS_KILL_SCORE * bossNo;
+        }
         return type.scoreValue;
     }
     

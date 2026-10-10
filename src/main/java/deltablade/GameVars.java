@@ -92,6 +92,18 @@ public final class GameVars {
     public static final int BOSS_BASE_HEALTH = 10;
     public static final int BOSS_HEALTH_PER_CYCLE = 2;
     public static final int BOSS_SCORE = 1000;
+    /** Alle wie viele Level ein grosser Boss kommt. */
+    public static final int BOSS_EVERY = 5;
+    /** Boss = normales Gegner-Bild, aber viel groesser. */
+    public static final int BOSS_DRAW_SIZE = 160;
+    public static final int BOSS_HP_BASE = 40;
+    public static final int BOSS_HP_PER_BOSS = 25;
+    public static final int BOSS_KILL_SCORE = 5000;
+    public static final int BOSS_KILL_MONEY = 300;
+
+    public static int bossNumber(int level) {
+        return Math.max(1, level / BOSS_EVERY);
+    }
 
     public static final double CURSE_REVERSE_SECONDS = 8.0;
     public static final double CURSE_JAM_SECONDS = 5.0;

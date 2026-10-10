@@ -122,7 +122,7 @@ public class WaveManager {
     }
 
     public static WaveType resolveWaveType(int level) {
-        if (level > 0 && level % 25 == 0) {
+        if (level > 0 && level % GameVars.BOSS_EVERY == 0) {
             return WaveType.BOSS;
         }
         if (level >= GameVars.MONSTER_WAVE_MIN_LEVEL && level % 8 == 6) {
@@ -133,10 +133,13 @@ public class WaveManager {
             case 1 -> WaveType.FIGHTERS;
             case 2 -> WaveType.MIXED;
             case 3 -> WaveType.PEARL;
-            case 4 -> WaveType.RANK;
-            case 5 -> {
+            case 4 -> {
                 int pack = (level - 1) / 5;
-                yield (pack % 2 == 0) ? WaveType.BONUS : WaveType.KAMIKAZE;
+                yield switch (pack % 3) {
+                    case 0 -> WaveType.RANK;
+                    case 1 -> WaveType.BONUS;
+                    default -> WaveType.KAMIKAZE;
+                };
             }
             default -> WaveType.FIGHTERS;
         };
@@ -216,13 +219,15 @@ public class WaveManager {
     private void setupBossWave(int level) {
         int escortCount = 2 + Math.min((level - 1) / 4, 2);
 
-        double centerX = getAppWidth() / 2.0 - 40;
-        formationSlots.add(new Point2D(centerX, 80));
+        double size = GameVars.BOSS_DRAW_SIZE;
+        double centerX = getAppWidth() / 2.0 - size / 2.0;
+        formationSlots.add(new Point2D(centerX, 50));
 
-        double spacing = 60;
+        double spacing = 70;
+        double escortY = clampFormationY(50 + size + 10);
         for (int i = 0; i < escortCount; i++) {
             double offset = (i % 2 == 0 ? -1 : 1) * spacing * ((i / 2) + 1);
-            formationSlots.add(new Point2D(centerX + offset, 140 + (i % 2) * 30));
+            formationSlots.add(new Point2D(getAppWidth() / 2.0 - 24 + offset, escortY));
         }
 
         totalEnemiesInWave = 1 + escortCount;
