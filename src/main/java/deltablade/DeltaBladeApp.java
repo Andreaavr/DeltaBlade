@@ -913,6 +913,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         waveTransition = false;
         refillWaveTimer();
         ufoSpawnedThisWave = false;
+        bossCollectLeft = 0;
+        bossCollectDone = false;
         meteorMissileCooldown = 0.35;
         waveManager.startWave(geti(GameVars.LEVEL));
     }
@@ -2195,6 +2197,13 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         if (waveManager.hasPendingSpawns() || hasLiveCombatEnemies()) {
             return;
         }
+        // Nach dem Boss: kurze Sammel-Phase, damit man die Beute holen kann.
+        if (waveManager.getCurrentWaveType() == WaveManager.WaveType.BOSS && !bossCollectDone) {
+            if (bossCollectLeft <= 0) {
+                bossCollectLeft = BOSS_COLLECT_SECONDS;
+            }
+            return;
+        }
         waveTransition = true;
         set(GameVars.ENEMIES_REMAINING, 0);
         if (waveManager.getCurrentWaveType() == WaveManager.WaveType.KAMIKAZE) {
@@ -2208,6 +2217,46 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             }
             continueToNextWave();
         }, Duration.seconds(pause));
+    }
+
+    private static final double BOSS_COLLECT_SECONDS = 5.0;
+    private double bossCollectLeft = 0;
+    private boolean bossCollectDone = false;
+    private static final EntityType[] DROP_TYPES = {
+            EntityType.PICKUP, EntityType.COIN, EntityType.RANK_MARKER, EntityType.EXTRA_LETTER_PICKUP
+    };
+
+    /** Sammel-Phase nach dem Boss: Beute treibt sanft zum Spieler. Max. 5 s oder bis alles weg ist. */
+    private void updateBossCollect(double tpf) {
+        if (bossCollectLeft <= 0 || bossCollectDone) {
+            return;
+        }
+        bossCollectLeft -= tpf;
+        boolean anyDrop = false;
+        if (player != null && player.isActive()) {
+            double px = player.getX() + player.getWidth() / 2.0;
+            double py = player.getY() + player.getHeight() / 2.0;
+            for (EntityType t : DROP_TYPES) {
+                for (Entity d : getGameWorld().getEntitiesByType(t)) {
+                    if (!d.isActive()) {
+                        continue;
+                    }
+                    anyDrop = true;
+                    double dx = px - (d.getX() + d.getWidth() / 2.0);
+                    double dy = py - (d.getY() + d.getHeight() / 2.0);
+                    double dist = Math.hypot(dx, dy);
+                    if (dist > 1) {
+                        double pull = 140 * tpf;
+                        d.translate(dx / dist * pull, dy / dist * pull);
+                    }
+                }
+            }
+        }
+        if (bossCollectLeft <= 0 || !anyDrop) {
+            bossCollectLeft = 0;
+            bossCollectDone = true;
+            checkWaveComplete();
+        }
     }
 
     private boolean hasLiveCombatEnemies() {
@@ -2595,6 +2644,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             if (forced == WaveManager.WaveType.BOSS) {
                 lvl = Math.max(lvl, GameVars.BOSS_EVERY);
             }
+            bossCollectLeft = 0;
+            bossCollectDone = false;
             waveManager.startWave(lvl, forced);
             showWaveAnnouncement();
             SoundHelper.play("get_ready.wav");
@@ -3800,6 +3851,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         
         if (waveManager != null && !waveTransition) {
             waveManager.update(tpf);
+            updateBossCollect(tpf);
             if (isBossWave()) {
                 // Boss-Level: kein Zeitdruck.
                 extraTime = extraTimeMax;
