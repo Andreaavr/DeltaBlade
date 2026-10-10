@@ -106,6 +106,11 @@ public class MazeEscapeGame implements Minigame {
     private int moneyCollected;
     private boolean shotLoaded;
     private double shieldTime;
+    // Geheimer Bonus: alle Extras im Maze eingesammelt.
+    private boolean perfectRun;
+    private int perfectScore;
+    private int perfectMoney;
+    private Text perfectText;
     private static final double SHIELD_SECONDS = GameVars.SHIELD_DURATION;
 
     private boolean shieldUp() {
@@ -229,6 +234,8 @@ public class MazeEscapeGame implements Minigame {
         this.noShotBannerCd = 0;
         this.activeBolt = null;
         this.collectedKinds.clear();
+        this.perfectRun = false;
+        this.perfectText = null;
         this.awaitingSettlement = false;
         this.settlementRoot = null;
 
@@ -260,6 +267,7 @@ public class MazeEscapeGame implements Minigame {
         if (awaitingSettlement) {
             settlementTimer -= tpf;
             settlementShownFor += tpf;
+            animatePerfectLine();
             if (settlementTimer <= 0) {
                 completeSettlement();
             }
@@ -1547,6 +1555,14 @@ public class MazeEscapeGame implements Minigame {
             score += 350;
             money += 20;
         }
+        // Geheimer Super-Bonus: wirklich ALLE Extras im Maze geholt.
+        perfectRun = !bonuses.isEmpty() && bonuses.stream().allMatch(b -> b.taken);
+        if (perfectRun) {
+            perfectScore = score * 4 + 5000;
+            perfectMoney = 500 + money * 3;
+            score += perfectScore;
+            money += perfectMoney;
+        }
         inc(GameVars.MAZE_WINS, 1);
         beginSettlement(true, score, money, "MAZE CLEAR  +" + score, Color.MEDIUMPURPLE,
                 leftover, turrets, picked, timeScore, turretScore, bonusScore);
@@ -1658,6 +1674,15 @@ public class MazeEscapeGame implements Minigame {
         }
         panel.getChildren().add(icons);
 
+        if (won && perfectRun) {
+            perfectText = new Text(String.format("PERFEKT! Alle Extras gesammelt  +%d  $+%d", perfectScore, perfectMoney));
+            perfectText.setFont(Font.font("Monospace", FontWeight.BOLD, 13));
+            perfectText.setFill(Color.GOLD);
+            perfectText.setEffect(new javafx.scene.effect.Glow(0.9));
+            panel.getChildren().add(perfectText);
+            panelH += 24;
+        }
+
         Text totals = new Text(String.format("SCORE +%d   $ +%d", totalScore, totalMoney));
         totals.setFont(Font.font("Monospace", FontWeight.BOLD, 14));
         totals.setFill(Color.WHITE);
@@ -1675,6 +1700,18 @@ public class MazeEscapeGame implements Minigame {
         settlementRoot.setMouseTransparent(true);
         host.addUi(settlementRoot);
         ui.add(settlementRoot);
+    }
+
+    /** Bunt blinkende, pulsierende PERFEKT-Zeile. */
+    private void animatePerfectLine() {
+        if (perfectText == null) {
+            return;
+        }
+        double t = settlementShownFor;
+        perfectText.setFill(Color.hsb((t * 240) % 360, 0.85, 1.0));
+        double sc = 1.0 + 0.08 * Math.sin(t * 9);
+        perfectText.setScaleX(sc);
+        perfectText.setScaleY(sc);
     }
 
     private HBox settleLine(String label, String value, String pts, Color accent) {
