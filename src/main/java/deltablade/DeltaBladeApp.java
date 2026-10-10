@@ -3021,12 +3021,57 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             clearLaserBeams();
             return;
         }
-        boolean wantFire = holdingFire || getb(GameVars.AUTOFIRE);
+        // Strahl-Waffen feuern NUR, solange Leertaste/X wirklich gedrueckt ist.
+        // (Autofire zaehlt hier nicht: ein Strahl ist ohnehin Dauerfeuer.)
+        installFireKeyTracking();
+        boolean wantFire = fireKeyPhysicallyDown();
         if (weapon == ShopWeapon.SWEEP_LASER) {
             updateSweepLaser(tpf, wantFire);
             return;
         }
         updateContinuousLaser(tpf, wantFire, weapon == ShopWeapon.TWIN_BEAM);
+    }
+
+    private boolean fireKeyTrackingInstalled = false;
+    private boolean spaceDown = false;
+    private boolean xDown = false;
+
+    /** Eigene, verlaessliche Erkennung ob die Feuertaste gerade gehalten wird. */
+    private void installFireKeyTracking() {
+        if (fireKeyTrackingInstalled) {
+            return;
+        }
+        javafx.stage.Stage stage = getPrimaryStage();
+        if (stage == null || stage.getScene() == null) {
+            return;
+        }
+        fireKeyTrackingInstalled = true;
+        stage.getScene().addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
+            if (e.getCode() == KeyCode.SPACE) spaceDown = true;
+            if (e.getCode() == KeyCode.X) xDown = true;
+        });
+        stage.getScene().addEventFilter(javafx.scene.input.KeyEvent.KEY_RELEASED, e -> {
+            if (e.getCode() == KeyCode.SPACE) spaceDown = false;
+            if (e.getCode() == KeyCode.X) xDown = false;
+        });
+        // Fenster verliert den Fokus -> nichts gilt mehr als gedrueckt.
+        stage.focusedProperty().addListener((obs, was, now) -> {
+            if (!now) {
+                spaceDown = false;
+                xDown = false;
+                holdingFire = false;
+            }
+        });
+    }
+
+    private boolean fireKeyPhysicallyDown() {
+        if (!fireKeyTrackingInstalled) {
+            return holdingFire;
+        }
+        if (!spaceDown && !xDown) {
+            holdingFire = false;
+        }
+        return spaceDown || xDown;
     }
 
     private void updateContinuousLaser(double tpf, boolean wantFire, boolean twin) {
@@ -3048,7 +3093,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
         laserHeat += tpf;
         double heatLimit = 3.0;
-        double coolDown = twin ? 0.5 : 3.0;
+        double coolDown = twin ? 0.5 : 1.0;
         if (laserHeat >= heatLimit) {
             laserHeat = 0;
             laserCooldown = coolDown;
