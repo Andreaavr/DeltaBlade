@@ -2573,6 +2573,34 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             showBanner(drop.banner(), Color.MEDIUMPURPLE, 1.2);
             return;
         }
+        if (drop.spawnName() != null && drop.spawnName().startsWith("WAVE:")) {
+            if (gameOver || optionsOpen || minigameActive || warping) {
+                return;
+            }
+            if (!gameStarted || showingTitleScreen || player == null) {
+                if (showingTitleScreen) {
+                    startActualGame(false);
+                }
+                if (player == null) {
+                    return;
+                }
+            }
+            WaveManager.WaveType forced = WaveManager.WaveType.valueOf(drop.spawnName().substring(5));
+            cancelGetReady();
+            clearWaveEntities();
+            refillWaveTimer();
+            ufoSpawnedThisWave = false;
+            waveTransition = false;
+            int lvl = geti(GameVars.LEVEL);
+            if (forced == WaveManager.WaveType.BOSS) {
+                lvl = Math.max(lvl, GameVars.BOSS_EVERY);
+            }
+            waveManager.startWave(lvl, forced);
+            showWaveAnnouncement();
+            SoundHelper.play("get_ready.wav");
+            showBanner(drop.banner(), Color.AQUA, 1.2);
+            return;
+        }
         if ("PEARL".equals(drop.spawnName())) {
             if (gameOver || optionsOpen || minigameActive || warping) {
                 return;
@@ -3798,7 +3826,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             }
         }
         if (pendingHurryUfo && hurryUfoDelay <= 0) {
-            boolean bonus = waveManager != null && waveManager.getCurrentWaveType() == WaveManager.WaveType.BONUS;
+            boolean bonus = waveManager != null && (waveManager.getCurrentWaveType() == WaveManager.WaveType.BONUS
+                    || waveManager.getCurrentWaveType() == WaveManager.WaveType.BOSS);
             if (bonus) {
                 pendingHurryUfo = false;
             } else {

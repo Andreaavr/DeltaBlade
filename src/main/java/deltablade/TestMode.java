@@ -8,6 +8,7 @@ import java.util.Optional;
  * Debug codes: tap the same number key three times
  * (000 Missile, 111 Meteor Challenge, 222 Cognitive, 333 Shield, 444 Warp, 555 UFO, 666 Bonus, 777 Attack, 888 Scoop, 999 Swarm).
  * Sequence 890 = Money cheat. Sequence 456 = Maze Escape minigame.
+ * Wellen-Tests: 505 Boss sofort, 147 Kreisel, 258 Zange, 369 Wasserfall, 159 Sturm.
  */
 public final class TestMode {
 
@@ -45,6 +46,15 @@ public final class TestMode {
             lastAt = now;
             count = 0;
             return money;
+        }
+        for (int i = 0; i < WAVE_CODES.length; i++) {
+            Optional<Drop> w = feedWaveSequence(i, digit, now);
+            if (w.isPresent()) {
+                lastDigit = digit;
+                lastAt = now;
+                count = 0;
+                return w;
+            }
         }
         Optional<Drop> maze = feedMazeSequence(digit, now);
         if (maze.isPresent()) {
@@ -89,6 +99,32 @@ public final class TestMode {
         return Optional.empty();
     }
 
+
+    /** Wellen-Test-Codes: Ziffernfolge -> Wellen-Art. */
+    private static final int[][] WAVE_CODES = {
+            {5, 0, 5}, {1, 4, 7}, {2, 5, 8}, {3, 6, 9}, {1, 5, 9}
+    };
+    private static final String[] WAVE_NAMES = {"BOSS", "KREISEL", "ZANGE", "WASSERFALL", "STURM"};
+    private static final int[] waveSeq = new int[WAVE_CODES.length];
+    private static final long[] waveSeqAt = new long[WAVE_CODES.length];
+
+    private static Optional<Drop> feedWaveSequence(int i, int digit, long now) {
+        int[] code = WAVE_CODES[i];
+        if (now - waveSeqAt[i] > TIMEOUT_MS) {
+            waveSeq[i] = 0;
+        }
+        waveSeqAt[i] = now;
+        if (digit == code[waveSeq[i]]) {
+            waveSeq[i]++;
+            if (waveSeq[i] >= code.length) {
+                waveSeq[i] = 0;
+                return Optional.of(new Drop("WAVE:" + WAVE_NAMES[i], "TEST  " + WAVE_NAMES[i]));
+            }
+            return Optional.empty();
+        }
+        waveSeq[i] = (digit == code[0]) ? 1 : 0;
+        return Optional.empty();
+    }
 
     private static Optional<Drop> feedMazeSequence(int digit, long now) {
         if (now - mazeSeqAt > TIMEOUT_MS) {
