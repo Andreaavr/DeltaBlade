@@ -3846,6 +3846,10 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
 
     private void triggerHurryUpWarning() {
+        if (isBossWave()) {
+            extraTimeWarned = true;
+            return;
+        }
         if (extraTimeWarned) {
             return;
         }
