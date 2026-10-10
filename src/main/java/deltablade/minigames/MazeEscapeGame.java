@@ -38,7 +38,7 @@ import static com.almasb.fxgl.dsl.FXGL.inc;
 /**
  * Full-screen dodge minigame: navigate a solvable maze from bottom-center to
  * top-center while rim turrets fire slow inward bullets. Single-shot silences
- * one rim ship; shield absorbs one hit.
+ * one rim ship; shield gives 10s invulnerability (stacks).
  */
 public class MazeEscapeGame implements Minigame {
 
@@ -105,7 +105,12 @@ public class MazeEscapeGame implements Minigame {
     private double timeLeft;
     private int moneyCollected;
     private boolean shotLoaded;
-    private boolean shieldUp;
+    private double shieldTime;
+    private static final double SHIELD_SECONDS = GameVars.SHIELD_DURATION;
+
+    private boolean shieldUp() {
+        return shieldTime > 0;
+    }
     private Circle shieldBubble;
     private double extraPulse;
     private double shieldFlash;
@@ -216,7 +221,7 @@ public class MazeEscapeGame implements Minigame {
         this.timeLeft = TIME_LIMIT;
         this.moneyCollected = 0;
         this.shotLoaded = false;
-        this.shieldUp = false;
+        this.shieldTime = 0;
         this.fireGraceLeft = FIRE_GRACE;
         this.hurryWarned = false;
         this.hudPulse = 0;
@@ -295,6 +300,9 @@ public class MazeEscapeGame implements Minigame {
         checkBulletHits();
         checkExit();
 
+        if (shieldTime > 0) {
+            shieldTime = Math.max(0, shieldTime - tpf);
+        }
         timeLeft -= tpf;
         hudPulse += tpf;
         maybeHurryUp();
@@ -746,14 +754,18 @@ public class MazeEscapeGame implements Minigame {
             shieldFlash = Math.max(0, shieldFlash - tpf);
         }
         if (shieldBubble != null) {
-            boolean show = (shieldUp || shieldFlash > 0) && playerShipView != null && playerShipView.isVisible();
+            boolean show = (shieldUp() || shieldFlash > 0) && playerShipView != null && playerShipView.isVisible();
             shieldBubble.setVisible(show);
             if (show) {
                 double f = shieldFlash / 0.35;
+                if (shieldTime > 0 && shieldTime <= 3) {
+                    // Letzte 3 Sekunden: schneller blinken.
+                    wave = 0.5 + 0.5 * Math.sin(shieldTime * 14);
+                }
                 double sc = 1.0 + 0.06 * wave + 0.25 * f;
                 shieldBubble.setScaleX(sc);
                 shieldBubble.setScaleY(sc);
-                shieldBubble.setOpacity(shieldUp ? Math.min(1.0, 0.6 + 0.3 * wave + f) : f);
+                shieldBubble.setOpacity(shieldUp() ? (shieldTime <= 3 ? Math.min(1.0, 0.25 + 0.75 * wave + f) : Math.min(1.0, 0.6 + 0.3 * wave + f)) : f);
             }
         }
     }
@@ -828,8 +840,8 @@ public class MazeEscapeGame implements Minigame {
             hudShot.setFill(shotLoaded ? Color.ORANGE : Color.rgb(120, 120, 140));
         }
         if (hudShield != null) {
-            hudShield.setText(shieldUp ? "SHIELD ON" : "SHIELD ---");
-            hudShield.setFill(shieldUp ? Color.AQUA : Color.rgb(120, 120, 140));
+            hudShield.setText(shieldUp() ? "SHIELD " + (int) Math.ceil(shieldTime) : "SHIELD ---");
+            hudShield.setFill(shieldUp() ? Color.AQUA : Color.rgb(120, 120, 140));
         }
     }
 
@@ -1318,7 +1330,8 @@ public class MazeEscapeGame implements Minigame {
                     SoundHelper.play("extra_time.wav");
                 }
                 case SHIELD -> {
-                    shieldUp = true;
+                    shieldTime += SHIELD_SECONDS;
+                    host.displayBanner("SHIELD +" + (int) SHIELD_SECONDS, Color.AQUA, 0.8);
                     SoundHelper.play("shield.wav");
                 }
                 case SHOT -> {
@@ -1358,11 +1371,9 @@ public class MazeEscapeGame implements Minigame {
             }
             bulletLayer.getChildren().remove(b.view);
             bullets.remove(i);
-            if (shieldUp) {
-                shieldUp = false;
+            if (shieldUp()) {
+                // Schild blockt jeden Treffer, solange Zeit uebrig ist.
                 shieldFlash = 0.35;
-                refreshHud();
-                host.displayBanner("SHIELD BREAK", Color.AQUA, 0.8);
             } else {
                 host.spawnExplosion(px, py, "ship");
                 fail("HIT");
@@ -1532,7 +1543,7 @@ public class MazeEscapeGame implements Minigame {
         int bonusScore = picked * 150;
         int score = 1800 + timeScore + turretScore + bonusScore + moneyCollected * 4;
         int money = 60 + leftover * 2 + turrets * 12 + picked * 8;
-        if (shieldUp) {
+        if (shieldUp()) {
             score += 350;
             money += 20;
         }
