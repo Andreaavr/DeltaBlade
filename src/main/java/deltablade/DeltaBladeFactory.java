@@ -68,6 +68,48 @@ public class DeltaBladeFactory implements EntityFactory {
         return EmbeddedTextures.createFallbackShip(size, fallback);
     }
 
+    /** Echte Gegner-Schiffe (Reihe 3 im Sprite-Sheet, sauber 64x64) fuer den Boss. */
+    static final int[] BOSS_SHIP_TILES = {21, 19, 20, 23, 22, 16};
+
+    /**
+     * Boss-Bild: echtes Gegner-Schiff, erst pixelgenau auf das 3-fache vergroessert
+     * (scharfe Kanten), dann weich auf Zielgroesse gebracht. So wirkt es nicht klotzig.
+     */
+    static Node bossView(int bossNo, int size) {
+        int tile = BOSS_SHIP_TILES[Math.floorMod(bossNo - 1, BOSS_SHIP_TILES.length)];
+        Image src = SpriteSheets.tile(SpriteSheets.SHIPS, tile);
+        if (src == null || src.isError()) {
+            return EmbeddedTextures.createFallbackShip(size, Color.DARKVIOLET);
+        }
+        int factor = Math.max(1, (int) Math.ceil(size / src.getWidth()));
+        Image big = upscaleNearest(src, factor);
+        ImageView view = new ImageView(big);
+        view.setFitWidth(size);
+        view.setFitHeight(size);
+        view.setPreserveRatio(true);
+        view.setSmooth(true);
+        return view;
+    }
+
+    static Image upscaleNearest(Image src, int factor) {
+        int w = (int) src.getWidth();
+        int h = (int) src.getHeight();
+        javafx.scene.image.WritableImage out = new javafx.scene.image.WritableImage(w * factor, h * factor);
+        javafx.scene.image.PixelReader r = src.getPixelReader();
+        javafx.scene.image.PixelWriter pw = out.getPixelWriter();
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                int argb = r.getArgb(x, y);
+                for (int dy = 0; dy < factor; dy++) {
+                    for (int dx = 0; dx < factor; dx++) {
+                        pw.setArgb(x * factor + dx, y * factor + dy, argb);
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
     private static Node safeTexture(String name, int w, int h, Color fallback) {
         Image img = EmbeddedTextures.getImage(name, w, h);
         if (img != null && !img.isError()) {
@@ -190,11 +232,7 @@ public class DeltaBladeFactory implements EntityFactory {
         } else {
             // Boss: vorhandenes Gegner-Bild, nur viel groesser. Jeder Boss sieht anders aus.
             int bossNo = GameVars.bossNumber(level);
-            if (bossNo % 2 == 0) {
-                view = sheetTile(SpriteSheets.MONSTERS, (bossNo / 2) % SpriteSheets.MONSTER_TILES, size, Color.DARKVIOLET);
-            } else {
-                view = sheetTile(SpriteSheets.SHIPS, (bossNo * 5) % SpriteSheets.SHIP_TILES, size, Color.DARKVIOLET);
-            }
+            view = bossView(bossNo, size);
         }
 
         return FXGL.entityBuilder(data)
