@@ -22,7 +22,18 @@ public class WaveManager {
         BOSS,
         KAMIKAZE,
         MONSTER,
-        METEOR
+        METEOR,
+        KREISEL,     // Gruppen kreisen erst um die Mitte
+        ZANGE,       // je zwei Gruppen gleichzeitig von links und rechts
+        WASSERFALL,  // viele kleine Gruppen in Schlangenlinien von oben
+        STURM        // Schiffe stuerzen sehr bald und oft herab
+    }
+
+    /** Pro Spiel neu: sorgt fuer etwas Zufall in der Wellen-Reihenfolge. */
+    private static long runSeed = System.nanoTime();
+
+    public WaveManager() {
+        runSeed = System.nanoTime();
     }
 
     public enum FormationType {
@@ -112,6 +123,13 @@ public class WaveManager {
             case KAMIKAZE -> setupKamikazeWave(level);
             case MONSTER -> setupMonsterWave(level);
             case METEOR -> setupMeteorWave(level);
+            case KREISEL -> setupFlightWave(level, FormationType.DIAMOND, 3);
+            case ZANGE -> setupFlightWave(level, FormationType.TWO_COLUMNS, 4);
+            case WASSERFALL -> {
+                setupFlightWave(level, FormationType.STAGGERED, 5);
+                squadSpawnDelay = 1.4;
+            }
+            case STURM -> setupFlightWave(level, FormationType.V_FORMATION, 3);
         }
 
         if (currentWaveType == WaveType.METEOR) {
@@ -129,6 +147,56 @@ public class WaveManager {
         if (level >= GameVars.MONSTER_WAVE_MIN_LEVEL && level % 8 == 6) {
             return WaveType.MONSTER;
         }
+        if (level <= 2) {
+            return level == 1 ? WaveType.FIGHTERS : WaveType.MIXED;
+        }
+        // Weniger starre Reihenfolge: Auswahl aus einem Topf, der mit dem Level waechst.
+        List<WaveType> pool = new ArrayList<>(List.of(
+                WaveType.FIGHTERS, WaveType.MIXED, WaveType.PEARL, WaveType.KREISEL, WaveType.WASSERFALL));
+        if (level >= 4) {
+            pool.add(WaveType.ZANGE);
+            pool.add(WaveType.RANK);
+        }
+        if (level >= 6) {
+            pool.add(WaveType.STURM);
+            pool.add(WaveType.BONUS);
+            pool.add(WaveType.KAMIKAZE);
+        }
+        java.util.Random rnd = new java.util.Random(runSeed * 31 + level * 7919L);
+        WaveType pick = pool.get(rnd.nextInt(pool.size()));
+        WaveType prev = level - 1 > 0 && (level - 1) % GameVars.BOSS_EVERY != 0
+                ? resolveWaveTypeSimple(level - 1) : null;
+        if (pick == prev) {
+            pick = pool.get((pool.indexOf(pick) + 1) % pool.size());
+        }
+        return pick;
+    }
+
+    /** Wie resolveWaveType, aber ohne den Vergleich mit dem Vorgaenger (verhindert lange Rekursion). */
+    private static WaveType resolveWaveTypeSimple(int level) {
+        if (level <= 2) {
+            return level == 1 ? WaveType.FIGHTERS : WaveType.MIXED;
+        }
+        if (level >= GameVars.MONSTER_WAVE_MIN_LEVEL && level % 8 == 6) {
+            return WaveType.MONSTER;
+        }
+        List<WaveType> pool = new ArrayList<>(List.of(
+                WaveType.FIGHTERS, WaveType.MIXED, WaveType.PEARL, WaveType.KREISEL, WaveType.WASSERFALL));
+        if (level >= 4) {
+            pool.add(WaveType.ZANGE);
+            pool.add(WaveType.RANK);
+        }
+        if (level >= 6) {
+            pool.add(WaveType.STURM);
+            pool.add(WaveType.BONUS);
+            pool.add(WaveType.KAMIKAZE);
+        }
+        java.util.Random rnd = new java.util.Random(runSeed * 31 + level * 7919L);
+        return pool.get(rnd.nextInt(pool.size()));
+    }
+
+    @SuppressWarnings("unused")
+    private static WaveType oldFixedOrder(int level) {
         int slot = ((level - 1) % 5) + 1;
         return switch (slot) {
             case 1 -> WaveType.FIGHTERS;
@@ -144,6 +212,14 @@ public class WaveManager {
             }
             default -> WaveType.FIGHTERS;
         };
+    }
+
+    private void setupFlightWave(int level, FormationType formation, int squads) {
+        int cycle = (level - 1) / 4 + 1;
+        int count = Math.min(10 + cycle * 2, 16);
+        generateFormationSlots(formation, count);
+        totalEnemiesInWave = formationSlots.size();
+        squadsToSpawn = squads;
     }
 
     private void setupFightersWave(int level) {
@@ -463,6 +539,9 @@ public class WaveManager {
             return;
         }
         double gap = Math.max(1.3, 4.6 - currentLevel * 0.15);
+        if (currentWaveType == WaveType.STURM) {
+            gap = Math.max(0.8, gap * 0.45);
+        }
         groupDiveTimer = gap * (0.8 + Math.random() * 0.4);
 
         List<Entity> ready = new ArrayList<>();
@@ -476,6 +555,9 @@ public class WaveManager {
             return;
         }
         int maxGroup = currentLevel < 3 ? 1 : currentLevel < 6 ? 2 : 3;
+        if (currentWaveType == WaveType.STURM) {
+            maxGroup = 3;
+        }
         int size = 1 + (int) (Math.random() * maxGroup);
         Entity leader = ready.get((int) (Math.random() * ready.size()));
         ready.sort((a, b) -> Double.compare(a.distance(leader), b.distance(leader)));
@@ -503,7 +585,9 @@ public class WaveManager {
 
         if (enemiesSpawned < totalEnemiesInWave) {
             squadSpawnTimer += tpf;
-            if (squadSpawnTimer >= squadSpawnDelay) {
+            double delayNow = currentWaveType == WaveType.ZANGE && activeSquads.size() % 2 == 1
+                    ? 0.35 : squadSpawnDelay;
+            if (squadSpawnTimer >= delayNow) {
                 squadSpawnTimer = 0;
                 if (squadsToSpawn <= 0) {
                     squadsToSpawn = 1;
@@ -629,6 +713,15 @@ public class WaveManager {
         return switch (currentWaveType) {
             case FIGHTERS, MIXED, BONUS, MONSTER -> mixedPath(squadIndex);
             case METEOR -> new EntryPath(getAppWidth() / 2.0, -50, EntryPath.Type.FROM_CENTER);
+            case KREISEL -> EntryPath.flight(squadIndex % 2 == 0 ? FlightPaths.Kind.KREIS : FlightPaths.Kind.SPIRALE,
+                    squadIndex % 2 == 1);
+            case ZANGE -> EntryPath.flight(FlightPaths.Kind.BOGEN, squadIndex % 2 == 1);
+            case WASSERFALL -> EntryPath.flight(squadIndex % 3 == 2 ? FlightPaths.Kind.WELLE : FlightPaths.Kind.S_KURVE,
+                    squadIndex % 2 == 1);
+            case STURM -> {
+                FlightPaths.Kind[] k = {FlightPaths.Kind.HAKEN, FlightPaths.Kind.SCHLEIFE, FlightPaths.Kind.BOGEN};
+                yield EntryPath.flight(k[squadIndex % k.length], squadIndex % 2 == 1);
+            }
             case PEARL -> pearlPath(squadIndex);
             case RANK -> squadIndex % 2 == 0
                     ? new EntryPath(getAppWidth() / 2.0, -50, EntryPath.Type.FROM_CENTER)

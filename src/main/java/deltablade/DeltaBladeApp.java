@@ -953,6 +953,22 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 message = "SWARM - WAVE " + geti(GameVars.LEVEL);
                 color = Color.MEDIUMPURPLE;
             }
+            case KREISEL -> {
+                message = "KREISEL - WAVE " + geti(GameVars.LEVEL);
+                color = Color.LIGHTGREEN;
+            }
+            case ZANGE -> {
+                message = "ZANGE - WAVE " + geti(GameVars.LEVEL);
+                color = Color.DEEPSKYBLUE;
+            }
+            case WASSERFALL -> {
+                message = "WASSERFALL - WAVE " + geti(GameVars.LEVEL);
+                color = Color.LIGHTSKYBLUE;
+            }
+            case STURM -> {
+                message = "STURM - WAVE " + geti(GameVars.LEVEL);
+                color = Color.ORANGE;
+            }
             case METEOR -> {
                 message = "METEOR CHALLENGE";
                 color = Color.SANDYBROWN;
@@ -3273,7 +3289,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             return false;
         }
         return switch (waveManager.getCurrentWaveType()) {
-            case FIGHTERS, MIXED, PEARL, RANK, BONUS, KAMIKAZE, MONSTER -> true;
+            case FIGHTERS, MIXED, PEARL, RANK, BONUS, KAMIKAZE, MONSTER,
+                 KREISEL, ZANGE, WASSERFALL, STURM -> true;
             default -> false;
         };
     }
