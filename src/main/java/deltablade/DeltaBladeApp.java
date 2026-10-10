@@ -807,6 +807,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         laserHeat = 0;
         laserCooldown = 0;
         laserTickTimer = 0;
+        java.util.Arrays.fill(laserTickTimers, 0);
         laserShotCounted = false;
         sweepAngle = 0;
         sweepActive = 0;
@@ -2962,6 +2963,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         laserHeat = 0;
         laserCooldown = 0;
         laserTickTimer = 0;
+        java.util.Arrays.fill(laserTickTimers, 0);
         laserShotCounted = false;
         sweepActive = 0;
         sweepPause = 0;
@@ -3092,8 +3094,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             laserShotCounted = true;
         }
         laserHeat += tpf;
-        double heatLimit = twin ? 3.0 : 2.0;
-        double coolDown = twin ? 0.5 : 1.5;
+        double heatLimit = twin ? 2.5 : 2.0;
+        double coolDown = twin ? 0.8 : 1.2;
         if (laserHeat >= heatLimit) {
             laserHeat = 0;
             laserCooldown = coolDown;
@@ -3106,11 +3108,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         Color color = twin ? Color.AQUA : Color.CYAN;
         if (twin) {
             ensureLaserBeamCount(2, color);
-            fireLaserColumn(laserBeams.get(0), pc.getCenterX() - 14, originY, 0, 1, tpf);
-            fireLaserColumn(laserBeams.get(1), pc.getCenterX() + 14, originY, 0, 1, tpf);
+            fireLaserColumn(laserBeams.get(0), pc.getCenterX() - 14, originY, 0, 1, tpf, TWIN_TICK, 0);
+            fireLaserColumn(laserBeams.get(1), pc.getCenterX() + 14, originY, 0, 1, tpf, TWIN_TICK, 1);
         } else {
             ensureLaserBeamCount(1, color);
-            fireLaserColumn(laserBeams.get(0), pc.getCenterX(), originY, 0, 2, tpf);
+            fireLaserColumn(laserBeams.get(0), pc.getCenterX(), originY, 0, 1, tpf, NEEDLE_TICK, 0);
         }
     }
 
@@ -3141,10 +3143,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         sweepAngle = Math.sin(sweepActive * Math.PI * 2.0 / 1.2) * 55.0;
         PlayerComponent pc = player.getComponent(PlayerComponent.class);
         ensureLaserBeamCount(1, Color.ORANGE);
-        fireLaserColumn(laserBeams.get(0), pc.getCenterX(), pc.getTopY(), sweepAngle, 2, tpf);
+        fireLaserColumn(laserBeams.get(0), pc.getCenterX(), pc.getTopY(), sweepAngle, 2, tpf, SWEEP_TICK, 0);
     }
 
-    private void fireLaserColumn(Line beam, double originX, double originY, double angleDeg, int damage, double tpf) {
+    private void fireLaserColumn(Line beam, double originX, double originY, double angleDeg, int damage, double tpf,
+                                 double tickEvery, int timerIdx) {
         double rad = Math.toRadians(angleDeg);
         double dirX = Math.sin(rad);
         double dirY = -Math.cos(rad);
@@ -3188,21 +3191,31 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         beam.setEndX(endX);
         beam.setEndY(endY);
 
-        laserTickTimer += tpf;
-        double tickEvery = twinOrNeedleTick(damage);
-        if (nearest != null && laserTickTimer >= tickEvery) {
-            laserTickTimer = 0;
-            damageEnemy(nearest, damage);
+        laserTickTimers[timerIdx] += tpf;
+        if (nearest != null && laserTickTimers[timerIdx] >= tickEvery) {
+            laserTickTimers[timerIdx] = 0;
+            int dmg = damage;
+            EnemyComponent tec = nearest.getComponent(EnemyComponent.class);
+            if (tec.isBoss() && currentShopWeapon() != ShopWeapon.SWEEP_LASER) {
+                // Needle/Twin machen am Boss nur halben Schaden (Rest wird angespart).
+                bossLaserCarry += damage * LASER_BOSS_FACTOR;
+                dmg = (int) bossLaserCarry;
+                bossLaserCarry -= dmg;
+            }
+            if (dmg > 0) {
+                damageEnemy(nearest, dmg);
+            }
             inc(GameVars.HITS_LANDED, 1);
         }
     }
 
-    private static final double NEEDLE_TICK = 0.14;
-
-    private double twinOrNeedleTick(int damage) {
-        // Needle (Schaden 2) tickt seltener: ~14 statt 20 Schaden pro Sekunde. Twin unveraendert.
-        return damage >= 2 ? NEEDLE_TICK : 0.10;
-    }
+    // Laser-Balance: Needle 1 Schaden / 0,15 s; Twin pro Strahl 1 / 0,20 s; Sweep unveraendert (2 / 0,10 s).
+    private static final double NEEDLE_TICK = 0.15;
+    private static final double TWIN_TICK = 0.20;
+    private static final double SWEEP_TICK = 0.10;
+    private static final double LASER_BOSS_FACTOR = 0.5;
+    private final double[] laserTickTimers = new double[2];
+    private double bossLaserCarry = 0;
 
     private void fireShopImpulse(ShopWeapon weapon) {
         if (weapon == ShopWeapon.PLASMA_ORB) {
