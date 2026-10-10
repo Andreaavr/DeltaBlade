@@ -3800,7 +3800,15 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         
         if (waveManager != null && !waveTransition) {
             waveManager.update(tpf);
-            updateExtraTime(tpf);
+            if (isBossWave()) {
+                // Boss-Level: kein Zeitdruck.
+                extraTime = extraTimeMax;
+                extraTimeWarned = true;
+                pendingHurryUfo = false;
+            } else {
+                updateExtraTime(tpf);
+            }
+            updateExtraTimeBar();
             checkWaveComplete();
         }
     }
@@ -3875,6 +3883,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private Rectangle weaponBar;
     private Rectangle livesBar;
     private Rectangle extraTimeBar;
+    private Rectangle timeBarBg;
+    private Text timeLabelNode;
+
+    private boolean isBossWave() {
+        return waveManager != null && waveManager.getCurrentWaveType() == WaveManager.WaveType.BOSS;
+    }
     private Text extraTimeMaxText;
     private double extraTimeBarMaxWidth;
     private Circle[] rankDots = new Circle[GameVars.RANK_COLOR_COUNT];
@@ -3955,6 +3969,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         timeLabelT.setTranslateX(xOffset);
         timeLabelT.setTranslateY(timeBlockY + 10);
         getGameScene().addUINode(timeLabelT);
+        timeLabelNode = timeLabelT;
 
         extraTimeMaxText = new Text(String.valueOf(extraTimeMax));
         extraTimeMaxText.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
@@ -3964,7 +3979,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         extraTimeMaxText.setEffect(new DropShadow(2, Color.BLACK));
         getGameScene().addUINode(extraTimeMaxText);
 
-        Rectangle timeBarBg = createBarBackground(xOffset, timeBlockY + 13, railWidth - 10, barHeight);
+        timeBarBg = createBarBackground(xOffset, timeBlockY + 13, railWidth - 10, barHeight);
         extraTimeBar = createStatusBar(xOffset + 1, timeBlockY + 14, railWidth - 12, barHeight - 2, Color.LIME);
         extraTimeBarMaxWidth = railWidth - 12;
         getGameScene().addUINode(timeBarBg);
@@ -4381,6 +4396,17 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
         if (extraTimeBar == null) {
             return;
+        }
+        boolean show = !isBossWave();
+        extraTimeBar.setVisible(show);
+        if (timeBarBg != null) {
+            timeBarBg.setVisible(show);
+        }
+        if (extraTimeMaxText != null) {
+            extraTimeMaxText.setVisible(show);
+        }
+        if (timeLabelNode != null) {
+            timeLabelNode.setVisible(show);
         }
         double ratio = extraTimeMax > 0 ? extraTime / extraTimeMax : 0;
         extraTimeBar.setWidth(Math.max(1, extraTimeBarMaxWidth * ratio));

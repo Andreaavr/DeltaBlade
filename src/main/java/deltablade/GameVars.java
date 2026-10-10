@@ -96,8 +96,8 @@ public final class GameVars {
     public static final int BOSS_EVERY = 5;
     /** Boss = normales Gegner-Bild, aber viel groesser. */
     public static final int BOSS_DRAW_SIZE = 160;
-    public static final int BOSS_HP_BASE = 40;
-    public static final int BOSS_HP_PER_BOSS = 25;
+    public static final int BOSS_HP_BASE = 25;
+    public static final int BOSS_HP_PER_BOSS = 20;
     public static final int BOSS_KILL_SCORE = 5000;
     public static final int BOSS_KILL_MONEY = 300;
 

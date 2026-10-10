@@ -621,12 +621,13 @@ public class EnemyComponent extends Component {
         return top + (baseY - top) * (1 + (WaveManager.formationBreath() - 1) * 0.6);
     }
 
-    /** Schiff dreht sich sanft in Flugrichtung (Bild schaut nach unten). */
+    /** Schiff dreht sich sanft in Flugrichtung (Spitze voraus). */
     private void faceToward(double vx, double vy, double tpf) {
         if (Math.abs(vx) + Math.abs(vy) < 1) {
             return;
         }
-        double want = Math.toDegrees(Math.atan2(vy, vx)) - 90;
+        // Gegner-Bilder zeigen mit der Spitze nach oben -> +90 Grad.
+        double want = Math.toDegrees(Math.atan2(vy, vx)) + 90;
         double diff = ((want - heading) % 360 + 540) % 360 - 180;
         heading += diff * Math.min(1, tpf * 10);
         entity.setRotation(heading);
@@ -745,20 +746,21 @@ public class EnemyComponent extends Component {
 
         bossShotTimer -= tpf;
         if (bossShotTimer <= 0) {
-            double gap = Math.max(0.9, 1.8 - bossNo * 0.08);
+            double gap = Math.max(1.1, 2.5 - bossNo * 0.1);
             if (bossPhase == 3) {
                 gap *= 0.7;
             }
             bossShotTimer = gap;
-            int count = 3 + Math.min(2, bossNo / 2) + (bossPhase == 3 ? 1 : 0);
-            bossFan(count, 60, bossPhase == 3 ? 270 : 230);
+            int count = 3 + Math.min(2, (bossNo - 1) / 2) + (bossPhase == 3 && bossNo > 1 ? 1 : 0);
+            double speed = Math.min(250, 180 + bossNo * 8) * (bossPhase == 3 ? 1.12 : 1.0);
+            bossFan(count, 60, speed);
         }
 
         if (bossPhase >= 2) {
             bossHelperTimer -= tpf;
             if (bossHelperTimer <= 0) {
-                bossHelperTimer = bossPhase == 3 ? 7.0 : 5.5;
-                int helpers = 2 + Math.min(2, bossNo / 2);
+                bossHelperTimer = bossPhase == 3 ? 9.0 : 7.5;
+                int helpers = 1 + Math.min(3, (bossNo - 1) / 2 + (bossNo > 1 ? 1 : 0));
                 FXGL.<deltablade.DeltaBladeApp>getAppCast().spawnBossHelpers(entity, helpers);
             }
         }
@@ -766,11 +768,11 @@ public class EnemyComponent extends Component {
         if (bossPhase == 3) {
             bossSpecialTimer -= tpf;
             if (bossSpecialTimer <= 0) {
-                bossSpecialTimer = 3.2;
+                bossSpecialTimer = 4.0;
                 if (bossRingNext) {
-                    bossRing(14 + Math.min(6, bossNo), 190);
+                    bossRing(8 + Math.min(10, bossNo * 2), Math.min(200, 145 + bossNo * 8));
                 } else {
-                    beamWarmup = 0.7;
+                    beamWarmup = 1.2;
                 }
                 bossRingNext = !bossRingNext;
             }
@@ -808,7 +810,7 @@ public class EnemyComponent extends Component {
             beamWarmup -= tpf;
             entity.translateX((random.nextDouble() - 0.5) * 6);
             if (beamWarmup <= 0) {
-                beamLeft = 1.3;
+                beamLeft = 1.0;
                 beamTick = 0;
             }
             return;
@@ -816,10 +818,10 @@ public class EnemyComponent extends Component {
         beamLeft -= tpf;
         beamTick -= tpf;
         if (beamTick <= 0) {
-            beamTick = 0.05;
+            beamTick = 0.08;
             double cx = entity.getX() + entity.getWidth() / 2.0;
             double by = entity.getY() + entity.getHeight() * 0.85;
-            FXGL.<deltablade.DeltaBladeApp>getAppCast().spawnBossBullet(cx, by, 0, 430);
+            FXGL.<deltablade.DeltaBladeApp>getAppCast().spawnBossBullet(cx, by, 0, 340);
         }
     }
 
