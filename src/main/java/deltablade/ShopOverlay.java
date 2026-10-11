@@ -7,6 +7,8 @@ import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.control.Button;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
@@ -73,6 +75,10 @@ public final class ShopOverlay {
     private final Group root = new Group();
     private final ShopItem[] items = ShopItem.catalog();
     private final Text[] rowTexts = new Text[items.length];
+    private static final double PREVIEW_SIZE = 120;
+    private static final double ROW_ICON = 18;
+    private ImageView previewImage;
+    private Text previewLabel;
     private final RunStats initialStats;
     private final BuyHandler onBuy;
     private final Consumer<ShopWeapon> onClose;
@@ -142,8 +148,13 @@ public final class ShopOverlay {
         previewBox.setStroke(Color.web("#4a90d9"));
         previewBox.setStrokeWidth(2);
         StackPane previewPane = new StackPane(previewBox);
-        Text previewLabel = mono("NO IMAGE", 12, Color.rgb(120, 140, 160));
-        previewPane.getChildren().add(previewLabel);
+        previewLabel = mono("NO IMAGE", 12, Color.rgb(120, 140, 160));
+        previewImage = new ImageView();
+        previewImage.setFitWidth(PREVIEW_SIZE);
+        previewImage.setFitHeight(PREVIEW_SIZE);
+        previewImage.setPreserveRatio(true);
+        previewImage.setSmooth(true);
+        previewPane.getChildren().addAll(previewLabel, previewImage);
 
         titleText = mono("", 18, Color.WHITE);
         typeText = mono("", 12, Color.CYAN);
@@ -161,12 +172,19 @@ public final class ShopOverlay {
         for (int i = 0; i < items.length; i++) {
             final int index = i;
             Text row = mono("", 13, Color.WHITE);
-            row.setOnMouseClicked(e -> {
+            ImageView icon = new ImageView(ShopImages.imageFor(items[i]));
+            icon.setFitWidth(ROW_ICON);
+            icon.setFitHeight(ROW_ICON);
+            icon.setPreserveRatio(true);
+            icon.setSmooth(true);
+            HBox rowBox = new HBox(6, icon, row);
+            rowBox.setAlignment(Pos.CENTER_LEFT);
+            rowBox.setOnMouseClicked(e -> {
                 selected = index;
                 refresh();
             });
             rowTexts[i] = row;
-            right.getChildren().add(row);
+            right.getChildren().add(rowBox);
         }
 
         body.getChildren().addAll(left, right);
@@ -296,6 +314,9 @@ public final class ShopOverlay {
         typeText.setFill(colorFor(item.colorTag()));
         previewBox.setFill(Color.rgb(16, 24, 40));
         previewBox.setStroke(colorFor(item.colorTag()));
+        Image img = ShopImages.imageFor(item);
+        previewImage.setImage(img);
+        previewLabel.setVisible(img == null);
         descText.setText(item.description());
 
         if (!unlocked) {
