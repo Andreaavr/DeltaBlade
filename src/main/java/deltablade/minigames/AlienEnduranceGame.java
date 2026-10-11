@@ -145,7 +145,6 @@ public class AlienEnduranceGame implements Minigame {
             layer.getChildren().remove(durationText);
             layer.getChildren().add(durationText);
             durationShow = 1.6;
-            SoundHelper.play(gain >= 5000 ? "bonus_perfect.wav" : "money.wav");
         }
         if (durationText == null || durationShow <= 0) {
             return;
