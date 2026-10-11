@@ -452,6 +452,17 @@ public class DeltaBladeFactory implements EntityFactory {
     }
 
 
+    @Spawns("alienPickup")
+    public Entity newAlienPickup(SpawnData data) {
+        return FXGL.entityBuilder(data)
+                .type(EntityType.PICKUP)
+                .viewWithBBox(orbPickup(Color.TEAL, Color.AQUAMARINE, "A"))
+                .zIndex(60)
+                .collidable()
+                .with(new PickupComponent(PickupComponent.PickupType.ALIEN))
+                .build();
+    }
+
     @Spawns("plasmaOrb")
     public Entity newPlasmaOrb(SpawnData data) {
         double speedX = data.hasKey("speedX") ? data.<Double>get("speedX") : 0.0;

@@ -46,6 +46,7 @@ public class AlienEnduranceGame implements Minigame {
     double time;
     int lives;
     private double invuln;
+    private boolean endPending;
     boolean over;
     private double fireCd;
     private double spawnTimer;
@@ -125,7 +126,13 @@ public class AlienEnduranceGame implements Minigame {
         updateBullets(tpf);
         updateExtras(tpf);
         updateInvuln(tpf);
-        refreshHud();
+        if (endPending) {
+            endRun();
+            return;
+        }
+        if (!over) {
+            refreshHud();
+        }
     }
 
     @Override
@@ -191,7 +198,6 @@ public class AlienEnduranceGame implements Minigame {
                     lives++;
                     host.displayBanner("EXTRA LIFE!", Color.HOTPINK, 1.0);
                 } else {
-                    killScore += 500;
                     host.displayBanner("LIVES FULL  +500", Color.HOTPINK, 1.0);
                 }
                 SoundHelper.play("extra_life.wav");
@@ -226,16 +232,138 @@ public class AlienEnduranceGame implements Minigame {
         hearts.add(h);
     }
 
-    void updateAfterGame(double tpf) {}
+    // ---------- settlement ----------
 
-    void onConfirm() {}
+    static final int PTS_PER_SECOND = 100;
+    static final int PTS_HEART = 500;
+    static final int PTS_MINIBOSS = 3000;
+    static final int PTS_BRAIN = 15000;
+    static final int PTS_RECORD = 2000;
+
+    private Group panel;
+    private double panelShown;
+    private int finalScore;
+    private int finalMoney;
+    private boolean newRecord;
+    private boolean closed;
+
+    void updateAfterGame(double tpf) {
+        panelShown += tpf;
+        if (panelShown >= 9.0) {
+            closeSettlement();
+        }
+    }
+
+    void onConfirm() {
+        if (panelShown >= 1.2) {
+            closeSettlement();
+        }
+    }
+
+    private void closeSettlement() {
+        if (closed) {
+            return;
+        }
+        closed = true;
+        host.finishMinigame(true, finalScore, finalMoney,
+                "ALIEN ENDURANCE  +" + finalScore, Color.rgb(120, 255, 200));
+    }
 
     void onAlienKilled(Alien a) {}
 
     void endRun() {
         over = true;
-        int score = (int) time * 100 + killScore;
-        host.finishMinigame(false, score, kills * 2, "SURVIVED " + timeLabel() + "  +" + score, Color.rgb(120, 255, 200));
+        for (Alien a : aliens) {
+            layer.getChildren().remove(a.view);
+        }
+        aliens.clear();
+        for (Bullet b : bullets) {
+            layer.getChildren().remove(b.node);
+        }
+        bullets.clear();
+        for (Shot sh : shots) {
+            layer.getChildren().remove(sh.node);
+        }
+        shots.clear();
+        for (Heart h : hearts) {
+            layer.getChildren().remove(h.node);
+        }
+        hearts.clear();
+        hudText.setVisible(false);
+        Entity pl = host.player();
+        if (pl != null && pl.isActive()) {
+            pl.getViewComponent().setOpacity(1.0);
+        }
+        activeBoss = null;
+        showBossBar(false);
+
+        int secs = (int) time;
+        int record = deltablade.OptionsStore.getAlienRecordSeconds();
+        newRecord = secs > record;
+        if (newRecord) {
+            deltablade.OptionsStore.setAlienRecordSeconds(secs);
+        }
+        int timePts = secs * PTS_PER_SECOND;
+        int heartPts = heartsCaught * PTS_HEART;
+        int bossPts = minibossKills * PTS_MINIBOSS + brainKills * PTS_BRAIN;
+        int recordPts = newRecord ? PTS_RECORD : 0;
+        finalScore = timePts + killScore + heartPts + bossPts + recordPts;
+        finalMoney = secs / 2 + kills * 2 + minibossKills * 150 + brainKills * 600;
+
+        List<String[]> rows = new ArrayList<>();
+        rows.add(new String[] {"SURVIVED " + timeLabel(), "+" + timePts});
+        rows.add(new String[] {"ALIENS KILLED " + kills, "+" + killScore});
+        rows.add(new String[] {"GIANTS DOWN " + minibossKills, "+" + minibossKills * PTS_MINIBOSS});
+        rows.add(new String[] {"BRAIN OCTOPUS " + brainKills, "+" + brainKills * PTS_BRAIN});
+        rows.add(new String[] {"HEARTS CAUGHT " + heartsCaught, "+" + heartPts});
+        if (newRecord) {
+            rows.add(new String[] {"NEW RECORD!", "+" + recordPts});
+        }
+        buildPanel(rows, Math.max(secs, record));
+        SoundHelper.play(newRecord ? "bonus_perfect.wav" : "rank_wave.wav");
+    }
+
+    private void buildPanel(List<String[]> rows, int bestSecs) {
+        double w = 380;
+        double h = 120 + rows.size() * 24 + 70;
+        double x = getAppWidth() / 2.0 - w / 2;
+        double y = getAppHeight() / 2.0 - h / 2;
+        Rectangle bg = new Rectangle(x, y, w, h);
+        bg.setArcWidth(16);
+        bg.setArcHeight(16);
+        bg.setFill(Color.rgb(6, 18, 24, 0.92));
+        bg.setStroke(Color.AQUAMARINE);
+        bg.setStrokeWidth(2);
+        panel = new Group(bg);
+        Text title = label("ALIEN ENDURANCE", x + 20, y + 34, 20, Color.AQUAMARINE);
+        Text sub = label("GAME OVER - THE SWARM GOT YOU", x + 20, y + 56, 11, Color.rgb(255, 150, 150));
+        panel.getChildren().addAll(title, sub);
+        double ry = y + 90;
+        for (String[] r : rows) {
+            Color c = r[0].startsWith("NEW RECORD") ? Color.GOLD : Color.WHITE;
+            panel.getChildren().add(label(r[0], x + 20, ry, 13, c));
+            Text v = label(r[1], x + w - 120, ry, 13, c);
+            panel.getChildren().add(v);
+            ry += 24;
+        }
+        ry += 8;
+        panel.getChildren().add(label("TOTAL", x + 20, ry, 15, Color.AQUAMARINE));
+        panel.getChildren().add(label("+" + finalScore, x + w - 120, ry, 15, Color.AQUAMARINE));
+        ry += 22;
+        panel.getChildren().add(label("MONEY  +$" + finalMoney, x + 20, ry, 12, Color.GOLD));
+        int bs = bestSecs;
+        panel.getChildren().add(label(String.format("BEST  %d:%02d", bs / 60, bs % 60), x + w - 120, ry, 12, Color.GOLD));
+        ry += 22;
+        panel.getChildren().add(label("YOUR SHIP LIVES ARE SAFE   SPACE = CONTINUE", x + 20, ry, 10, Color.rgb(170, 200, 210)));
+        layer.getChildren().add(panel);
+    }
+
+    private static Text label(String s, double x, double y, int size, Color c) {
+        Text t = new Text(x, y, s);
+        t.setFont(Font.font("Monospace", FontWeight.BOLD, size));
+        t.setFill(c);
+        t.setEffect(new DropShadow(4, Color.BLACK));
+        return t;
     }
 
     // ---------- player ----------
@@ -290,7 +418,7 @@ public class AlienEnduranceGame implements Minigame {
         SoundHelper.play("bad_drop.wav");
         if (lives <= 0) {
             host.spawnExplosion(playerX(), playerY(), "ship");
-            endRun();
+            endPending = true;
         }
     }
 
@@ -666,12 +794,10 @@ public class AlienEnduranceGame implements Minigame {
         showBossBar(false);
         if (a.big) {
             brainKills++;
-            killScore += 15000;
             host.displayBanner("BRAIN OCTOPUS DOWN!  +15000", Color.GOLD, 2.0);
             dropHeart(a.x, a.y);
         } else {
             minibossKills++;
-            killScore += 3000;
             host.displayBanner("GIANT " + ALIEN_NAMES[a.kind] + " DOWN!  +3000", Color.GOLD, 1.6);
             if (rng.nextBoolean()) {
                 dropHeart(a.x, a.y);

@@ -1893,9 +1893,14 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         double roll = random.nextDouble();
 
         if (roll < GameVars.MINIGAME_DROP_CHANCE) {
-            // Equal share: meteor / cognitive / maze (same rarity pool).
-            int which = random.nextInt(3);
-            String mini = which == 0 ? "meteorPickup" : (which == 1 ? "cognitivePickup" : "mazePickup");
+            // Equal share: meteor / cognitive / maze / alien endurance (same total rarity).
+            int which = random.nextInt(4);
+            String mini = switch (which) {
+                case 0 -> "meteorPickup";
+                case 1 -> "cognitivePickup";
+                case 2 -> "mazePickup";
+                default -> "alienPickup";
+            };
             spawn(mini, x - 14, y - 14);
             return;
         }
@@ -2117,6 +2122,10 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             case MAZE -> {
                 inc(GameVars.SCORE, 25);
                 startMinigame(new MazeEscapeGame());
+            }
+            case ALIEN -> {
+                inc(GameVars.SCORE, 25);
+                startMinigame(new AlienEnduranceGame());
             }
             case EXTRA_TIME -> {
                 changeLevelTime(GameVars.LEVEL_TIME_PICKUP);

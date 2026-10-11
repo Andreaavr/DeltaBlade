@@ -54,6 +54,14 @@ public final class OptionsStore {
         PREFS.put(KEY_MUSIC_TRACK, trackId);
     }
 
+    public static int getAlienRecordSeconds() {
+        return PREFS.getInt("alienEnduranceRecord", 0);
+    }
+
+    public static void setAlienRecordSeconds(int seconds) {
+        PREFS.putInt("alienEnduranceRecord", Math.max(0, seconds));
+    }
+
     private static double clamp01(double value) {
         return Math.max(0.0, Math.min(1.0, value));
     }

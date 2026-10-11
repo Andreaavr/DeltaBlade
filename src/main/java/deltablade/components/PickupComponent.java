@@ -13,6 +13,7 @@ public class PickupComponent extends Component {
         METEOR,
         COGNITIVE,
         MAZE,
+        ALIEN,
         EXTRA_TIME,
         SHIELD,
         SCOOP,
