@@ -110,6 +110,8 @@ public class WaveManager {
         this.bonusPerfectStreak = 0;
         this.stopped = false;
         this.groupDiveTimer = 3.0;
+        this.monsterKills = 0;
+        this.alienBossSpawned = false;
 
         currentWaveType = forcedType != null ? forcedType : resolveWaveType(level);
 
@@ -316,6 +318,7 @@ public class WaveManager {
         int total = Math.min(8 + cycle * 2, 14);
         generateFormationSlots(cycle % 2 == 0 ? FormationType.STAGGERED : FormationType.V_FORMATION, total);
         totalEnemiesInWave = formationSlots.size();
+        monsterTotal = totalEnemiesInWave;
         squadsToSpawn = 2 + cycle % 2;
         squadSpawnDelay = 2.1;
     }
@@ -891,6 +894,35 @@ public class WaveManager {
 
     private void showComboBonus(int bonus) {
         FXGL.<DeltaBladeApp>getAppCast().showSquadCombo(bonus);
+    }
+
+    private int monsterKills;
+    private boolean alienBossSpawned;
+    private int monsterTotal;
+
+    /** Monster wave: true once, when about two thirds of the monsters are down. */
+    public boolean noteMonsterKillAndCheckBoss() {
+        if (currentWaveType != WaveType.MONSTER || alienBossSpawned) {
+            return false;
+        }
+        monsterKills++;
+        if (monsterKills >= Math.max(1, (int) Math.ceil(monsterTotal * 2.0 / 3.0))) {
+            alienBossSpawned = true;
+            return true;
+        }
+        return false;
+    }
+
+    public void markAlienBossSpawned() {
+        alienBossSpawned = true;
+    }
+
+    public boolean alienBossThisWave() {
+        return currentWaveType == WaveType.MONSTER && alienBossSpawned;
+    }
+
+    public static EntryPath bossEntry() {
+        return new EntryPath(getAppWidth() / 2, -80, EntryPath.Type.FROM_TOP_SPLIT);
     }
 
     public void onEnemyDestroyed(int squadId, boolean wasEntering) {

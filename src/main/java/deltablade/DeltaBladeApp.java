@@ -793,6 +793,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         set(GameVars.EXTRA_LETTER_SPAWNED_THIS_WAVE, 0);
         set(GameVars.SQUAD_COMBOS, 0);
         set(GameVars.COGNITIVE_WINS, 0);
+        alienBossCount = 0;
+        alienBossPending = false;
         set(GameVars.METEOR_WINS, 0);
         set(GameVars.MAZE_WINS, 0);
         set(GameVars.RANK, 0);
@@ -1575,6 +1577,77 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
     }
 
+    private static final int[] ALIEN_BOSS_ROTATION = {
+            SpriteSheets.ALIEN_CRAB, SpriteSheets.ALIEN_BRAIN, SpriteSheets.ALIEN_EYE};
+    private int alienBossCount = 0;
+    private boolean alienBossPending = false;
+
+    /** Monster wave: a big alien from the new sheet joins the fight (Crab, Brain, Eye in turn). */
+    private void spawnAlienBoss() {
+        alienBossPending = false;
+        if (gameOver || minigameActive || warping || player == null
+                || waveManager.getCurrentWaveType() != WaveManager.WaveType.MONSTER) {
+            inc(GameVars.ENEMIES_REMAINING, -1);
+            checkWaveComplete();
+            return;
+        }
+        int kind = ALIEN_BOSS_ROTATION[alienBossCount % ALIEN_BOSS_ROTATION.length];
+        alienBossCount++;
+        int size = GameVars.BOSS_DRAW_SIZE;
+        double tx = getAppWidth() / 2.0 - size / 2.0;
+        int level = Math.max(geti(GameVars.LEVEL), GameVars.BOSS_EVERY);
+        WaveManager.EntryPath path = WaveManager.bossEntry();
+        spawn("enemy", new com.almasb.fxgl.entity.SpawnData(path.startX - size / 2.0, path.startY - size)
+                .put("enemyType", EnemyComponent.EnemyType.BOSS)
+                .put("level", level)
+                .put("targetX", tx)
+                .put("targetY", 50.0)
+                .put("entryPath", path)
+                .put("squadId", -1)
+                .put("entering", true)
+                .put("alienBoss", kind)
+                .put("alienCycle", alienBossCount));
+        refillWaveTimer();
+        String name = kind == SpriteSheets.ALIEN_CRAB ? "GIANT CRAB" : kind == SpriteSheets.ALIEN_BRAIN ? "BRAIN OCTOPUS" : "GIANT EYE";
+        showBanner("WARNING!  " + name, Color.MEDIUMORCHID, 1.8);
+        SoundHelper.play("ufo_appear.wav");
+    }
+
+    /** Brain Octopus calls little monsters that dive at the player. */
+    public void spawnAlienBossHelpers(Entity boss, int count) {
+        if (boss == null || !boss.isActive() || player == null) {
+            return;
+        }
+        double cx = boss.getX() + boss.getWidth() / 2.0;
+        double by = boss.getY() + boss.getHeight() * 0.7;
+        int level = geti(GameVars.LEVEL);
+        for (int i = 0; i < count; i++) {
+            double ox = (i - (count - 1) / 2.0) * 44;
+            inc(GameVars.ENEMIES_REMAINING, 1);
+            Entity child = spawn("enemy", new com.almasb.fxgl.entity.SpawnData(cx + ox - 24, by)
+                    .put("enemyType", EnemyComponent.EnemyType.MONSTER)
+                    .put("level", level)
+                    .put("spriteIndex", random.nextInt(SpriteSheets.MONSTER_TILES))
+                    .put("canSplit", false)
+                    .put("diveNow", true)
+                    .put("diveTargetX", player.getX() + ox));
+            child.setScaleX(0.7);
+            child.setScaleY(0.7);
+        }
+    }
+
+    /** Boss shot aimed at the player. */
+    public void spawnAimedBossBullet(double x, double y, double speed) {
+        if (player == null) {
+            spawnEnemyBullet(x, y, 0, speed, false);
+            return;
+        }
+        double dx = player.getX() + player.getWidth() / 2.0 - x;
+        double dy = player.getY() + player.getHeight() / 2.0 - y;
+        double d = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+        spawnEnemyBullet(x, y, dx / d * speed, dy / d * speed, false);
+    }
+
     /** Boss-Schuss mit freier Richtung. */
     public void spawnBossBullet(double x, double y, double vx, double vy) {
         spawnEnemyBullet(x, y, vx, vy, false);
@@ -1624,7 +1697,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         double ratio = Math.max(0, boss.getHealth() / (double) Math.max(1, boss.getMaxHealth()));
         bossBarFill.setWidth(BOSS_BAR_W * ratio);
         bossBarFill.setFill(ratio > 0.5 ? Color.ORANGE : ratio > 0.25 ? Color.ORANGERED : Color.RED);
-        bossBarLabel.setText("BOSS " + boss.getBossNumber());
+        bossBarLabel.setText(boss.bossLabel());
         bossBar.setVisible(true);
         // Nach Neustart werden alle UI-Knoten entfernt -> Balken wieder einhaengen.
         if (bossBar.getParent() == null) {
@@ -2211,11 +2284,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         if (minigameActive || warping || gameOver || waveManager == null || waveTransition) {
             return;
         }
-        if (waveManager.hasPendingSpawns() || hasLiveCombatEnemies()) {
+        if (waveManager.hasPendingSpawns() || hasLiveCombatEnemies() || alienBossPending) {
             return;
         }
         // Nach dem Boss: kurze Sammel-Phase, damit man die Beute holen kann.
-        if (waveManager.getCurrentWaveType() == WaveManager.WaveType.BOSS && !bossCollectDone) {
+        if ((waveManager.getCurrentWaveType() == WaveManager.WaveType.BOSS || waveManager.alienBossThisWave())
+                && !bossCollectDone) {
             if (bossCollectLeft <= 0) {
                 bossCollectLeft = BOSS_COLLECT_SECONDS;
             }
@@ -3655,6 +3729,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         inc(GameVars.SCORE, ec.getScoreValue());
         inc(GameVars.ENEMIES_REMAINING, -1);
         waveManager.onEnemyDestroyed(ec.getSquadId(), ec.isEntering());
+        if (ec.isMonster() && waveManager.noteMonsterKillAndCheckBoss()) {
+            runOnce(this::spawnAlienBoss, Duration.seconds(1.5));
+            inc(GameVars.ENEMIES_REMAINING, 1); // keep the wave open until the boss is down
+            alienBossPending = true;
+        }
         ec.dock();
         waveManager.checkKillBonuses();
         checkWaveComplete();

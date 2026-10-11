@@ -232,7 +232,14 @@ public class DeltaBladeFactory implements EntityFactory {
         } else {
             // Boss: vorhandenes Gegner-Bild, nur viel groesser. Jeder Boss sieht anders aus.
             int bossNo = GameVars.bossNumber(level);
-            view = bossView(bossNo, size);
+            if (data.hasKey("alienBoss")) {
+                int kind = data.get("alienBoss");
+                int cycle = data.hasKey("alienCycle") ? data.get("alienCycle") : 1;
+                enemyComponent.setAlienBoss(kind, cycle);
+                view = SpriteSheets.alienView(kind, size);
+            } else {
+                view = bossView(bossNo, size);
+            }
         }
 
         return FXGL.entityBuilder(data)

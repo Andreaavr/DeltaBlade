@@ -191,6 +191,85 @@ public class EnemyComponent extends Component {
     public boolean isBoss() {
         return isBoss;
     }
+
+    /** Alien boss of a monster wave: -1 = normal boss, else tile index on the alienz2 sheet. */
+    private int alienBoss = -1;
+    private double alienAttackTimer = 2.0;
+    private double alienSpecialTimer = 5.0;
+    private double alienHelperTimer = 4.0;
+
+    public void setAlienBoss(int kind, int cycle) {
+        this.alienBoss = kind;
+        this.health = 40 + 20 * Math.max(1, cycle);
+        this.maxHealth = this.health;
+    }
+
+    public boolean isAlienBoss() {
+        return alienBoss >= 0;
+    }
+
+    public String bossLabel() {
+        if (alienBoss < 0) {
+            return "BOSS " + bossNo;
+        }
+        return switch (alienBoss) {
+            case deltablade.SpriteSheets.ALIEN_CRAB -> "GIANT CRAB";
+            case deltablade.SpriteSheets.ALIEN_BRAIN -> "BRAIN OCTOPUS";
+            default -> "GIANT EYE";
+        };
+    }
+
+    /**
+     * Alien boss attacks.
+     * Crab: wide slow "web" fans. Brain: calls little monsters. Eye: aimed shots + beam.
+     * Below a quarter of health all of them get faster and add a bullet ring.
+     */
+    private void updateAlienBossAttack(double tpf) {
+        if (beamWarmup > 0 || beamLeft > 0) {
+            updateBeam(tpf);
+            return;
+        }
+        boolean angry = bossPhase == 3;
+        var app = FXGL.<deltablade.DeltaBladeApp>getAppCast();
+        alienAttackTimer -= tpf;
+        alienSpecialTimer -= tpf;
+        if (alienAttackTimer <= 0) {
+            switch (alienBoss) {
+                case deltablade.SpriteSheets.ALIEN_CRAB -> {
+                    bossFan(7, 110, 130);
+                    alienAttackTimer = angry ? 1.7 : 2.4;
+                }
+                case deltablade.SpriteSheets.ALIEN_BRAIN -> {
+                    bossFan(3, 40, 170);
+                    alienAttackTimer = angry ? 1.9 : 2.6;
+                }
+                default -> {
+                    double cx = entity.getX() + entity.getWidth() / 2.0;
+                    double by = entity.getY() + entity.getHeight() * 0.8;
+                    for (int i = -1; i <= 1; i++) {
+                        app.spawnAimedBossBullet(cx + i * 16, by, 210);
+                    }
+                    deltablade.SoundHelper.play("enemy_shot.wav");
+                    alienAttackTimer = angry ? 1.3 : 1.8;
+                }
+            }
+        }
+        if (alienBoss == deltablade.SpriteSheets.ALIEN_BRAIN) {
+            alienHelperTimer -= tpf;
+            if (alienHelperTimer <= 0) {
+                alienHelperTimer = angry ? 4.5 : 6.0;
+                app.spawnAlienBossHelpers(entity, angry ? 3 : 2);
+            }
+        }
+        if (alienSpecialTimer <= 0) {
+            alienSpecialTimer = 5.0;
+            if (alienBoss == deltablade.SpriteSheets.ALIEN_EYE) {
+                beamWarmup = 1.4;
+            } else if (angry) {
+                bossRing(10, 150);
+            }
+        }
+    }
     
     public void setEntrySpeed(double speed) {
         this.entrySpeed = speed;
@@ -737,6 +816,10 @@ public class EnemyComponent extends Component {
             bossPhase = phase;
             onBossPhaseChange(phase);
         }
+        if (alienBoss >= 0) {
+            updateAlienBossAttack(tpf);
+            return;
+        }
 
         // Strahl laeuft gerade? Dann nur den.
         if (beamWarmup > 0 || beamLeft > 0) {
@@ -781,7 +864,9 @@ public class EnemyComponent extends Component {
 
     private void onBossPhaseChange(int phase) {
         var app = FXGL.<deltablade.DeltaBladeApp>getAppCast();
-        if (phase == 2) {
+        if (phase == 2 && alienBoss >= 0) {
+            app.bossAnnounce(bossLabel() + " IS HURT!");
+        } else if (phase == 2) {
             app.bossAnnounce("BOSS CALLS FOR HELP!");
         } else if (phase == 3) {
             app.bossAnnounce("BOSS IS ENRAGED!");
