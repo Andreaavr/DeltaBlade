@@ -17,6 +17,7 @@ import deltablade.components.RankMarkerComponent;
 import deltablade.components.StarComponent;
 import deltablade.minigames.CognitiveTestGame;
 import deltablade.minigames.MazeEscapeGame;
+import deltablade.minigames.AlienEnduranceGame;
 import deltablade.minigames.MeteorStormGame;
 import deltablade.minigames.Minigame;
 import deltablade.minigames.MinigameHost;
@@ -2571,6 +2572,22 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             return;
         }
 
+        if ("ALIEN_ENDURANCE".equals(drop.spawnName())) {
+            if (gameOver || optionsOpen || minigameActive || warping) {
+                return;
+            }
+            if (!gameStarted || showingTitleScreen || player == null) {
+                if (showingTitleScreen) {
+                    startActualGame(false);
+                }
+                if (player == null) {
+                    return;
+                }
+            }
+            showBanner(drop.banner(), Color.AQUAMARINE, 1.2);
+            startMinigame(new AlienEnduranceGame());
+            return;
+        }
         if ("MAZE_ESCAPE".equals(drop.spawnName())) {
             if (gameOver || optionsOpen || minigameActive || warping) {
                 return;
