@@ -2840,6 +2840,9 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         waveTransition = true;
         cancelGetReady();
         minigameActive = true;
+        if (waveManager != null) {
+            waveManager.stop(); // no late main-game spawns during the minigame
+        }
         clearWaveEntities();
         activeMinigame = game;
         game.start(this);

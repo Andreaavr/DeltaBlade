@@ -71,6 +71,7 @@ public class AlienEnduranceGame implements Minigame {
         double hitFlash;
         // boss data
         boolean big;
+        double swayPhase, bobPhase;
         double bossT, attackCd, specialCd, helperCd, homeX;
         int phase;
     }
@@ -93,6 +94,7 @@ public class AlienEnduranceGame implements Minigame {
         spawnTimer = 1.5;
         host.hidePlayer(false);
         host.addUi(layer);
+        layer.setClip(new Rectangle(host.playLeft(), 0, host.playRight() - host.playLeft(), getAppHeight()));
         hudText = new Text();
         hudText.setFont(Font.font("Monospace", FontWeight.BOLD, 14));
         hudText.setFill(Color.rgb(140, 255, 220));
@@ -490,7 +492,8 @@ public class AlienEnduranceGame implements Minigame {
         spawnGroupOnPath(kind, path, count, speed, mixed);
     }
 
-    void spawnGroupOnPath(int kind, List<Point2D> path, int count, double speed, boolean mixed) {
+    void spawnGroupOnPath(int kind, List<Point2D> rawPath, int count, double speed, boolean mixed) {
+        List<Point2D> path = insideField(rawPath, 22);
         for (int i = 0; i < count; i++) {
             int k = mixed ? rng.nextInt(SpriteSheets.ALIEN_LEAF + 1) : kind;
             Alien a = newAlien(k, 40, 1 + (k == SpriteSheets.ALIEN_JELLY ? 1 : 0));
@@ -499,7 +502,7 @@ public class AlienEnduranceGame implements Minigame {
             a.delay = i * (34.0 / speed) * 1.25;
             a.x = path.get(0).getX();
             a.y = path.get(0).getY();
-            a.view.setVisible(false);
+            a.view.setVisible(a.delay <= 0);
         }
     }
 
@@ -516,12 +519,23 @@ public class AlienEnduranceGame implements Minigame {
         return a;
     }
 
+    /** Squeeze every path point between the side rails so no alien flies over the sidebars. */
+    List<Point2D> insideField(List<Point2D> path, double half) {
+        double min = host.playLeft() + half;
+        double max = host.playRight() - half;
+        List<Point2D> out = new ArrayList<>(path.size());
+        for (Point2D p : path) {
+            out.add(new Point2D(Math.max(min, Math.min(max, p.getX())), p.getY()));
+        }
+        return out;
+    }
+
     /** Path continues off the bottom/side so the group leaves the screen. */
     static List<Point2D> withExit(List<Point2D> path) {
         List<Point2D> out = new ArrayList<>(path);
         Point2D last = path.get(path.size() - 1);
         double w = getAppWidth();
-        double exitX = last.getX() < w / 2 ? -80 : w + 80;
+        double exitX = last.getX() < w / 2 ? 0 : w;
         out.add(new Point2D((last.getX() + exitX) / 2, last.getY() + 160));
         out.add(new Point2D(exitX, getAppHeight() + 80));
         return out;
@@ -541,6 +555,9 @@ public class AlienEnduranceGame implements Minigame {
             if (!gone) {
                 for (Alien a : aliens) {
                     if (a.delay > 0 || a.hp <= 0) {
+                        continue;
+                    }
+                    if (!a.view.isVisible()) {
                         continue;
                     }
                     double r = a.size * 0.42;
@@ -684,9 +701,11 @@ public class AlienEnduranceGame implements Minigame {
         if (a.phase >= 2) {
             swaySpeed *= 1.4;
         }
-        a.x = a.homeX + Math.sin(a.bossT * swaySpeed) * range;
+        a.swayPhase += swaySpeed * tpf;
+        a.x = a.homeX + Math.sin(a.swayPhase) * range;
         if (a.kind == SpriteSheets.ALIEN_JELLY) {
-            a.y = targetY + Math.sin(a.bossT * 1.7) * 18;
+            a.bobPhase += 1.7 * tpf;
+            a.y = targetY + Math.sin(a.bobPhase) * 18;
         }
 
         double hpPart = a.hp / (double) a.maxHp;

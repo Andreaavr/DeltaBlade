@@ -893,8 +893,11 @@ public class EnemyComponent extends Component {
     private void updateBeam(double tpf) {
         if (beamWarmup > 0) {
             beamWarmup -= tpf;
-            entity.translateX((random.nextDouble() - 0.5) * 6);
+            // Warning shake on the picture only (smooth wobble), the boss itself does not move.
+            double shake = Math.sin(beamWarmup * 60) * 3;
+            shakeView(shake);
             if (beamWarmup <= 0) {
+                shakeView(0);
                 beamLeft = 1.0;
                 beamTick = 0;
             }
@@ -907,6 +910,12 @@ public class EnemyComponent extends Component {
             double cx = entity.getX() + entity.getWidth() / 2.0;
             double by = entity.getY() + entity.getHeight() * 0.85;
             FXGL.<deltablade.DeltaBladeApp>getAppCast().spawnBossBullet(cx, by, 0, 340);
+        }
+    }
+
+    private void shakeView(double dx) {
+        for (javafx.scene.Node n : entity.getViewComponent().getChildren()) {
+            n.setTranslateX(dx);
         }
     }
 
