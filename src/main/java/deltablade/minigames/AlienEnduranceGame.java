@@ -124,6 +124,47 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
+    // ---------- live duration bonus (every 10 s, shown big; settlement sums the same curve) ----------
+
+    private double nextDurationMark = 10;
+    private Text durationText;
+    private double durationShow;
+
+    private void updateDurationBonus(double tpf) {
+        if (time >= nextDurationMark) {
+            int gain = timePoints(nextDurationMark) - timePoints(nextDurationMark - 10);
+            nextDurationMark += 10;
+            if (durationText == null) {
+                durationText = new Text();
+                durationText.setFont(Font.font("Monospace", FontWeight.EXTRA_BOLD, 22));
+                durationText.setEffect(new javafx.scene.effect.Glow(0.8));
+            }
+            durationText.setText("DURATION BONUS +" + gain);
+            durationText.setX(getAppWidth() / 2.0 - durationText.getLayoutBounds().getWidth() / 2);
+            durationText.setY(getAppHeight() * 0.42);
+            layer.getChildren().remove(durationText);
+            layer.getChildren().add(durationText);
+            durationShow = 1.6;
+            SoundHelper.play(gain >= 5000 ? "bonus_perfect.wav" : "money.wav");
+        }
+        if (durationText == null || durationShow <= 0) {
+            return;
+        }
+        durationShow -= tpf;
+        double age = 1.6 - durationShow;
+        double pop = age < 0.25 ? 0.6 + age / 0.25 * 0.8 : 1.4 - Math.min(0.4, (age - 0.25) * 1.2);
+        double pulse = 1 + Math.sin(age * 18) * 0.05;
+        durationText.setScaleX(pop * pulse);
+        durationText.setScaleY(pop * pulse);
+        Color[] flash = {Color.GOLD, Color.ORANGE, Color.HOTPINK, Color.AQUA, Color.WHITE};
+        int st = Math.min(flash.length - 1, stage() / 2);
+        durationText.setFill(((int) (age * 12)) % 2 == 0 ? flash[st] : Color.WHITE);
+        durationText.setOpacity(Math.min(1, durationShow / 0.4));
+        if (durationShow <= 0) {
+            layer.getChildren().remove(durationText);
+        }
+    }
+
     /** Survival points rise steeply: 100 * ((1 + t/30)^3 - 1). 1:00=2600, 2:00=12400, 5:00=133000. */
     static int timePoints(double seconds) {
         double f = 1 + seconds / 30.0;
@@ -183,6 +224,7 @@ public class AlienEnduranceGame implements Minigame {
         updateExtras(tpf);
         updateInvuln(tpf);
         updatePopups(tpf);
+        updateDurationBonus(tpf);
         if (endPending) {
             endRun();
             return;
@@ -345,6 +387,9 @@ public class AlienEnduranceGame implements Minigame {
             layer.getChildren().remove(t);
         }
         popups.clear();
+        if (durationText != null) {
+            layer.getChildren().remove(durationText);
+        }
         for (Heart h : hearts) {
             layer.getChildren().remove(h.node);
         }
