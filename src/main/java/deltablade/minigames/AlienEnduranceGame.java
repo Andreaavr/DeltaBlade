@@ -69,11 +69,65 @@ public class AlienEnduranceGame implements Minigame {
         double delay;
         boolean boss;
         double hitFlash;
+        FlightGroup group;
         // boss data
         boolean big;
         double swayPhase, bobPhase;
         double bossT, attackCd, specialCd, helperCd, homeX;
         int phase;
+    }
+
+    /** One flight group: bonus when every member is shot down and none escaped. */
+    static final class FlightGroup {
+        int size, killed, escaped, stage;
+    }
+
+    int groupClears;
+    int groupPts;
+
+    private void onGroupMemberKilled(Alien a) {
+        FlightGroup g = a.group;
+        if (g == null) {
+            return;
+        }
+        g.killed++;
+        if (g.escaped == 0 && g.killed >= g.size) {
+            int bonus = g.size * 50 * (g.stage + 1);
+            groupClears++;
+            groupPts += bonus;
+            popup("GROUP +" + bonus, a.x, a.y);
+            SoundHelper.play("extra.wav");
+        }
+    }
+
+    private final List<Text> popups = new ArrayList<>();
+
+    private void popup(String msg, double x, double y) {
+        Text t = new Text(x - 40, y, msg);
+        t.setFont(Font.font("Monospace", FontWeight.BOLD, 14));
+        t.setFill(Color.GOLD);
+        t.setEffect(new DropShadow(6, Color.BLACK));
+        layer.getChildren().add(t);
+        popups.add(t);
+    }
+
+    private void updatePopups(double tpf) {
+        Iterator<Text> it = popups.iterator();
+        while (it.hasNext()) {
+            Text t = it.next();
+            t.setTranslateY(t.getTranslateY() - 40 * tpf);
+            t.setOpacity(t.getOpacity() - tpf);
+            if (t.getOpacity() <= 0) {
+                layer.getChildren().remove(t);
+                it.remove();
+            }
+        }
+    }
+
+    /** Survival points rise steeply: 100 * ((1 + t/30)^3 - 1). 1:00=2600, 2:00=12400, 5:00=133000. */
+    static int timePoints(double seconds) {
+        double f = 1 + seconds / 30.0;
+        return (int) Math.round(100 * (f * f * f - 1));
     }
 
     private static final class Shot {
@@ -128,6 +182,7 @@ public class AlienEnduranceGame implements Minigame {
         updateBullets(tpf);
         updateExtras(tpf);
         updateInvuln(tpf);
+        updatePopups(tpf);
         if (endPending) {
             endRun();
             return;
@@ -236,7 +291,6 @@ public class AlienEnduranceGame implements Minigame {
 
     // ---------- settlement ----------
 
-    static final int PTS_PER_SECOND = 100;
     static final int PTS_HEART = 500;
     static final int PTS_MINIBOSS = 3000;
     static final int PTS_BRAIN = 15000;
@@ -287,6 +341,10 @@ public class AlienEnduranceGame implements Minigame {
             layer.getChildren().remove(sh.node);
         }
         shots.clear();
+        for (Text t : popups) {
+            layer.getChildren().remove(t);
+        }
+        popups.clear();
         for (Heart h : hearts) {
             layer.getChildren().remove(h.node);
         }
@@ -305,16 +363,17 @@ public class AlienEnduranceGame implements Minigame {
         if (newRecord) {
             deltablade.OptionsStore.setAlienRecordSeconds(secs);
         }
-        int timePts = secs * PTS_PER_SECOND;
+        int timePts = timePoints(time);
         int heartPts = heartsCaught * PTS_HEART;
         int bossPts = minibossKills * PTS_MINIBOSS + brainKills * PTS_BRAIN;
         int recordPts = newRecord ? PTS_RECORD : 0;
-        finalScore = timePts + killScore + heartPts + bossPts + recordPts;
+        finalScore = timePts + killScore + groupPts + heartPts + bossPts + recordPts;
         finalMoney = secs / 2 + kills * 2 + minibossKills * 150 + brainKills * 600;
 
         List<String[]> rows = new ArrayList<>();
         rows.add(new String[] {"SURVIVED " + timeLabel(), "+" + timePts});
         rows.add(new String[] {"ALIENS KILLED " + kills, "+" + killScore});
+        rows.add(new String[] {"GROUPS CLEARED " + groupClears, "+" + groupPts});
         rows.add(new String[] {"GIANTS DOWN " + minibossKills, "+" + minibossKills * PTS_MINIBOSS});
         rows.add(new String[] {"BRAIN OCTOPUS " + brainKills, "+" + brainKills * PTS_BRAIN});
         rows.add(new String[] {"HEARTS CAUGHT " + heartsCaught, "+" + heartPts});
@@ -494,10 +553,14 @@ public class AlienEnduranceGame implements Minigame {
 
     void spawnGroupOnPath(int kind, List<Point2D> rawPath, int count, double speed, boolean mixed) {
         List<Point2D> path = insideField(rawPath, 22);
+        FlightGroup group = new FlightGroup();
+        group.size = count;
+        group.stage = stage();
         for (int i = 0; i < count; i++) {
             int k = mixed ? rng.nextInt(SpriteSheets.ALIEN_LEAF + 1) : kind;
             Alien a = newAlien(k, 40, 1 + (k == SpriteSheets.ALIEN_JELLY ? 1 : 0));
             a.path = path;
+            a.group = group;
             a.speed = speed;
             a.delay = i * (34.0 / speed) * 1.25;
             a.x = path.get(0).getX();
@@ -586,6 +649,9 @@ public class AlienEnduranceGame implements Minigame {
             if (a.boss) {
                 onBossKilled(a);
             }
+            if (!a.boss) {
+                onGroupMemberKilled(a);
+            }
             onAlienKilled(a);
         }
     }
@@ -618,6 +684,9 @@ public class AlienEnduranceGame implements Minigame {
                     updateBoss(a, tpf);
                 } else {
                     remove = followPath(a, tpf);
+                    if (remove && a.group != null) {
+                        a.group.escaped++;
+                    }
                     alienShoot(a, tpf);
                 }
                 a.view.setTranslateX(a.x - a.size / 2);
@@ -630,6 +699,9 @@ public class AlienEnduranceGame implements Minigame {
                 if (dx * dx + dy * dy < r * r) {
                     hitPlayer();
                     if (!a.boss) {
+                        if (a.group != null) {
+                            a.group.escaped++;
+                        }
                         a.hp = 0;
                         host.spawnExplosion(a.x, a.y, "ship");
                         remove = true;
