@@ -101,7 +101,6 @@ public class AlienEnduranceGame implements Minigame {
             groupClears++;
             groupPts += bonus;
             popup("GROUP +" + bonus, a.x, a.y);
-            SoundHelper.play("extra.wav");
         }
     }
 
