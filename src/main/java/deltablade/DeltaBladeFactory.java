@@ -463,7 +463,7 @@ public class DeltaBladeFactory implements EntityFactory {
     public Entity newAlienPickup(SpawnData data) {
         return FXGL.entityBuilder(data)
                 .type(EntityType.PICKUP)
-                .viewWithBBox(orbPickup(Color.TEAL, Color.AQUAMARINE, "A"))
+                .viewWithBBox(orbPickup(Color.TEAL, Color.AQUAMARINE, "K"))
                 .zIndex(60)
                 .collidable()
                 .with(new PickupComponent(PickupComponent.PickupType.ALIEN))

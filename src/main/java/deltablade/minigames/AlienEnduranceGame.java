@@ -102,7 +102,7 @@ public class AlienEnduranceGame implements Minigame {
         hudText.setTranslateX(host.playLeft() + 12);
         hudText.setTranslateY(host.playTop() + 22);
         layer.getChildren().add(hudText);
-        host.displayBanner("ALIEN ENDURANCE", Color.rgb(120, 255, 200), 2.0);
+        host.displayBanner("KOBARMARU YASHI TEST", Color.rgb(120, 255, 200), 2.0);
     }
 
     @Override
@@ -268,7 +268,7 @@ public class AlienEnduranceGame implements Minigame {
         }
         closed = true;
         host.finishMinigame(true, finalScore, finalMoney,
-                "ALIEN ENDURANCE  +" + finalScore, Color.rgb(120, 255, 200));
+                "KOBARMARU YASHI TEST  +" + finalScore, Color.rgb(120, 255, 200));
     }
 
     void onAlienKilled(Alien a) {}
@@ -337,7 +337,7 @@ public class AlienEnduranceGame implements Minigame {
         bg.setStroke(Color.AQUAMARINE);
         bg.setStrokeWidth(2);
         panel = new Group(bg);
-        Text title = label("ALIEN ENDURANCE", x + 20, y + 34, 20, Color.AQUAMARINE);
+        Text title = label("KOBARMARU YASHI TEST", x + 20, y + 34, 20, Color.AQUAMARINE);
         Text sub = label("GAME OVER - THE SWARM GOT YOU", x + 20, y + 56, 11, Color.rgb(255, 150, 150));
         panel.getChildren().addAll(title, sub);
         double ry = y + 90;
