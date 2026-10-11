@@ -41,12 +41,17 @@ public class AlienEnduranceGame implements Minigame {
     final Random rng = new Random();
     MinigameHost host;
     final Group layer = new Group();
+    /** Aliens, shots, bullets, hearts. */
+    final Group world = new Group();
+    /** HUD, boss bar, popups, settlement: always above the world, no per-frame toFront. */
+    final Group top = new Group();
     private Text hudText;
 
     double time;
     int lives;
     private double invuln;
     private boolean endPending;
+    private double smoothTpf;
     boolean over;
     private double fireCd;
     private double spawnTimer;
@@ -106,8 +111,9 @@ public class AlienEnduranceGame implements Minigame {
         Text t = new Text(x - 40, y, msg);
         t.setFont(Font.font("Monospace", FontWeight.BOLD, 14));
         t.setFill(Color.GOLD);
-        t.setEffect(new DropShadow(6, Color.BLACK));
-        layer.getChildren().add(t);
+        t.setStroke(Color.BLACK);
+        t.setStrokeWidth(0.6);
+        top.getChildren().add(t);
         popups.add(t);
     }
 
@@ -118,7 +124,7 @@ public class AlienEnduranceGame implements Minigame {
             t.setTranslateY(t.getTranslateY() - 40 * tpf);
             t.setOpacity(t.getOpacity() - tpf);
             if (t.getOpacity() <= 0) {
-                layer.getChildren().remove(t);
+                top.getChildren().remove(t);
                 it.remove();
             }
         }
@@ -137,13 +143,14 @@ public class AlienEnduranceGame implements Minigame {
             if (durationText == null) {
                 durationText = new Text();
                 durationText.setFont(Font.font("Monospace", FontWeight.EXTRA_BOLD, 22));
-                durationText.setEffect(new javafx.scene.effect.Glow(0.8));
+                durationText.setStroke(Color.rgb(60, 20, 0));
+                durationText.setStrokeWidth(1.2);
             }
             durationText.setText("DURATION BONUS +" + gain);
             durationText.setX(getAppWidth() / 2.0 - durationText.getLayoutBounds().getWidth() / 2);
             durationText.setY(getAppHeight() * 0.42);
-            layer.getChildren().remove(durationText);
-            layer.getChildren().add(durationText);
+            top.getChildren().remove(durationText);
+            top.getChildren().add(durationText);
             durationShow = 1.6;
         }
         if (durationText == null || durationShow <= 0) {
@@ -160,7 +167,7 @@ public class AlienEnduranceGame implements Minigame {
         durationText.setFill(((int) (age * 12)) % 2 == 0 ? flash[st] : Color.WHITE);
         durationText.setOpacity(Math.min(1, durationShow / 0.4));
         if (durationShow <= 0) {
-            layer.getChildren().remove(durationText);
+            top.getChildren().remove(durationText);
         }
     }
 
@@ -187,15 +194,17 @@ public class AlienEnduranceGame implements Minigame {
         time = 0;
         spawnTimer = 1.5;
         host.hidePlayer(false);
+        layer.getChildren().setAll(world, top);
         host.addUi(layer);
         layer.setClip(new Rectangle(host.playLeft(), 0, host.playRight() - host.playLeft(), getAppHeight()));
         hudText = new Text();
         hudText.setFont(Font.font("Monospace", FontWeight.BOLD, 14));
         hudText.setFill(Color.rgb(140, 255, 220));
         hudText.setEffect(new DropShadow(6, Color.BLACK));
+        hudText.setCache(true);
         hudText.setTranslateX(host.playLeft() + 12);
         hudText.setTranslateY(host.playTop() + 22);
-        layer.getChildren().add(hudText);
+        top.getChildren().add(hudText);
         host.displayBanner("KOBARMARU YASHI TEST", Color.rgb(120, 255, 200), 2.0);
     }
 
@@ -205,7 +214,10 @@ public class AlienEnduranceGame implements Minigame {
     }
 
     @Override
-    public void update(double tpf) {
+    public void update(double rawTpf) {
+        double clamped = Math.min(rawTpf, 1.0 / 30.0);
+        smoothTpf = smoothTpf <= 0 ? clamped : smoothTpf * 0.8 + clamped * 0.2;
+        double tpf = smoothTpf;
         if (over) {
             updateAfterGame(tpf);
             return;
@@ -249,7 +261,8 @@ public class AlienEnduranceGame implements Minigame {
         aliens.clear();
         shots.clear();
         bullets.clear();
-        layer.getChildren().clear();
+        world.getChildren().clear();
+        top.getChildren().clear();
         host.removeUi(layer);
         Entity p = host.player();
         if (p != null && p.isActive()) {
@@ -301,7 +314,7 @@ public class AlienEnduranceGame implements Minigame {
                 SoundHelper.play("extra_life.wav");
             }
             if (caught || h.y > getAppHeight() + 30) {
-                layer.getChildren().remove(h.node);
+                world.getChildren().remove(h.node);
                 it.remove();
             }
         }
@@ -325,8 +338,7 @@ public class AlienEnduranceGame implements Minigame {
             t.setTranslateY(24);
             h.node = new Group(t);
         }
-        h.node.setEffect(new DropShadow(12, Color.HOTPINK));
-        layer.getChildren().add(h.node);
+        world.getChildren().add(h.node);
         hearts.add(h);
     }
 
@@ -371,26 +383,28 @@ public class AlienEnduranceGame implements Minigame {
     void endRun() {
         over = true;
         for (Alien a : aliens) {
-            layer.getChildren().remove(a.view);
+            world.getChildren().remove(a.view);
         }
         aliens.clear();
         for (Bullet b : bullets) {
-            layer.getChildren().remove(b.node);
+            b.node.setVisible(false);
+            bulletPool.add(b.node);
         }
         bullets.clear();
         for (Shot sh : shots) {
-            layer.getChildren().remove(sh.node);
+            sh.node.setVisible(false);
+            shotPool.add(sh.node);
         }
         shots.clear();
         for (Text t : popups) {
-            layer.getChildren().remove(t);
+            top.getChildren().remove(t);
         }
         popups.clear();
         if (durationText != null) {
-            layer.getChildren().remove(durationText);
+            top.getChildren().remove(durationText);
         }
         for (Heart h : hearts) {
-            layer.getChildren().remove(h.node);
+            world.getChildren().remove(h.node);
         }
         hearts.clear();
         hudText.setVisible(false);
@@ -460,7 +474,7 @@ public class AlienEnduranceGame implements Minigame {
         panel.getChildren().add(label(String.format("BEST  %d:%02d", bs / 60, bs % 60), x + w - 120, ry, 12, Color.GOLD));
         ry += 22;
         panel.getChildren().add(label("YOUR SHIP LIVES ARE SAFE   SPACE = CONTINUE", x + 20, ry, 10, Color.rgb(170, 200, 210)));
-        layer.getChildren().add(panel);
+        top.getChildren().add(panel);
     }
 
     private static Text label(String s, double x, double y, int size, Color c) {
@@ -492,9 +506,10 @@ public class AlienEnduranceGame implements Minigame {
             s.x = playerX() + dx;
             s.y = playerY() - 22;
             s.vx = dx * 3;
-            s.node = new Rectangle(3, 12, Color.rgb(140, 255, 230));
-            s.node.setEffect(new DropShadow(6, Color.AQUA));
-            layer.getChildren().add(s.node);
+            s.node = shotPool.isEmpty() ? newShotNode() : shotPool.remove(shotPool.size() - 1);
+            s.node.setTranslateX(s.x - 1.5);
+            s.node.setTranslateY(s.y - 6);
+            s.node.setVisible(true);
             shots.add(s);
         }
         SoundHelper.play("shot.wav");
@@ -621,7 +636,7 @@ public class AlienEnduranceGame implements Minigame {
         a.maxHp = hp;
         a.view = SpriteSheets.alienView(kind, size);
         a.shootCd = 1.5 + rng.nextDouble() * 3;
-        layer.getChildren().add(a.view);
+        world.getChildren().add(a.view);
         aliens.add(a);
         return a;
     }
@@ -676,7 +691,8 @@ public class AlienEnduranceGame implements Minigame {
                 }
             }
             if (gone) {
-                layer.getChildren().remove(s.node);
+                s.node.setVisible(false);
+                shotPool.add(s.node);
                 it.remove();
             }
         }
@@ -736,7 +752,10 @@ public class AlienEnduranceGame implements Minigame {
                 a.view.setTranslateX(a.x - a.size / 2);
                 a.view.setTranslateY(a.y - a.size / 2);
                 a.hitFlash -= tpf;
-                a.view.setOpacity(a.hitFlash > 0 ? 0.55 : 1.0);
+                double op = a.hitFlash > 0 ? (a.boss ? 0.8 : 0.55) : 1.0;
+                if (a.view.getOpacity() != op) {
+                    a.view.setOpacity(op);
+                }
                 double dx = a.x - playerX();
                 double dy = a.y - playerY();
                 double r = a.size * 0.38 + PLAYER_RADIUS;
@@ -753,7 +772,7 @@ public class AlienEnduranceGame implements Minigame {
                 }
             }
             if (remove) {
-                layer.getChildren().remove(a.view);
+                world.getChildren().remove(a.view);
                 it.remove();
             }
         }
@@ -794,6 +813,8 @@ public class AlienEnduranceGame implements Minigame {
             host.displayBanner("GIANT " + ALIEN_NAMES[kind] + "!", Color.ORANGE, 1.6);
         }
         b.boss = true;
+        b.view.setCache(true);
+        b.view.setCacheHint(javafx.scene.CacheHint.SPEED);
         b.x = getAppWidth() / 2.0;
         b.homeX = b.x;
         b.y = -b.size / 2;
@@ -910,18 +931,15 @@ public class AlienEnduranceGame implements Minigame {
             bossBarText.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
             bossBarText.setFill(Color.WHITE);
         }
-        layer.getChildren().removeAll(bossBarBg, bossBarFill, bossBarText);
+        top.getChildren().removeAll(bossBarBg, bossBarFill, bossBarText);
         if (show) {
-            layer.getChildren().addAll(bossBarBg, bossBarFill, bossBarText);
+            top.getChildren().addAll(bossBarBg, bossBarFill, bossBarText);
         }
     }
 
     private void updateBossBar(Alien a) {
         bossBarFill.setWidth(Math.max(0, (bossBarBg.getWidth() - 2) * a.hp / (double) a.maxHp));
         bossBarText.setText(a.big ? "BRAIN OCTOPUS" : "GIANT " + ALIEN_NAMES[a.kind]);
-        bossBarBg.toFront();
-        bossBarFill.toFront();
-        bossBarText.toFront();
     }
 
     void onBossKilled(Alien a) {
@@ -998,10 +1016,29 @@ public class AlienEnduranceGame implements Minigame {
         b.y = y;
         b.vx = vx;
         b.vy = vy;
-        b.node = new Circle(5, c);
-        b.node.setEffect(new DropShadow(8, c));
-        layer.getChildren().add(b.node);
+        b.node = bulletPool.isEmpty() ? newBulletNode() : bulletPool.remove(bulletPool.size() - 1);
+        b.node.setFill(c);
+        b.node.setTranslateX(x);
+        b.node.setTranslateY(y);
+        b.node.setVisible(true);
         bullets.add(b);
+    }
+
+    private final List<Circle> bulletPool = new ArrayList<>();
+    private final List<Rectangle> shotPool = new ArrayList<>();
+
+    private Circle newBulletNode() {
+        Circle c = new Circle(5);
+        c.setStroke(Color.WHITE);
+        c.setStrokeWidth(1.2);
+        world.getChildren().add(c);
+        return c;
+    }
+
+    private Rectangle newShotNode() {
+        Rectangle r = new Rectangle(3, 12, Color.rgb(170, 255, 240));
+        world.getChildren().add(r);
+        return r;
     }
 
     private void updateBullets(double tpf) {
@@ -1022,7 +1059,8 @@ public class AlienEnduranceGame implements Minigame {
                 gone = true;
             }
             if (gone) {
-                layer.getChildren().remove(b.node);
+                b.node.setVisible(false);
+                bulletPool.add(b.node);
                 it.remove();
             }
         }
@@ -1035,8 +1073,15 @@ public class AlienEnduranceGame implements Minigame {
         return String.format("%d:%02d", s / 60, s % 60);
     }
 
+    private int hudSec = -1, hudLives = -1, hudKills = -1;
+
     void refreshHud() {
-        hudText.setText("TIME " + timeLabel() + "   LIVES " + "\u2665".repeat(Math.max(0, lives)) + "   KILLS " + kills);
-        hudText.toFront();
+        int sec = (int) time;
+        if (sec != hudSec || lives != hudLives || kills != hudKills) {
+            hudSec = sec;
+            hudLives = lives;
+            hudKills = kills;
+            hudText.setText("TIME " + timeLabel() + "   LIVES " + "\u2665".repeat(Math.max(0, lives)) + "   KILLS " + kills);
+        }
     }
 }
