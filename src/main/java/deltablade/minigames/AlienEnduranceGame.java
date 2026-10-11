@@ -221,14 +221,65 @@ public class AlienEnduranceGame implements Minigame {
 
     // ---------- spawning ----------
 
-    /** Escalation is added in step 3; here a steady stream of groups. */
+    /** Danger level: rises by one every 30 seconds. */
+    int stage() {
+        return (int) (time / 30.0);
+    }
+
+    private int announcedStage;
+
+    /** Spawn pace multiplier (bosses slow the stream down). */
+    double paceFactor() {
+        return 1.0;
+    }
+
     void updateDirector(double tpf) {
-        spawnTimer -= tpf;
-        if (spawnTimer <= 0) {
-            FlightPaths.Kind[] kinds = FlightPaths.Kind.values();
-            spawnGroup(rng.nextInt(SpriteSheets.ALIEN_LEAF + 1), kinds[rng.nextInt(kinds.length)], rng.nextBoolean(), 5, 180, false);
-            spawnTimer = 3.0;
+        int st = stage();
+        if (st > announcedStage) {
+            announcedStage = st;
+            host.displayBanner("DANGER " + (st + 1), Color.rgb(255, 120 + Math.max(0, 120 - st * 15), 80), 1.2);
         }
+        spawnTimer -= tpf * paceFactor();
+        if (spawnTimer > 0) {
+            return;
+        }
+        spawnTimer = Math.max(0.8, 3.0 - 0.28 * st);
+        int count = Math.min(12, 4 + st);
+        double speed = Math.min(340, 170 + 18 * st);
+        int kindsUnlocked = Math.min(5, 1 + st);
+        boolean mixed = st >= 4 && rng.nextDouble() < 0.4;
+        int kind = rng.nextInt(kindsUnlocked);
+        boolean mirror = rng.nextBoolean();
+        spawnGroupOnPath(kind, randomPath(st, mirror), count, speed, mixed);
+        if (st >= 5 && rng.nextDouble() < 0.5) {
+            // twin group from the other side
+            spawnGroupOnPath(rng.nextInt(kindsUnlocked), randomPath(st, !mirror), Math.max(3, count - 3), speed, mixed);
+        }
+    }
+
+    private List<Point2D> randomPath(int st, boolean mirror) {
+        List<Object> pool = new ArrayList<>(List.of(FlightPaths.Kind.BOGEN, FlightPaths.Kind.WELLE, FlightPaths.Kind.S_KURVE));
+        if (st >= 1) {
+            pool.add(FlightPaths.Cross.ZICKZACK);
+            pool.add(FlightPaths.Kind.SCHLEIFE);
+        }
+        if (st >= 2) {
+            pool.add(FlightPaths.Kind.KREIS);
+            pool.add(FlightPaths.Cross.ACHT);
+        }
+        if (st >= 3) {
+            pool.add(FlightPaths.Kind.SPIRALE);
+            pool.add(FlightPaths.Cross.SCHWARM);
+        }
+        if (st >= 4) {
+            pool.add(FlightPaths.Cross.REGEN);
+            pool.add(FlightPaths.Kind.HAKEN);
+        }
+        Object pick = pool.get(rng.nextInt(pool.size()));
+        if (pick instanceof FlightPaths.Cross c) {
+            return FlightPaths.crossing(c, mirror, rng.nextDouble());
+        }
+        return withExit(FlightPaths.build((FlightPaths.Kind) pick, mirror));
     }
 
     void spawnGroup(int kind, FlightPaths.Kind pathKind, boolean mirror, int count, double speed, boolean mixed) {
@@ -394,7 +445,7 @@ public class AlienEnduranceGame implements Minigame {
     }
 
     double shootRate() {
-        return 1.0;
+        return 1.0 + 0.25 * stage();
     }
 
     private void alienShoot(Alien a, double tpf) {

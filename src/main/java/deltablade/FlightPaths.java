@@ -87,6 +87,67 @@ public final class FlightPaths {
         return out;
     }
 
+    /** Crossing paths for Alien Endurance: they cross the whole screen and leave it again. */
+    public enum Cross {
+        ACHT,      // figure eight
+        ZICKZACK,  // zigzag down
+        SCHWARM,   // loose wobbling swarm
+        REGEN      // steep diagonal rain
+    }
+
+    public static List<Point2D> crossing(Cross kind, boolean mirror, double seed) {
+        double w = getAppWidth();
+        double h = getAppHeight();
+        List<Point2D> pts = new ArrayList<>();
+        switch (kind) {
+            case ACHT -> {
+                double cx = w / 2.0;
+                double cy = h * 0.34;
+                line(pts, -40, cy, cx - 120, cy, 8);
+                int n = 90;
+                for (int i = 0; i <= n; i++) {
+                    double t = i / (double) n * Math.PI * 2;
+                    pts.add(new Point2D(cx - Math.cos(t) * 120, cy + Math.sin(2 * t) * 70));
+                }
+                line(pts, cx - 120, cy, w + 60, h * 0.55, 10);
+            }
+            case ZICKZACK -> {
+                double left = GameVars.RAIL_WIDTH + 30;
+                double right = w - GameVars.RAIL_WIDTH - 30;
+                double y = -40;
+                boolean toRight = true;
+                pts.add(new Point2D(left, y));
+                for (int i = 0; i < 6; i++) {
+                    y += h * 0.12;
+                    line(pts, toRight ? left : right, y - h * 0.12, toRight ? right : left, y, 10);
+                    toRight = !toRight;
+                }
+                pts.add(new Point2D(w / 2.0, h + 60));
+            }
+            case SCHWARM -> {
+                double x = w * (0.25 + 0.5 * seed);
+                int n = 80;
+                for (int i = 0; i <= n; i++) {
+                    double t = i / (double) n;
+                    pts.add(new Point2D(x + Math.sin(t * 9 + seed * 6) * 70 + Math.sin(t * 23) * 18,
+                            -40 + t * (h + 100)));
+                }
+            }
+            case REGEN -> {
+                double x0 = w * (0.1 + 0.3 * seed);
+                line(pts, x0, -40, x0 + w * 0.5, h + 60, 30);
+            }
+        }
+        if (!mirror) {
+            return pts;
+        }
+        List<Point2D> out = new ArrayList<>(pts.size());
+        for (Point2D p : pts) {
+            out.add(new Point2D(w - p.getX(), p.getY()));
+        }
+        return out;
+    }
+
     private static void line(List<Point2D> pts, double x0, double y0, double x1, double y1, int n) {
         for (int i = 0; i <= n; i++) {
             double t = i / (double) n;
