@@ -149,7 +149,77 @@ public class AlienEnduranceGame implements Minigame {
 
     // ---------- hooks for later steps ----------
 
-    void updateExtras(double tpf) {}
+    // ---------- falling hearts (extra lives) ----------
+
+    private static final class Heart {
+        javafx.scene.Node node;
+        double x, y, t;
+    }
+
+    private final List<Heart> hearts = new ArrayList<>();
+    private double heartTimer = 40 + new Random().nextDouble() * 20;
+    int heartsCaught;
+
+    void updateExtras(double tpf) {
+        heartTimer -= tpf;
+        if (heartTimer <= 0) {
+            dropHeart(host.playLeft() + 40 + rng.nextDouble() * Math.max(40, host.playRight() - host.playLeft() - 80), -20);
+            heartTimer = time > 180 ? 75 : 40 + rng.nextDouble() * 20;
+        }
+        Iterator<Heart> it = hearts.iterator();
+        while (it.hasNext()) {
+            Heart h = it.next();
+            h.t += tpf;
+            h.y += 90 * tpf;
+            h.x += Math.sin(h.t * 3) * 30 * tpf;
+            double pulse = 1.0 + Math.sin(h.t * 6) * 0.12;
+            h.node.setScaleX(pulse);
+            h.node.setScaleY(pulse);
+            h.node.setTranslateX(h.x - 14);
+            h.node.setTranslateY(h.y - 14);
+            double dx = h.x - playerX();
+            double dy = h.y - playerY();
+            boolean caught = dx * dx + dy * dy < 32 * 32;
+            if (caught) {
+                heartsCaught++;
+                if (lives < MAX_LIVES) {
+                    lives++;
+                    host.displayBanner("EXTRA LIFE!", Color.HOTPINK, 1.0);
+                } else {
+                    killScore += 500;
+                    host.displayBanner("LIVES FULL  +500", Color.HOTPINK, 1.0);
+                }
+                SoundHelper.play("extra_life.wav");
+            }
+            if (caught || h.y > getAppHeight() + 30) {
+                layer.getChildren().remove(h.node);
+                it.remove();
+            }
+        }
+    }
+
+    void dropHeart(double x, double y) {
+        Heart h = new Heart();
+        h.x = x;
+        h.y = y;
+        javafx.scene.image.Image img = deltablade.EmbeddedTextures.getImage("heart.png", 28, 28);
+        if (img != null) {
+            ImageView v = new ImageView(img);
+            v.setFitWidth(28);
+            v.setFitHeight(28);
+            v.setPreserveRatio(true);
+            h.node = v;
+        } else {
+            Text t = new Text("\u2665");
+            t.setFont(Font.font("Monospace", FontWeight.BOLD, 26));
+            t.setFill(Color.HOTPINK);
+            t.setTranslateY(24);
+            h.node = new Group(t);
+        }
+        h.node.setEffect(new DropShadow(12, Color.HOTPINK));
+        layer.getChildren().add(h.node);
+        hearts.add(h);
+    }
 
     void updateAfterGame(double tpf) {}
 
