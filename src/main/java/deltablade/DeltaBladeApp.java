@@ -2655,6 +2655,35 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             return;
         }
 
+        if ("MONSTER_BOSS".equals(drop.spawnName())) {
+            if (gameOver || optionsOpen || minigameActive || warping) {
+                return;
+            }
+            if (!gameStarted || showingTitleScreen || player == null) {
+                if (showingTitleScreen) {
+                    startActualGame(false);
+                }
+                if (player == null) {
+                    return;
+                }
+            }
+            cancelGetReady();
+            clearWaveEntities();
+            refillWaveTimer();
+            ufoSpawnedThisWave = false;
+            waveTransition = false;
+            bossCollectLeft = 0;
+            bossCollectDone = false;
+            waveManager.startWave(Math.max(geti(GameVars.LEVEL), GameVars.MONSTER_WAVE_MIN_LEVEL), WaveManager.WaveType.MONSTER);
+            waveManager.markAlienBossSpawned();
+            inc(GameVars.ENEMIES_REMAINING, 1);
+            alienBossPending = true;
+            runOnce(this::spawnAlienBoss, Duration.seconds(3));
+            showWaveAnnouncement();
+            SoundHelper.play("get_ready.wav");
+            showBanner(drop.banner(), Color.AQUA, 1.2);
+            return;
+        }
         if ("ALIEN_ENDURANCE".equals(drop.spawnName())) {
             if (gameOver || optionsOpen || minigameActive || warping) {
                 return;

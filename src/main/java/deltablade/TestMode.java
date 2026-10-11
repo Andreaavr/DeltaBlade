@@ -8,7 +8,7 @@ import java.util.Optional;
  * Debug codes: tap the same number key three times
  * (000 Missile, 111 Meteor Challenge, 222 Cognitive, 333 Shield, 444 Warp, 555 UFO, 666 Bonus, 777 Attack, 888 Scoop, 999 Swarm).
  * Sequence 890 = Money cheat. Sequence 456 = Maze Escape minigame.
- * 789 Alien Endurance minigame.
+ * 789 Alien Endurance minigame. 357 Monster wave with alien boss right away.
  * Wellen-Tests: 505 Boss sofort, 147 Kreisel, 258 Zange, 369 Wasserfall, 159 Sturm.
  */
 public final class TestMode {
@@ -103,10 +103,10 @@ public final class TestMode {
 
     /** Wellen-Test-Codes: Ziffernfolge -> Wellen-Art. */
     private static final int[][] WAVE_CODES = {
-            {5, 0, 5}, {1, 4, 7}, {2, 5, 8}, {3, 6, 9}, {1, 5, 9}, {7, 8, 9}
+            {5, 0, 5}, {1, 4, 7}, {2, 5, 8}, {3, 6, 9}, {1, 5, 9}, {7, 8, 9}, {3, 5, 7}
     };
-    private static final String[] WAVE_NAMES = {"BOSS", "KREISEL", "ZANGE", "WASSERFALL", "STURM", "ALIEN_ENDURANCE"};
-    private static final String[] WAVE_LABELS = {"BOSS", "SPINNER", "PINCER", "CASCADE", "RUSH", "ALIEN ENDURANCE"};
+    private static final String[] WAVE_NAMES = {"BOSS", "KREISEL", "ZANGE", "WASSERFALL", "STURM", "ALIEN_ENDURANCE", "MONSTER_BOSS"};
+    private static final String[] WAVE_LABELS = {"BOSS", "SPINNER", "PINCER", "CASCADE", "RUSH", "ALIEN ENDURANCE", "MONSTER + ALIEN BOSS"};
     private static final int[] waveSeq = new int[WAVE_CODES.length];
     private static final long[] waveSeqAt = new long[WAVE_CODES.length];
 
@@ -121,7 +121,7 @@ public final class TestMode {
             if (waveSeq[i] >= code.length) {
                 waveSeq[i] = 0;
                 String n = WAVE_NAMES[i];
-                return Optional.of(new Drop(n.startsWith("ALIEN") ? n : "WAVE:" + n, "TEST  " + WAVE_LABELS[i]));
+                return Optional.of(new Drop((n.startsWith("ALIEN") || n.startsWith("MONSTER_")) ? n : "WAVE:" + n, "TEST  " + WAVE_LABELS[i]));
             }
             return Optional.empty();
         }
