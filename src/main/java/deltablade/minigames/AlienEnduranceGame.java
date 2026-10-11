@@ -68,6 +68,10 @@ public class AlienEnduranceGame implements Minigame {
         double delay;
         boolean boss;
         double hitFlash;
+        // boss data
+        boolean big;
+        double bossT, attackCd, specialCd, helperCd, homeX;
+        int phase;
     }
 
     private static final class Shot {
@@ -115,6 +119,7 @@ public class AlienEnduranceGame implements Minigame {
             fireShot();
         }
         updateDirector(tpf);
+        maybeSpawnBoss();
         updateShots(tpf);
         updateAliens(tpf);
         updateBullets(tpf);
@@ -300,7 +305,7 @@ public class AlienEnduranceGame implements Minigame {
 
     /** Spawn pace multiplier (bosses slow the stream down). */
     double paceFactor() {
-        return 1.0;
+        return activeBoss != null ? 0.45 : 1.0;
     }
 
     void updateDirector(double tpf) {
@@ -433,6 +438,9 @@ public class AlienEnduranceGame implements Minigame {
             killScore += killValue(a.kind);
             host.spawnExplosion(a.x, a.y, a.boss ? "big" : "ship");
             SoundHelper.play(a.boss ? "explode_boss.wav" : "explode_ship.wav");
+            if (a.boss) {
+                onBossKilled(a);
+            }
             onAlienKilled(a);
         }
     }
@@ -490,7 +498,189 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    void updateBoss(Alien a, double tpf) {}
+    // ---------- bosses ----------
+
+    private static final int[] MINI_ROTATION = {
+            SpriteSheets.ALIEN_JELLY, SpriteSheets.ALIEN_EYE, SpriteSheets.ALIEN_MOTH,
+            SpriteSheets.ALIEN_CRAB, SpriteSheets.ALIEN_LEAF};
+    private static final String[] ALIEN_NAMES = {"CRAB", "MOTH", "EYE", "JELLY", "LEAF", "BRAIN"};
+
+    Alien activeBoss;
+    private double nextBossAt = 60;
+    private int miniCount;
+    int minibossKills;
+    int brainKills;
+    private Rectangle bossBarBg;
+    private Rectangle bossBarFill;
+    private Text bossBarText;
+
+    private void maybeSpawnBoss() {
+        if (activeBoss != null || time < nextBossAt) {
+            return;
+        }
+        boolean brain = ((int) Math.round(nextBossAt)) % 300 == 0;
+        nextBossAt += 60;
+        Alien b;
+        if (brain) {
+            int round = brainKills + 1;
+            b = newAlien(SpriteSheets.ALIEN_BRAIN, 190, 200 + 80 * brainKills);
+            b.big = true;
+            host.displayBanner("BRAIN OCTOPUS " + (round > 1 ? round : "") + "!", Color.MEDIUMORCHID, 2.0);
+        } else {
+            int kind = MINI_ROTATION[miniCount % MINI_ROTATION.length];
+            miniCount++;
+            b = newAlien(kind, 140, 28 + 12 * miniCount);
+            host.displayBanner("GIANT " + ALIEN_NAMES[kind] + "!", Color.ORANGE, 1.6);
+        }
+        b.boss = true;
+        b.x = getAppWidth() / 2.0;
+        b.homeX = b.x;
+        b.y = -b.size / 2;
+        b.attackCd = 2.0;
+        b.specialCd = 4.0;
+        b.helperCd = 5.0;
+        activeBoss = b;
+        SoundHelper.play("ufo_appear.wav");
+        showBossBar(true);
+    }
+
+    void updateBoss(Alien a, double tpf) {
+        a.bossT += tpf;
+        double targetY = host.playTop() + 40 + a.size / 2;
+        if (a.y < targetY) {
+            a.y = Math.min(targetY, a.y + 70 * tpf);
+            return;
+        }
+        double range = Math.max(40, (host.playRight() - host.playLeft()) / 2 - a.size / 2 - 10);
+        double swaySpeed = a.kind == SpriteSheets.ALIEN_MOTH ? 1.3 : 0.6;
+        if (a.phase >= 2) {
+            swaySpeed *= 1.4;
+        }
+        a.x = a.homeX + Math.sin(a.bossT * swaySpeed) * range;
+        if (a.kind == SpriteSheets.ALIEN_JELLY) {
+            a.y = targetY + Math.sin(a.bossT * 1.7) * 18;
+        }
+
+        double hpPart = a.hp / (double) a.maxHp;
+        if (a.big) {
+            int want = hpPart < 0.25 ? 2 : (hpPart < 0.6 ? 1 : 0);
+            if (want > a.phase) {
+                a.phase = want;
+                if (want == 1) {
+                    host.displayBanner("BRAIN CALLS FOR HELP!", Color.MEDIUMORCHID, 1.4);
+                } else {
+                    host.displayBanner("BRAIN GETS ANGRY!", Color.RED, 1.4);
+                    a.view.setEffect(new javafx.scene.effect.Lighting(
+                            new javafx.scene.effect.Light.Distant(45, 60, Color.rgb(255, 110, 110))));
+                }
+            }
+        }
+
+        double bottom = a.y + a.size * 0.4;
+        a.attackCd -= tpf;
+        a.specialCd -= tpf;
+        if (a.attackCd <= 0) {
+            switch (a.kind) {
+                case SpriteSheets.ALIEN_JELLY -> { fan(a.x, bottom, 5, 0.9, 170, Color.HOTPINK); a.attackCd = 2.2; }
+                case SpriteSheets.ALIEN_EYE -> { aimedShot(a.x - 14, bottom, 230, Color.MEDIUMPURPLE); aimedShot(a.x, bottom, 230, Color.MEDIUMPURPLE); aimedShot(a.x + 14, bottom, 230, Color.MEDIUMPURPLE); a.attackCd = 1.7; }
+                case SpriteSheets.ALIEN_MOTH -> { for (int i = 0; i < 3; i++) { enemyBullet(a.x + (rng.nextDouble() - 0.5) * a.size, bottom, (rng.nextDouble() - 0.5) * 60, 210, Color.GOLD); } a.attackCd = 1.2; }
+                case SpriteSheets.ALIEN_CRAB -> { fan(a.x, bottom, 7, 1.2, 140, Color.TURQUOISE); a.attackCd = 2.6; }
+                case SpriteSheets.ALIEN_LEAF -> { ring(a.x, a.y, 10, 150, Color.LIMEGREEN); a.attackCd = 3.0; }
+                default -> { // brain
+                    fan(a.x, bottom, a.phase >= 2 ? 7 : 5, 1.0, 170, Color.ORCHID);
+                    aimedShot(a.x, bottom, 220, Color.VIOLET);
+                    a.attackCd = a.phase >= 2 ? 1.6 : 2.2;
+                }
+            }
+        }
+        if (a.specialCd <= 0) {
+            if (a.kind == SpriteSheets.ALIEN_EYE) {
+                ring(a.x, a.y, 12, 160, Color.MEDIUMPURPLE);
+                a.specialCd = 5.0;
+            } else if (a.big && a.phase >= 2) {
+                ring(a.x, a.y, 14, 170, Color.RED);
+                a.specialCd = 3.0;
+            } else {
+                a.specialCd = 4.0;
+            }
+        }
+        if (a.big && a.phase >= 1) {
+            a.helperCd -= tpf;
+            if (a.helperCd <= 0) {
+                a.helperCd = 6.0;
+                List<Point2D> path = new ArrayList<>();
+                path.add(new Point2D(a.x, a.y));
+                path.add(new Point2D(a.x + (rng.nextBoolean() ? 160 : -160), a.y + 120));
+                path.add(new Point2D(playerX(), getAppHeight() + 80));
+                spawnGroupOnPath(0, path, 3, 200, true);
+            }
+        }
+        updateBossBar(a);
+    }
+
+    void fan(double x, double y, int n, double spread, double speed, Color c) {
+        for (int i = 0; i < n; i++) {
+            double ang = Math.PI / 2 + (n == 1 ? 0 : (i / (double) (n - 1) - 0.5) * spread);
+            enemyBullet(x, y, Math.cos(ang) * speed, Math.sin(ang) * speed, c);
+        }
+    }
+
+    void ring(double x, double y, int n, double speed, Color c) {
+        double off = rng.nextDouble() * Math.PI;
+        for (int i = 0; i < n; i++) {
+            double ang = off + i * Math.PI * 2 / n;
+            enemyBullet(x, y, Math.cos(ang) * speed, Math.sin(ang) * speed, c);
+        }
+    }
+
+    private void showBossBar(boolean show) {
+        if (bossBarBg == null) {
+            double w = 260;
+            double x = getAppWidth() / 2.0 - w / 2;
+            double y = host.playTop() + 34;
+            bossBarBg = new Rectangle(x, y, w, 10);
+            bossBarBg.setFill(Color.rgb(20, 10, 30, 0.85));
+            bossBarBg.setStroke(Color.ORCHID);
+            bossBarFill = new Rectangle(x + 1, y + 1, w - 2, 8);
+            bossBarFill.setFill(Color.MEDIUMORCHID);
+            bossBarText = new Text(x, y - 4, "");
+            bossBarText.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
+            bossBarText.setFill(Color.WHITE);
+        }
+        layer.getChildren().removeAll(bossBarBg, bossBarFill, bossBarText);
+        if (show) {
+            layer.getChildren().addAll(bossBarBg, bossBarFill, bossBarText);
+        }
+    }
+
+    private void updateBossBar(Alien a) {
+        bossBarFill.setWidth(Math.max(0, (bossBarBg.getWidth() - 2) * a.hp / (double) a.maxHp));
+        bossBarText.setText(a.big ? "BRAIN OCTOPUS" : "GIANT " + ALIEN_NAMES[a.kind]);
+        bossBarBg.toFront();
+        bossBarFill.toFront();
+        bossBarText.toFront();
+    }
+
+    void onBossKilled(Alien a) {
+        activeBoss = null;
+        showBossBar(false);
+        if (a.big) {
+            brainKills++;
+            killScore += 15000;
+            host.displayBanner("BRAIN OCTOPUS DOWN!  +15000", Color.GOLD, 2.0);
+            dropHeart(a.x, a.y);
+        } else {
+            minibossKills++;
+            killScore += 3000;
+            host.displayBanner("GIANT " + ALIEN_NAMES[a.kind] + " DOWN!  +3000", Color.GOLD, 1.6);
+            if (rng.nextBoolean()) {
+                dropHeart(a.x, a.y);
+            }
+        }
+        for (int i = 0; i < 4; i++) {
+            host.spawnExplosion(a.x + (rng.nextDouble() - 0.5) * a.size * 0.7, a.y + (rng.nextDouble() - 0.5) * a.size * 0.7, "big");
+        }
+    }
 
     /** @return true when the alien has run off the end of its path. */
     private boolean followPath(Alien a, double tpf) {
