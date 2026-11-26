@@ -7,25 +7,39 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ColorPicker;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Slider;
+import javafx.scene.control.TextField;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.effect.Glow;
 import javafx.scene.image.PixelReader;
 import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.CycleMethod;
-import javafx.scene.paint.LinearGradient;
-import javafx.scene.paint.Stop;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -37,9 +51,9 @@ import java.util.zip.Deflater;
 /**
  * Standalone explosion editor for DeltaBlade.
  * Creates procedural pixel-art explosions and exports them as sprite sheets.
- * 
+ *
  * Run with: mvn javafx:run -Pexplosions
- * 
+ *
  * Integration note (future PR): To play exported sheets in-game, load the PNG
  * using EmbeddedTextures.decodePng(), then draw frame N based on elapsed time:
  *   int frame = (int)((elapsedMs / 1000.0) * fps) % frameCount;
@@ -49,7 +63,7 @@ public class ExplosionEditor extends Application {
 
     private static final int PREVIEW_SIZE = 400;
     private static final int HIRES_SCALE = 4;
-    
+
     private Canvas previewCanvas;
     private GraphicsContext previewGc;
     private WritableImage hiresBuffer;
@@ -58,7 +72,7 @@ public class ExplosionEditor extends Application {
     private int[][] accumulatorG;
     private int[][] accumulatorB;
     private int[][] accumulatorA;
-    
+
     private Slider durationSlider;
     private Slider frameCountSlider;
     private ComboBox<Integer> frameSizeCombo;
@@ -83,70 +97,70 @@ public class ExplosionEditor extends Application {
     private Label currentFrameLabel;
     private Label playbackTimeLabel;
     private Label presetNameLabel;
-    
+
     private boolean isPlaying = true;
     private boolean isLooping = true;
     private double playbackTime = 0;
     private long lastNanos = 0;
     private AnimationTimer animationTimer;
-    
+
     private final Random random = new Random();
     private long currentSeed = 12345L;
     private String currentPresetName = "Schiff";
-    
+
     private List<Particle> particles = new ArrayList<>();
     private double shockwaveRadius = 0;
     private double shockwaveMaxRadius = 0;
     private double flashAlpha = 0;
-    
+
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("DeltaBlade Explosion Editor v1.0");
-        
+
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: linear-gradient(to bottom, #0d1117, #161b22);");
-        
+
         VBox leftPane = createPreviewPane();
         root.setLeft(leftPane);
-        
+
         ScrollPane controlPane = createControlPane();
         root.setCenter(controlPane);
-        
+
         VBox bottomPane = createBottomPane();
         root.setBottom(bottomPane);
-        
+
         Scene scene = new Scene(root, 1000, 720);
         scene.getStylesheets().add("data:text/css," + getCustomCSS());
         primaryStage.setScene(scene);
         primaryStage.setResizable(true);
         primaryStage.show();
-        
+
         applyPreset("schiff");
         startAnimation();
     }
-    
+
     private String getCustomCSS() {
         return """
             .slider { -fx-min-height: 20; }
-            .slider .track { 
-                -fx-background-color: #30363d; 
-                -fx-background-radius: 3; 
-                -fx-pref-height: 6; 
-                -fx-min-height: 6; 
-                -fx-border-color: #484f58; 
-                -fx-border-width: 1; 
-                -fx-border-radius: 3; 
+            .slider .track {
+                -fx-background-color: #30363d;
+                -fx-background-radius: 3;
+                -fx-pref-height: 6;
+                -fx-min-height: 6;
+                -fx-border-color: #484f58;
+                -fx-border-width: 1;
+                -fx-border-radius: 3;
             }
-            .slider .thumb { 
-                -fx-background-color: #58a6ff; 
-                -fx-background-radius: 7; 
-                -fx-pref-width: 14; 
-                -fx-pref-height: 14; 
-                -fx-min-width: 14; 
-                -fx-min-height: 14; 
-                -fx-border-color: #79c0ff; 
-                -fx-border-width: 1; 
-                -fx-border-radius: 7; 
+            .slider .thumb {
+                -fx-background-color: #58a6ff;
+                -fx-background-radius: 7;
+                -fx-pref-width: 14;
+                -fx-pref-height: 14;
+                -fx-min-width: 14;
+                -fx-min-height: 14;
+                -fx-border-color: #79c0ff;
+                -fx-border-width: 1;
+                -fx-border-radius: 7;
             }
             .slider .thumb:hover { -fx-background-color: #79c0ff; }
             .check-box .box { -fx-background-color: #21262d; -fx-border-color: #30363d; }
@@ -163,34 +177,34 @@ public class ExplosionEditor extends Application {
             .color-picker { -fx-background-color: #21262d; }
             """.replace("\n", " ");
     }
-    
+
     private VBox createPreviewPane() {
         VBox pane = new VBox(15);
         pane.setAlignment(Pos.TOP_CENTER);
         pane.setPadding(new Insets(20, 15, 20, 20));
         pane.setStyle("-fx-background-color: transparent;");
         pane.setPrefWidth(450);
-        
+
         HBox headerBox = new HBox(10);
         headerBox.setAlignment(Pos.CENTER_LEFT);
-        
+
         Label title = new Label("VORSCHAU");
         title.setFont(Font.font("Monospace", FontWeight.BOLD, 14));
         title.setTextFill(Color.web("#8b949e"));
-        
+
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        
+
         presetNameLabel = new Label("Schiff");
         presetNameLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 16));
         presetNameLabel.setTextFill(Color.web("#58a6ff"));
-        
+
         headerBox.getChildren().addAll(title, spacer, presetNameLabel);
-        
+
         previewCanvas = new Canvas(PREVIEW_SIZE, PREVIEW_SIZE);
         previewGc = previewCanvas.getGraphicsContext2D();
         previewGc.setImageSmoothing(false);
-        
+
         StackPane canvasHolder = new StackPane(previewCanvas);
         canvasHolder.setStyle(
             "-fx-background-color: #010409;" +
@@ -200,13 +214,13 @@ public class ExplosionEditor extends Application {
             "-fx-background-radius: 6;"
         );
         canvasHolder.setMaxSize(PREVIEW_SIZE + 4, PREVIEW_SIZE + 4);
-        
+
         DropShadow shadow = new DropShadow(15, Color.rgb(0, 0, 0, 0.5));
         canvasHolder.setEffect(shadow);
-        
+
         HBox infoBox = new HBox(20);
         infoBox.setAlignment(Pos.CENTER);
-        
+
         Label sizeInfo = new Label();
         sizeInfo.setFont(Font.font("Monospace", 11));
         sizeInfo.setTextFill(Color.web("#8b949e"));
@@ -214,165 +228,170 @@ public class ExplosionEditor extends Application {
         frameSizeCombo.valueProperty().addListener((obs, o, n) -> {
             if (n != null) sizeInfo.setText(n + "×" + n + " px");
         });
-        
+
         infoBox.getChildren().add(sizeInfo);
-        
+
         pane.getChildren().addAll(headerBox, canvasHolder, infoBox);
         return pane;
     }
-    
+
     private ScrollPane createControlPane() {
         VBox controls = new VBox(14);
         controls.setPadding(new Insets(20, 20, 20, 10));
         controls.setStyle("-fx-background-color: transparent;");
         controls.setPrefWidth(340);
-        
-        controls.getChildren().add(createSection("TIMING", 
+
+        controls.getChildren().add(createSection("TIMING",
             createSliderRow("Dauer", "s", 0.15, 2.0, 0.6, s -> durationSlider = s),
-            createSliderRow("Frames", "", 4, 24, 8, s -> { frameCountSlider = s; s.setSnapToTicks(true); s.setMajorTickUnit(1); }),
+            createSliderRow("Frames", "", 4, 24, 8, s -> {
+                frameCountSlider = s;
+                s.setSnapToTicks(true);
+                s.setMajorTickUnit(1);
+            }),
             createFrameSizeRow()
         ));
-        
+
         controls.getChildren().add(createSection("PARTIKEL",
             createSliderRow("Anzahl", "", 20, 400, 100, s -> particleCountSlider = s),
             createSliderRow("Größe/Leben", "×", 0.2, 2.5, 1.0, s -> sizeOverLifeSlider = s),
             createSliderRow("Debris", "", 0, 30, 8, s -> debrisSlider = s)
         ));
-        
+
         controls.getChildren().add(createSection("FARBEN",
             createColorRow("Kern:", Color.WHITE, c -> coreColorPicker = c),
             createColorRow("Feuer:", Color.ORANGE, c -> midColorPicker = c),
             createColorRow("Rauch:", Color.rgb(60, 55, 50), c -> smokeColorPicker = c)
         ));
-        
+
         controls.getChildren().add(createSection("PHYSIK",
             createSliderRow("Velocity", "", 30, 500, 180, s -> velocitySlider = s),
             createSliderRow("Gravity", "", -300, 300, 60, s -> gravitySlider = s),
             createSliderRow("Drag", "", 0.3, 6.0, 2.2, s -> dragSlider = s),
             createSliderRow("Flash", "", 0, 1.5, 0.8, s -> flashIntensitySlider = s)
         ));
-        
+
         controls.getChildren().add(createSection("LAYER",
             createTogglesRow()
         ));
-        
+
         controls.getChildren().add(createSection("SEED",
             createSeedRow()
         ));
-        
+
         controls.getChildren().add(createSection("PRESETS",
             createPresetsGrid()
         ));
-        
+
         controls.getChildren().add(createSection("EXPORT",
             createExportButtons()
         ));
-        
+
         ScrollPane scroll = new ScrollPane(controls);
         scroll.setFitToWidth(true);
         scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         return scroll;
     }
-    
+
     private VBox createSection(String title, Node... content) {
         VBox section = new VBox(8);
-        
+
         Label header = new Label(title);
         header.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
         header.setTextFill(Color.web("#8b949e"));
-        
+
         VBox contentBox = new VBox(6);
         contentBox.getChildren().addAll(content);
         contentBox.setPadding(new Insets(0, 0, 0, 4));
-        
+
         section.getChildren().addAll(header, contentBox);
         return section;
     }
-    
-    private HBox createSliderRow(String label, String unit, double min, double max, double value, java.util.function.Consumer<Slider> setter) {
+
+    private HBox createSliderRow(String label, String unit, double min, double max, double value,
+                                 java.util.function.Consumer<Slider> setter) {
         HBox row = new HBox(8);
         row.setAlignment(Pos.CENTER_LEFT);
-        
+
         Label nameLabel = new Label(label + ":");
         nameLabel.setFont(Font.font("Monospace", 12));
         nameLabel.setTextFill(Color.web("#c9d1d9"));
         nameLabel.setMinWidth(80);
-        
+
         Slider slider = new Slider(min, max, value);
         slider.setPrefWidth(140);
         HBox.setHgrow(slider, Priority.ALWAYS);
-        
+
         Label valueLabel = new Label(formatValue(value, unit));
         valueLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
         valueLabel.setTextFill(Color.web("#58a6ff"));
         valueLabel.setMinWidth(50);
         valueLabel.setAlignment(Pos.CENTER_RIGHT);
-        
+
         slider.valueProperty().addListener((obs, o, n) -> {
             valueLabel.setText(formatValue(n.doubleValue(), unit));
             restartExplosion();
         });
-        
+
         setter.accept(slider);
         row.getChildren().addAll(nameLabel, slider, valueLabel);
         return row;
     }
-    
+
     private String formatValue(double value, String unit) {
         if (unit.isEmpty() && value == Math.floor(value)) {
             return String.format("%.0f", value);
         }
         return String.format("%.2f%s", value, unit);
     }
-    
+
     private HBox createFrameSizeRow() {
         HBox row = new HBox(8);
         row.setAlignment(Pos.CENTER_LEFT);
-        
+
         Label nameLabel = new Label("Größe:");
         nameLabel.setFont(Font.font("Monospace", 12));
         nameLabel.setTextFill(Color.web("#c9d1d9"));
         nameLabel.setMinWidth(80);
-        
+
         frameSizeCombo.getItems().addAll(32, 48, 64, 96);
         frameSizeCombo.setValue(64);
         frameSizeCombo.setOnAction(e -> restartExplosion());
-        
+
         row.getChildren().addAll(nameLabel, frameSizeCombo);
         return row;
     }
-    
+
     private HBox createColorRow(String label, Color defaultColor, java.util.function.Consumer<ColorPicker> setter) {
         HBox row = new HBox(8);
         row.setAlignment(Pos.CENTER_LEFT);
-        
+
         Label nameLabel = new Label(label);
         nameLabel.setFont(Font.font("Monospace", 12));
         nameLabel.setTextFill(Color.web("#c9d1d9"));
         nameLabel.setMinWidth(50);
-        
+
         ColorPicker picker = new ColorPicker(defaultColor);
         picker.setOnAction(e -> restartExplosion());
         setter.accept(picker);
-        
+
         row.getChildren().addAll(nameLabel, picker);
         return row;
     }
-    
+
     private FlowPane createTogglesRow() {
         FlowPane flow = new FlowPane(10, 6);
-        
+
         fireToggle = createToggle("Feuer", true);
         sparksToggle = createToggle("Funken", true);
         smokeToggle = createToggle("Rauch", true);
         shockwaveToggle = createToggle("Schock", false);
         debrisToggle = createToggle("Debris", true);
         flashToggle = createToggle("Flash", true);
-        
+
         flow.getChildren().addAll(fireToggle, sparksToggle, smokeToggle, shockwaveToggle, debrisToggle, flashToggle);
         return flow;
     }
-    
+
     private CheckBox createToggle(String text, boolean selected) {
         CheckBox cb = new CheckBox(text);
         cb.setSelected(selected);
@@ -381,36 +400,36 @@ public class ExplosionEditor extends Application {
         cb.setOnAction(e -> restartExplosion());
         return cb;
     }
-    
+
     private HBox createSeedRow() {
         HBox row = new HBox(8);
         row.setAlignment(Pos.CENTER_LEFT);
-        
+
         seedField = new TextField(String.valueOf(currentSeed));
         seedField.setFont(Font.font("Monospace", 11));
         seedField.setPrefWidth(100);
         seedField.setStyle("-fx-background-color: #21262d; -fx-text-fill: #c9d1d9; -fx-border-color: #30363d;");
         seedField.setOnAction(e -> restartExplosion());
-        
+
         Button randomBtn = createStyledButton("🎲 Neu", "#238636", "#2ea043");
         randomBtn.setOnAction(e -> randomizeSeed());
-        
+
         Button copyBtn = createStyledButton("📋", "#30363d", "#3d444d");
         copyBtn.setOnAction(e -> {
             javafx.scene.input.Clipboard.getSystemClipboard().setContent(
                 java.util.Collections.singletonMap(javafx.scene.input.DataFormat.PLAIN_TEXT, seedField.getText())
             );
         });
-        
+
         row.getChildren().addAll(seedField, randomBtn, copyBtn);
         return row;
     }
-    
+
     private GridPane createPresetsGrid() {
         GridPane grid = new GridPane();
         grid.setHgap(6);
         grid.setVgap(6);
-        
+
         String[][] presets = {
             {"Treffer", "treffer", "#f85149"},
             {"Schiff", "schiff", "#f0883e"},
@@ -419,12 +438,12 @@ public class ExplosionEditor extends Application {
             {"Plasma", "plasma", "#3fb950"},
             {"Funken", "funken", "#58a6ff"}
         };
-        
+
         for (int i = 0; i < presets.length; i++) {
             String name = presets[i][0];
             String id = presets[i][1];
             String color = presets[i][2];
-            
+
             Button btn = new Button(name);
             btn.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
             btn.setPrefWidth(90);
@@ -445,46 +464,47 @@ public class ExplosionEditor extends Application {
                 presetNameLabel.setText(name);
                 presetNameLabel.setTextFill(Color.web(color));
             });
-            
+
             grid.add(btn, i % 3, i / 3);
         }
-        
+
         return grid;
     }
-    
+
     private VBox createExportButtons() {
         VBox box = new VBox(6);
-        
+
         Button sheetBtn = createStyledButton("📦 Sprite Sheet exportieren...", "#238636", "#2ea043");
         sheetBtn.setMaxWidth(Double.MAX_VALUE);
         sheetBtn.setFont(Font.font("Monospace", FontWeight.BOLD, 12));
         sheetBtn.setOnAction(e -> exportSpriteSheet());
-        
+
         Button framesBtn = createStyledButton("🖼 Einzelframes exportieren...", "#1f6feb", "#388bfd");
         framesBtn.setMaxWidth(Double.MAX_VALUE);
         framesBtn.setOnAction(e -> exportIndividualFrames());
-        
+
         box.getChildren().addAll(sheetBtn, framesBtn);
         return box;
     }
-    
+
     private Button createStyledButton(String text, String bgColor, String hoverColor) {
         Button btn = new Button(text);
         btn.setFont(Font.font("Monospace", 11));
-        btn.setStyle(String.format("-fx-background-color: %s; -fx-text-fill: white; -fx-background-radius: 6;", bgColor));
-        btn.setOnMouseEntered(e -> btn.setStyle(String.format("-fx-background-color: %s; -fx-text-fill: white; -fx-background-radius: 6;", hoverColor)));
-        btn.setOnMouseExited(e -> btn.setStyle(String.format("-fx-background-color: %s; -fx-text-fill: white; -fx-background-radius: 6;", bgColor)));
+        String styleTemplate = "-fx-background-color: %s; -fx-text-fill: white; -fx-background-radius: 6;";
+        btn.setStyle(String.format(styleTemplate, bgColor));
+        btn.setOnMouseEntered(e -> btn.setStyle(String.format(styleTemplate, hoverColor)));
+        btn.setOnMouseExited(e -> btn.setStyle(String.format(styleTemplate, bgColor)));
         return btn;
     }
-    
+
     private VBox createBottomPane() {
         VBox bottom = new VBox(0);
-        
+
         HBox playbackPane = new HBox(12);
         playbackPane.setAlignment(Pos.CENTER);
         playbackPane.setPadding(new Insets(12, 20, 12, 20));
         playbackPane.setStyle("-fx-background-color: #161b22; -fx-border-color: #30363d; -fx-border-width: 1 0 0 0;");
-        
+
         Button playPauseBtn = new Button("⏸");
         playPauseBtn.setFont(Font.font("Monospace", FontWeight.BOLD, 16));
         playPauseBtn.setPrefSize(40, 32);
@@ -492,24 +512,24 @@ public class ExplosionEditor extends Application {
         playPauseBtn.setOnAction(e -> {
             isPlaying = !isPlaying;
             playPauseBtn.setText(isPlaying ? "⏸" : "▶");
-            playPauseBtn.setStyle(isPlaying ? 
+            playPauseBtn.setStyle(isPlaying ?
                 "-fx-background-color: #238636; -fx-text-fill: white; -fx-background-radius: 6;" :
                 "-fx-background-color: #1f6feb; -fx-text-fill: white; -fx-background-radius: 6;");
             if (isPlaying) lastNanos = System.nanoTime();
         });
-        
+
         Button restartBtn = new Button("⟲");
         restartBtn.setFont(Font.font("Monospace", FontWeight.BOLD, 16));
         restartBtn.setPrefSize(40, 32);
         restartBtn.setStyle("-fx-background-color: #30363d; -fx-text-fill: #c9d1d9; -fx-background-radius: 6;");
         restartBtn.setOnAction(e -> restartExplosion());
-        
+
         CheckBox loopToggle = new CheckBox("Loop");
         loopToggle.setSelected(true);
         loopToggle.setFont(Font.font("Monospace", 11));
         loopToggle.setTextFill(Color.web("#8b949e"));
         loopToggle.setOnAction(e -> isLooping = loopToggle.isSelected());
-        
+
         frameSlider = new Slider(0, 1, 0);
         frameSlider.setPrefWidth(200);
         HBox.setHgrow(frameSlider, Priority.ALWAYS);
@@ -519,53 +539,53 @@ public class ExplosionEditor extends Application {
                 playbackTime = n.doubleValue() * duration;
             }
         });
-        
+
         currentFrameLabel = new Label("Frame: 1/8");
         currentFrameLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 12));
         currentFrameLabel.setTextFill(Color.web("#58a6ff"));
         currentFrameLabel.setMinWidth(90);
-        
+
         playbackTimeLabel = new Label("0.00s");
         playbackTimeLabel.setFont(Font.font("Monospace", 12));
         playbackTimeLabel.setTextFill(Color.web("#8b949e"));
         playbackTimeLabel.setMinWidth(50);
-        
+
         Region spacer = new Region();
         spacer.setMinWidth(20);
-        
+
         Label durationLabel = new Label("Dauer:");
         durationLabel.setFont(Font.font("Monospace", 12));
         durationLabel.setTextFill(Color.web("#c9d1d9"));
-        
+
         Slider bottomDurationSlider = new Slider(0.15, 2.0, 0.6);
         bottomDurationSlider.setPrefWidth(100);
         bottomDurationSlider.setMinWidth(80);
-        
+
         Label durationValueLabel = new Label("0.60s");
         durationValueLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
         durationValueLabel.setTextFill(Color.web("#58a6ff"));
         durationValueLabel.setMinWidth(45);
         durationValueLabel.setAlignment(Pos.CENTER_RIGHT);
-        
+
         bottomDurationSlider.valueProperty().bindBidirectional(durationSlider.valueProperty());
         bottomDurationSlider.valueProperty().addListener((obs, o, n) -> {
             durationValueLabel.setText(String.format("%.2fs", n.doubleValue()));
         });
         durationValueLabel.setText(String.format("%.2fs", durationSlider.getValue()));
-        
+
         playbackPane.getChildren().addAll(
-            playPauseBtn, restartBtn, loopToggle, frameSlider, 
+            playPauseBtn, restartBtn, loopToggle, frameSlider,
             currentFrameLabel, playbackTimeLabel,
             spacer, durationLabel, bottomDurationSlider, durationValueLabel
         );
-        
+
         bottom.getChildren().add(playbackPane);
         return bottom;
     }
-    
+
     private void applyPreset(String presetId) {
         currentPresetName = presetId.substring(0, 1).toUpperCase() + presetId.substring(1);
-        
+
         switch (presetId) {
             case "treffer" -> {
                 durationSlider.setValue(0.2);
@@ -696,13 +716,13 @@ public class ExplosionEditor extends Application {
         }
         restartExplosion();
     }
-    
+
     private void randomizeSeed() {
         currentSeed = System.nanoTime();
         seedField.setText(String.valueOf(currentSeed));
         restartExplosion();
     }
-    
+
     private void restartExplosion() {
         playbackTime = 0;
         try {
@@ -713,19 +733,19 @@ public class ExplosionEditor extends Application {
         }
         initializeParticles();
     }
-    
+
     private void initializeParticles() {
         particles.clear();
         random.setSeed(currentSeed);
-        
+
         int frameSize = frameSizeCombo.getValue();
         int hiresSize = frameSize * HIRES_SCALE;
         double centerX = hiresSize / 2.0;
         double centerY = hiresSize / 2.0;
         double velocity = velocitySlider.getValue() * HIRES_SCALE;
-        
+
         int count = (int) particleCountSlider.getValue();
-        
+
         if (smokeToggle.isSelected()) {
             int smokeCount = count / 3;
             for (int i = 0; i < smokeCount; i++) {
@@ -743,7 +763,7 @@ public class ExplosionEditor extends Application {
                 ));
             }
         }
-        
+
         if (fireToggle.isSelected()) {
             int fireCount = count / 3;
             for (int i = 0; i < fireCount; i++) {
@@ -760,7 +780,7 @@ public class ExplosionEditor extends Application {
                 ));
             }
         }
-        
+
         if (sparksToggle.isSelected()) {
             int sparkCount = count / 4;
             for (int i = 0; i < sparkCount; i++) {
@@ -776,7 +796,7 @@ public class ExplosionEditor extends Application {
                 ));
             }
         }
-        
+
         int coreCount = count / 8 + 5;
         for (int i = 0; i < coreCount; i++) {
             double angle = random.nextDouble() * Math.PI * 2;
@@ -791,7 +811,7 @@ public class ExplosionEditor extends Application {
                 0
             ));
         }
-        
+
         if (debrisToggle.isSelected()) {
             int debrisCount = (int) debrisSlider.getValue();
             for (int i = 0; i < debrisCount; i++) {
@@ -807,32 +827,32 @@ public class ExplosionEditor extends Application {
                 ));
             }
         }
-        
+
         if (shockwaveToggle.isSelected()) {
             shockwaveRadius = 0;
             shockwaveMaxRadius = hiresSize * 0.42;
         }
-        
+
         if (flashToggle.isSelected()) {
             flashAlpha = flashIntensitySlider.getValue();
         } else {
             flashAlpha = 0;
         }
     }
-    
+
     private void startAnimation() {
         lastNanos = System.nanoTime();
-        
+
         animationTimer = new AnimationTimer() {
             @Override
             public void handle(long now) {
                 double deltaTime = (now - lastNanos) / 1_000_000_000.0;
                 lastNanos = now;
-                
+
                 if (isPlaying) {
                     double duration = durationSlider.getValue();
                     playbackTime += deltaTime;
-                    
+
                     if (playbackTime >= duration) {
                         if (isLooping) {
                             restartExplosion();
@@ -841,10 +861,10 @@ public class ExplosionEditor extends Application {
                             isPlaying = false;
                         }
                     }
-                    
+
                     frameSlider.setValue(playbackTime / duration);
                 }
-                
+
                 renderPreview();
                 updateLabels();
             }
@@ -852,28 +872,28 @@ public class ExplosionEditor extends Application {
         animationTimer.start();
         initializeParticles();
     }
-    
+
     private void renderPreview() {
         int frameSize = frameSizeCombo.getValue();
-        
+
         if (renderBuffer == null || renderBuffer.getWidth() != frameSize) {
             renderBuffer = new WritableImage(frameSize, frameSize);
         }
-        
+
         renderFrameToImage(renderBuffer, playbackTime);
-        
+
         previewGc.setFill(Color.rgb(1, 4, 9));
         previewGc.fillRect(0, 0, PREVIEW_SIZE, PREVIEW_SIZE);
-        
+
         drawStarfield();
-        
+
         previewGc.setImageSmoothing(false);
         double scale = (double) PREVIEW_SIZE / frameSize;
         double offsetX = (PREVIEW_SIZE - frameSize * scale) / 2;
         double offsetY = (PREVIEW_SIZE - frameSize * scale) / 2;
         previewGc.drawImage(renderBuffer, offsetX, offsetY, frameSize * scale, frameSize * scale);
     }
-    
+
     private void drawStarfield() {
         Random starRand = new Random(42);
         for (int i = 0; i < 50; i++) {
@@ -885,11 +905,11 @@ public class ExplosionEditor extends Application {
             previewGc.fillRect((int)x, (int)y, (int)Math.ceil(size), (int)Math.ceil(size));
         }
     }
-    
+
     private void renderFrameToImage(WritableImage img, double time) {
         int frameSize = (int) img.getWidth();
         int hiresSize = frameSize * HIRES_SCALE;
-        
+
         if (hiresBuffer == null || hiresBuffer.getWidth() != hiresSize) {
             hiresBuffer = new WritableImage(hiresSize, hiresSize);
             accumulatorR = new int[hiresSize][hiresSize];
@@ -897,7 +917,7 @@ public class ExplosionEditor extends Application {
             accumulatorB = new int[hiresSize][hiresSize];
             accumulatorA = new int[hiresSize][hiresSize];
         }
-        
+
         for (int y = 0; y < hiresSize; y++) {
             for (int x = 0; x < hiresSize; x++) {
                 accumulatorR[y][x] = 0;
@@ -906,22 +926,22 @@ public class ExplosionEditor extends Application {
                 accumulatorA[y][x] = 0;
             }
         }
-        
+
         double duration = durationSlider.getValue();
         double progress = Math.min(1.0, time / duration);
         double sizeMultiplier = sizeOverLifeSlider.getValue();
         double gravity = gravitySlider.getValue() * HIRES_SCALE;
         double drag = dragSlider.getValue();
-        
+
         Color coreColor = coreColorPicker.getValue();
         Color midColor = midColorPicker.getValue();
         Color smokeColor = smokeColorPicker.getValue();
-        
+
         double centerX = hiresSize / 2.0;
         double centerY = hiresSize / 2.0;
-        
+
         simulateParticles(time, gravity, drag, duration);
-        
+
         if (flashToggle.isSelected() && progress < 0.15) {
             double flashProgress = progress / 0.15;
             double currentFlash = flashAlpha * (1.0 - flashProgress * flashProgress);
@@ -930,7 +950,7 @@ public class ExplosionEditor extends Application {
                 int flashG = (int)(coreColor.getGreen() * 255);
                 int flashB = (int)(coreColor.getBlue() * 255);
                 double flashRadius = hiresSize * 0.3 * (0.5 + flashProgress * 0.5);
-                
+
                 for (int y = 0; y < hiresSize; y++) {
                     for (int x = 0; x < hiresSize; x++) {
                         double dx = x - centerX;
@@ -949,17 +969,17 @@ public class ExplosionEditor extends Application {
                 }
             }
         }
-        
+
         if (shockwaveToggle.isSelected() && progress > 0.02 && progress < 0.7) {
             double shockProgress = (progress - 0.02) / 0.68;
             double radius = shockwaveMaxRadius * shockProgress;
             double ringAlpha = Math.max(0, 0.7 * (1.0 - shockProgress));
             double thickness = 3.0 * HIRES_SCALE * (1.0 - shockProgress * 0.5);
-            
+
             int mr = (int)(midColor.getRed() * 255);
             int mg = (int)(midColor.getGreen() * 255);
             int mb = (int)(midColor.getBlue() * 255);
-            
+
             for (int y = 0; y < hiresSize; y++) {
                 for (int x = 0; x < hiresSize; x++) {
                     double dx = x - centerX;
@@ -977,26 +997,26 @@ public class ExplosionEditor extends Application {
                 }
             }
         }
-        
+
         List<Particle> sortedParticles = new ArrayList<>(particles);
         sortedParticles.sort((a, b) -> {
             int ao = getLayerOrder(a.type);
             int bo = getLayerOrder(b.type);
             return Integer.compare(ao, bo);
         });
-        
+
         for (Particle p : sortedParticles) {
             if (p.life <= 0 || progress < p.delay) continue;
-            
+
             double adjustedProgress = (progress - p.delay) / (1.0 - p.delay);
             double life = Math.max(0, 1.0 - (adjustedProgress / p.lifeFactor));
-            
+
             double size = p.baseSize * (0.4 + 0.6 * life) * sizeMultiplier;
             double alpha = life;
-            
+
             Color color;
             boolean additive = false;
-            
+
             switch (p.type) {
                 case CORE -> {
                     color = coreColor;
@@ -1031,15 +1051,15 @@ public class ExplosionEditor extends Application {
                     additive = true;
                 }
             }
-            
+
             drawParticle(hiresSize, p.x, p.y, size, color, alpha, p.type == ParticleType.SPARK, additive);
         }
-        
+
         PixelWriter pw = img.getPixelWriter();
         for (int y = 0; y < frameSize; y++) {
             for (int x = 0; x < frameSize; x++) {
                 int totalR = 0, totalG = 0, totalB = 0, totalA = 0;
-                
+
                 for (int sy = 0; sy < HIRES_SCALE; sy++) {
                     for (int sx = 0; sx < HIRES_SCALE; sx++) {
                         int hx = x * HIRES_SCALE + sx;
@@ -1050,18 +1070,18 @@ public class ExplosionEditor extends Application {
                         totalA += accumulatorA[hy][hx];
                     }
                 }
-                
+
                 int samples = HIRES_SCALE * HIRES_SCALE;
                 int r = Math.min(255, totalR / samples);
                 int g = Math.min(255, totalG / samples);
                 int b = Math.min(255, totalB / samples);
                 int a = Math.min(255, totalA / samples);
-                
+
                 pw.setArgb(x, y, (a << 24) | (r << 16) | (g << 8) | b);
             }
         }
     }
-    
+
     private int getLayerOrder(ParticleType type) {
         return switch (type) {
             case SMOKE -> 0;
@@ -1071,23 +1091,23 @@ public class ExplosionEditor extends Application {
             case CORE -> 4;
         };
     }
-    
+
     private void simulateParticles(double targetTime, double gravity, double drag, double duration) {
         for (Particle p : particles) {
             if (targetTime < p.delay) continue;
-            
+
             double simTime = targetTime - p.delay;
             double simDuration = duration - p.delay;
-            
+
             random.setSeed(currentSeed + (long)(p.x * 1000 + p.y * 1000000));
             double px = p.startX;
             double py = p.startY;
             double vx = p.startVx;
             double vy = p.startVy;
-            
+
             double dt = 1.0 / 120.0;
             double t = 0;
-            
+
             while (t < simTime) {
                 double step = Math.min(dt, simTime - t);
                 vy += gravity * step;
@@ -1097,26 +1117,26 @@ public class ExplosionEditor extends Application {
                 py += vy * step;
                 t += step;
             }
-            
+
             p.x = px;
             p.y = py;
             p.vx = vx;
             p.vy = vy;
-            
+
             double progress = simTime / Math.max(0.001, simDuration);
             p.life = Math.max(0, 1.0 - (progress / p.lifeFactor));
         }
     }
-    
+
     private void drawParticle(int size, double cx, double cy, double psize, Color color, double alpha, boolean isSpark, boolean additive) {
         int icx = (int) cx;
         int icy = (int) cy;
         int radius = (int) Math.ceil(psize / 2);
-        
+
         int r = (int)(color.getRed() * 255);
         int g = (int)(color.getGreen() * 255);
         int b = (int)(color.getBlue() * 255);
-        
+
         if (isSpark) {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dx = -1; dx <= 1; dx++) {
@@ -1139,19 +1159,19 @@ public class ExplosionEditor extends Application {
             }
             return;
         }
-        
+
         for (int dy = -radius; dy <= radius; dy++) {
             for (int dx = -radius; dx <= radius; dx++) {
                 int px = icx + dx;
                 int py = icy + dy;
                 if (px < 0 || px >= size || py < 0 || py >= size) continue;
-                
+
                 double dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist <= psize / 2) {
                     double falloff = 1.0 - (dist / (psize / 2));
                     falloff = falloff * falloff;
                     int a = (int)(alpha * falloff * 255);
-                    
+
                     if (additive) {
                         accumulatorR[py][px] = Math.min(255 * 4, accumulatorR[py][px] + r * a / 255);
                         accumulatorG[py][px] = Math.min(255 * 4, accumulatorG[py][px] + g * a / 255);
@@ -1169,7 +1189,7 @@ public class ExplosionEditor extends Application {
             }
         }
     }
-    
+
     private Color interpolateColor(Color c1, Color c2, double t) {
         t = Math.max(0, Math.min(1, t));
         return new Color(
@@ -1179,7 +1199,7 @@ public class ExplosionEditor extends Application {
             1.0
         );
     }
-    
+
     private void updateLabels() {
         int frameCount = (int) frameCountSlider.getValue();
         double duration = durationSlider.getValue();
@@ -1187,175 +1207,177 @@ public class ExplosionEditor extends Application {
         currentFrameLabel.setText("Frame: " + currentFrame + "/" + frameCount);
         playbackTimeLabel.setText(String.format("%.2fs", playbackTime));
     }
-    
+
     private void exportSampleExplosions() {
         try {
             Path explosionsDir = Path.of("src/main/resources/assets/textures/explosions");
             Files.createDirectories(explosionsDir);
-            
+
             String[] presets = {"treffer", "schiff", "tough", "boss", "plasma", "funken"};
-            
+
             for (String preset : presets) {
                 applyPreset(preset);
                 currentSeed = preset.hashCode() * 12345L;
                 seedField.setText(String.valueOf(currentSeed));
-                
+
                 int frameSize = frameSizeCombo.getValue();
                 int frameCount = (int) frameCountSlider.getValue();
                 double duration = durationSlider.getValue();
                 double fps = frameCount / duration;
-                
+
                 int cols = Math.min(8, frameCount);
                 int rows = (frameCount + cols - 1) / cols;
-                
+
                 WritableImage sheet = new WritableImage(cols * frameSize, rows * frameSize);
                 WritableImage frameBuffer = new WritableImage(frameSize, frameSize);
                 PixelWriter sheetPw = sheet.getPixelWriter();
                 PixelReader framePr = frameBuffer.getPixelReader();
-                
+
                 for (int i = 0; i < frameCount; i++) {
                     double frameTime = (i / (double) frameCount) * duration;
                     renderFrameToImage(frameBuffer, frameTime);
-                    
+
                     int col = i % cols;
                     int row = i / cols;
                     int destX = col * frameSize;
                     int destY = row * frameSize;
-                    
+
                     for (int y = 0; y < frameSize; y++) {
                         for (int x = 0; x < frameSize; x++) {
                             sheetPw.setArgb(destX + x, destY + y, framePr.getArgb(x, y));
                         }
                     }
                 }
-                
+
                 String filename = "explosion_" + preset + ".png";
                 byte[] pngBytes = encodePng8BitRgba(sheet);
                 Files.write(explosionsDir.resolve(filename), pngBytes);
-                
+
                 String jsonFilename = "explosion_" + preset + ".json";
                 String json = String.format(
-                    "{\n  \"name\": \"%s\",\n  \"frameWidth\": %d,\n  \"frameHeight\": %d,\n  \"frameCount\": %d,\n  \"fps\": %.2f,\n  \"columns\": %d,\n  \"rows\": %d\n}",
+                    "{\n  \"name\": \"%s\",\n  \"frameWidth\": %d,\n  \"frameHeight\": %d,\n"
+                        + "  \"frameCount\": %d,\n  \"fps\": %.2f,\n  \"columns\": %d,\n  \"rows\": %d\n}",
                     preset, frameSize, frameSize, frameCount, fps, cols, rows
                 );
                 Files.writeString(explosionsDir.resolve(jsonFilename), json);
             }
-            
+
             applyPreset("schiff");
             System.out.println("Sample explosions exported to: " + explosionsDir.toAbsolutePath());
-            
+
         } catch (Exception e) {
             System.err.println("Failed to export sample explosions: " + e.getMessage());
             e.printStackTrace();
         }
     }
-    
+
     private void exportSpriteSheet() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Sprite Sheet speichern");
         fileChooser.setInitialFileName("explosion_" + currentPresetName.toLowerCase() + ".png");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG", "*.png"));
-        
+
         File file = fileChooser.showSaveDialog(previewCanvas.getScene().getWindow());
         if (file == null) return;
-        
+
         try {
             int frameSize = frameSizeCombo.getValue();
             int frameCount = (int) frameCountSlider.getValue();
             double duration = durationSlider.getValue();
             double fps = frameCount / duration;
-            
+
             int cols = Math.min(8, frameCount);
             int rows = (frameCount + cols - 1) / cols;
-            
+
             WritableImage sheet = new WritableImage(cols * frameSize, rows * frameSize);
             WritableImage frameBuffer = new WritableImage(frameSize, frameSize);
             PixelWriter sheetPw = sheet.getPixelWriter();
             PixelReader framePr = frameBuffer.getPixelReader();
-            
+
             for (int i = 0; i < frameCount; i++) {
                 double frameTime = (i / (double) frameCount) * duration;
                 renderFrameToImage(frameBuffer, frameTime);
-                
+
                 int col = i % cols;
                 int row = i / cols;
                 int destX = col * frameSize;
                 int destY = row * frameSize;
-                
+
                 for (int y = 0; y < frameSize; y++) {
                     for (int x = 0; x < frameSize; x++) {
                         sheetPw.setArgb(destX + x, destY + y, framePr.getArgb(x, y));
                     }
                 }
             }
-            
+
             byte[] pngBytes = encodePng8BitRgba(sheet);
             Files.write(file.toPath(), pngBytes);
-            
+
             String jsonPath = file.getAbsolutePath().replace(".png", ".json");
             String json = String.format(
-                "{\n  \"frameWidth\": %d,\n  \"frameHeight\": %d,\n  \"frameCount\": %d,\n  \"fps\": %.2f,\n  \"columns\": %d,\n  \"rows\": %d\n}",
+                "{\n  \"frameWidth\": %d,\n  \"frameHeight\": %d,\n  \"frameCount\": %d,\n"
+                    + "  \"fps\": %.2f,\n  \"columns\": %d,\n  \"rows\": %d\n}",
                 frameSize, frameSize, frameCount, fps, cols, rows
             );
             Files.writeString(Path.of(jsonPath), json);
-            
+
             showAlert(Alert.AlertType.INFORMATION, "Export erfolgreich",
-                "Sprite Sheet gespeichert:\n" + file.getName() + "\n\n" + 
+                "Sprite Sheet gespeichert:\n" + file.getName() + "\n\n" +
                 "Größe: " + (cols * frameSize) + "×" + (rows * frameSize) + " px\n" +
                 "Frames: " + frameCount + " @ " + String.format("%.1f", fps) + " FPS");
-                
+
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Export fehlgeschlagen", e.getMessage());
         }
     }
-    
+
     private void exportIndividualFrames() {
         DirectoryChooser dirChooser = new DirectoryChooser();
         dirChooser.setTitle("Ordner für Einzelframes wählen");
-        
+
         File dir = dirChooser.showDialog(previewCanvas.getScene().getWindow());
         if (dir == null) return;
-        
+
         try {
             int frameSize = frameSizeCombo.getValue();
             int frameCount = (int) frameCountSlider.getValue();
             double duration = durationSlider.getValue();
             double fps = frameCount / duration;
-            
+
             WritableImage frameBuffer = new WritableImage(frameSize, frameSize);
-            
+
             for (int i = 0; i < frameCount; i++) {
                 double frameTime = (i / (double) frameCount) * duration;
                 renderFrameToImage(frameBuffer, frameTime);
-                
+
                 String filename = String.format("explosion_%03d.png", i);
                 byte[] pngBytes = encodePng8BitRgba(frameBuffer);
                 Files.write(Path.of(dir.getAbsolutePath(), filename), pngBytes);
             }
-            
+
             String jsonPath = Path.of(dir.getAbsolutePath(), "explosion_meta.json").toString();
             String json = String.format(
                 "{\n  \"frameWidth\": %d,\n  \"frameHeight\": %d,\n  \"frameCount\": %d,\n  \"fps\": %.2f\n}",
                 frameSize, frameSize, frameCount, fps
             );
             Files.writeString(Path.of(jsonPath), json);
-            
+
             showAlert(Alert.AlertType.INFORMATION, "Export erfolgreich",
                 frameCount + " Frames exportiert nach:\n" + dir.getAbsolutePath());
-                
+
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Export fehlgeschlagen", e.getMessage());
         }
     }
-    
+
     private byte[] encodePng8BitRgba(WritableImage img) throws IOException {
         int w = (int) img.getWidth();
         int h = (int) img.getHeight();
         PixelReader pr = img.getPixelReader();
-        
+
         byte[] rawData = new byte[h * (1 + w * 4)];
         int idx = 0;
-        
+
         for (int y = 0; y < h; y++) {
             rawData[idx++] = 0;
             for (int x = 0; x < w; x++) {
@@ -1370,24 +1392,24 @@ public class ExplosionEditor extends Application {
                 rawData[idx++] = (byte) a;
             }
         }
-        
+
         Deflater deflater = new Deflater(Deflater.DEFAULT_COMPRESSION);
         deflater.setInput(rawData);
         deflater.finish();
-        
+
         byte[] compressedBuffer = new byte[rawData.length + 1024];
         int compressedLen = deflater.deflate(compressedBuffer);
         deflater.end();
-        
+
         byte[] compressed = new byte[compressedLen];
         System.arraycopy(compressedBuffer, 0, compressed, 0, compressedLen);
-        
+
         verifyInflate(compressed, w, h);
-        
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        
+
         out.write(new byte[] {(byte)0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A});
-        
+
         ByteArrayOutputStream ihdr = new ByteArrayOutputStream();
         writeInt(ihdr, w);
         writeInt(ihdr, h);
@@ -1397,14 +1419,14 @@ public class ExplosionEditor extends Application {
         ihdr.write(0);
         ihdr.write(0);
         writeChunk(out, "IHDR", ihdr.toByteArray());
-        
+
         writeChunk(out, "IDAT", compressed);
-        
+
         writeChunk(out, "IEND", new byte[0]);
-        
+
         return out.toByteArray();
     }
-    
+
     private void verifyInflate(byte[] compressed, int w, int h) throws IOException {
         try {
             java.util.zip.Inflater inflater = new java.util.zip.Inflater();
@@ -1417,7 +1439,7 @@ public class ExplosionEditor extends Application {
                 total += count;
             }
             inflater.end();
-            
+
             int expected = h * (1 + w * 4);
             if (total < expected) {
                 throw new IOException("Inflate verification failed: got " + total + " bytes, expected " + expected);
@@ -1426,28 +1448,28 @@ public class ExplosionEditor extends Application {
             throw new IOException("Inflate verification failed: " + e.getMessage());
         }
     }
-    
+
     private void writeChunk(OutputStream out, String type, byte[] data) throws IOException {
         writeInt(out, data.length);
-        
+
         byte[] typeBytes = type.getBytes("ASCII");
         out.write(typeBytes);
-        
+
         out.write(data);
-        
+
         CRC32 crc = new CRC32();
         crc.update(typeBytes);
         crc.update(data);
         writeInt(out, (int) crc.getValue());
     }
-    
+
     private void writeInt(OutputStream out, int value) throws IOException {
         out.write((value >> 24) & 0xFF);
         out.write((value >> 16) & 0xFF);
         out.write((value >> 8) & 0xFF);
         out.write(value & 0xFF);
     }
-    
+
     private void showAlert(Alert.AlertType type, String title, String content) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
@@ -1455,15 +1477,15 @@ public class ExplosionEditor extends Application {
         alert.setContentText(content);
         alert.showAndWait();
     }
-    
+
     public static void main(String[] args) {
         launch(args);
     }
-    
+
     private enum ParticleType {
         CORE, FIRE, SPARK, SMOKE, DEBRIS
     }
-    
+
     private static class Particle {
         double x, y;
         double vx, vy;
@@ -1474,7 +1496,7 @@ public class ExplosionEditor extends Application {
         double lifeFactor;
         double delay;
         ParticleType type;
-        
+
         Particle(double x, double y, double vx, double vy, double size, ParticleType type, double lifeFactor, double delay) {
             this.x = x;
             this.y = y;

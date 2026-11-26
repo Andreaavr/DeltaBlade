@@ -1,6 +1,8 @@
 package deltablade.tools;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -12,31 +14,31 @@ import java.util.zip.Deflater;
 /**
  * Generates sample explosion sprite sheets without requiring JavaFX Application.
  * Pure Java implementation - no JavaFX runtime needed.
- * 
+ *
  * Run via: mvn exec:java -Dexec.mainClass=deltablade.tools.ExplosionSampleGenerator
- * 
+ *
  * Outputs 8-bit RGBA PNGs (color type 6, non-interlaced) compatible with
  * DeltaBlade's EmbeddedTextures.decodePng().
  */
 public class ExplosionSampleGenerator {
 
     private static final int HIRES_SCALE = 4;
-    
+
     private final Random random = new Random();
     private long currentSeed;
-    
+
     private int[][] accumulatorR;
     private int[][] accumulatorG;
     private int[][] accumulatorB;
     private int[][] accumulatorA;
-    
+
     private int[] imageBuffer;
     private int imageWidth;
     private int imageHeight;
-    
+
     private List<Particle> particles = new ArrayList<>();
     private double shockwaveMaxRadius;
-    
+
     private double duration;
     private int frameCount;
     private int frameSize;
@@ -59,81 +61,82 @@ public class ExplosionSampleGenerator {
 
     public static void main(String[] args) {
         ExplosionSampleGenerator gen = new ExplosionSampleGenerator();
-        
+
         try {
             Path explosionsDir = Path.of("src/main/resources/assets/textures/explosions");
             Files.createDirectories(explosionsDir);
-            
+
             System.out.println("Generating sample explosions...");
-            
+
             gen.generatePreset("treffer", explosionsDir);
             gen.generatePreset("schiff", explosionsDir);
             gen.generatePreset("boss", explosionsDir);
-            
+
             System.out.println("Sample explosions exported to: " + explosionsDir.toAbsolutePath());
             System.out.println("Done!");
             System.exit(0);
-            
+
         } catch (Exception e) {
             System.err.println("Failed to generate samples: " + e.getMessage());
             e.printStackTrace();
             System.exit(1);
         }
     }
-    
+
     private int[] rgb(int r, int g, int b) {
         return new int[] {r, g, b};
     }
-    
+
     private void generatePreset(String presetId, Path outDir) throws IOException {
         applyPreset(presetId);
-        
+
         int cols = Math.min(8, frameCount);
         int rows = (frameCount + cols - 1) / cols;
         double fps = frameCount / duration;
-        
+
         int sheetW = cols * frameSize;
         int sheetH = rows * frameSize;
         int[] sheet = new int[sheetW * sheetH];
-        
+
         for (int i = 0; i < frameCount; i++) {
             double frameTime = (i / (double) frameCount) * duration;
-            
+
             imageWidth = frameSize;
             imageHeight = frameSize;
             imageBuffer = new int[frameSize * frameSize];
-            
+
             renderFrame(frameTime);
-            
+
             int col = i % cols;
             int row = i / cols;
             int destX = col * frameSize;
             int destY = row * frameSize;
-            
+
             for (int y = 0; y < frameSize; y++) {
                 for (int x = 0; x < frameSize; x++) {
                     sheet[(destY + y) * sheetW + (destX + x)] = imageBuffer[y * frameSize + x];
                 }
             }
         }
-        
+
         String filename = "explosion_" + presetId + ".png";
         byte[] pngBytes = encodePng8BitRgba(sheet, sheetW, sheetH);
         Files.write(outDir.resolve(filename), pngBytes);
-        
+
         String jsonFilename = "explosion_" + presetId + ".json";
         String json = String.format(
-            "{\n  \"name\": \"%s\",\n  \"frameWidth\": %d,\n  \"frameHeight\": %d,\n  \"frameCount\": %d,\n  \"fps\": %.2f,\n  \"columns\": %d,\n  \"rows\": %d\n}",
+            "{\n  \"name\": \"%s\",\n  \"frameWidth\": %d,\n  \"frameHeight\": %d,\n"
+                + "  \"frameCount\": %d,\n  \"fps\": %.2f,\n  \"columns\": %d,\n  \"rows\": %d\n}",
             presetId, frameSize, frameSize, frameCount, fps, cols, rows
         );
         Files.writeString(outDir.resolve(jsonFilename), json);
-        
+
         System.out.println("  Generated: " + filename + " (" + sheetW + "x" + sheetH + ", " + frameCount + " frames)");
     }
-    
+
     private void applyPreset(String presetId) {
         currentSeed = presetId.hashCode() * 12345L;
-        
+
         switch (presetId) {
             case "treffer" -> {
                 duration = 0.2;
@@ -200,19 +203,19 @@ public class ExplosionSampleGenerator {
             }
             default -> throw new IllegalArgumentException("Unknown preset: " + presetId);
         }
-        
+
         initializeParticles();
     }
-    
+
     private void initializeParticles() {
         particles.clear();
         random.setSeed(currentSeed);
-        
+
         int hiresSize = frameSize * HIRES_SCALE;
         double centerX = hiresSize / 2.0;
         double centerY = hiresSize / 2.0;
         double vel = velocity * HIRES_SCALE;
-        
+
         if (smokeEnabled) {
             int smokeCount = particleCount / 3;
             for (int i = 0; i < smokeCount; i++) {
@@ -229,7 +232,7 @@ public class ExplosionSampleGenerator {
                 ));
             }
         }
-        
+
         if (fireEnabled) {
             int fireCount = particleCount / 3;
             for (int i = 0; i < fireCount; i++) {
@@ -244,7 +247,7 @@ public class ExplosionSampleGenerator {
                 ));
             }
         }
-        
+
         if (sparksEnabled) {
             int sparkCount = particleCount / 4;
             for (int i = 0; i < sparkCount; i++) {
@@ -258,7 +261,7 @@ public class ExplosionSampleGenerator {
                 ));
             }
         }
-        
+
         int coreCount = particleCount / 8 + 5;
         for (int i = 0; i < coreCount; i++) {
             double angle = random.nextDouble() * Math.PI * 2;
@@ -271,7 +274,7 @@ public class ExplosionSampleGenerator {
                 size, ParticleType.CORE, 0.25 + random.nextDouble() * 0.25, 0
             ));
         }
-        
+
         if (debrisEnabled) {
             for (int i = 0; i < debrisCount; i++) {
                 double angle = random.nextDouble() * Math.PI * 2;
@@ -284,20 +287,20 @@ public class ExplosionSampleGenerator {
                 ));
             }
         }
-        
+
         shockwaveMaxRadius = frameSize * HIRES_SCALE * 0.42;
     }
-    
+
     private void renderFrame(double time) {
         int hiresSize = frameSize * HIRES_SCALE;
-        
+
         if (accumulatorR == null || accumulatorR.length != hiresSize) {
             accumulatorR = new int[hiresSize][hiresSize];
             accumulatorG = new int[hiresSize][hiresSize];
             accumulatorB = new int[hiresSize][hiresSize];
             accumulatorA = new int[hiresSize][hiresSize];
         }
-        
+
         for (int y = 0; y < hiresSize; y++) {
             for (int x = 0; x < hiresSize; x++) {
                 accumulatorR[y][x] = 0;
@@ -306,20 +309,20 @@ public class ExplosionSampleGenerator {
                 accumulatorA[y][x] = 0;
             }
         }
-        
+
         double progress = Math.min(1.0, time / duration);
         double grav = gravity * HIRES_SCALE;
         double centerX = hiresSize / 2.0;
         double centerY = hiresSize / 2.0;
-        
+
         simulateParticles(time, grav);
-        
+
         if (flashEnabled && progress < 0.15) {
             double flashProgress = progress / 0.15;
             double currentFlash = flashIntensity * (1.0 - flashProgress * flashProgress);
             if (currentFlash > 0.05) {
                 double flashRadius = hiresSize * 0.3 * (0.5 + flashProgress * 0.5);
-                
+
                 for (int y = 0; y < hiresSize; y++) {
                     for (int x = 0; x < hiresSize; x++) {
                         double dx = x - centerX;
@@ -338,13 +341,13 @@ public class ExplosionSampleGenerator {
                 }
             }
         }
-        
+
         if (shockwaveEnabled && progress > 0.02 && progress < 0.7) {
             double shockProgress = (progress - 0.02) / 0.68;
             double radius = shockwaveMaxRadius * shockProgress;
             double ringAlpha = Math.max(0, 0.7 * (1.0 - shockProgress));
             double thickness = 3.0 * HIRES_SCALE * (1.0 - shockProgress * 0.5);
-            
+
             for (int y = 0; y < hiresSize; y++) {
                 for (int x = 0; x < hiresSize; x++) {
                     double dx = x - centerX;
@@ -362,22 +365,22 @@ public class ExplosionSampleGenerator {
                 }
             }
         }
-        
+
         List<Particle> sortedParticles = new ArrayList<>(particles);
         sortedParticles.sort((a, b) -> Integer.compare(getLayerOrder(a.type), getLayerOrder(b.type)));
-        
+
         for (Particle p : sortedParticles) {
             if (p.life <= 0 || progress < p.delay) continue;
-            
+
             double adjustedProgress = (progress - p.delay) / (1.0 - p.delay);
             double life = Math.max(0, 1.0 - (adjustedProgress / p.lifeFactor));
-            
+
             double size = p.baseSize * (0.4 + 0.6 * life) * sizeOverLife;
             double alpha = life;
-            
+
             int[] color;
             boolean additive = false;
-            
+
             switch (p.type) {
                 case CORE -> {
                     color = coreColor;
@@ -412,14 +415,14 @@ public class ExplosionSampleGenerator {
                     additive = true;
                 }
             }
-            
+
             drawParticle(hiresSize, p.x, p.y, size, color, alpha, p.type == ParticleType.SPARK, additive);
         }
-        
+
         for (int y = 0; y < frameSize; y++) {
             for (int x = 0; x < frameSize; x++) {
                 int totalR = 0, totalG = 0, totalB = 0, totalA = 0;
-                
+
                 for (int sy = 0; sy < HIRES_SCALE; sy++) {
                     for (int sx = 0; sx < HIRES_SCALE; sx++) {
                         int hx = x * HIRES_SCALE + sx;
@@ -430,18 +433,18 @@ public class ExplosionSampleGenerator {
                         totalA += accumulatorA[hy][hx];
                     }
                 }
-                
+
                 int samples = HIRES_SCALE * HIRES_SCALE;
                 int r = Math.min(255, totalR / samples);
                 int g = Math.min(255, totalG / samples);
                 int b = Math.min(255, totalB / samples);
                 int a = Math.min(255, totalA / samples);
-                
+
                 imageBuffer[y * frameSize + x] = (a << 24) | (r << 16) | (g << 8) | b;
             }
         }
     }
-    
+
     private int getLayerOrder(ParticleType type) {
         return switch (type) {
             case SMOKE -> 0;
@@ -451,22 +454,22 @@ public class ExplosionSampleGenerator {
             case CORE -> 4;
         };
     }
-    
+
     private void simulateParticles(double targetTime, double grav) {
         for (Particle p : particles) {
             if (targetTime < p.delay) continue;
-            
+
             double simTime = targetTime - p.delay;
             double simDuration = duration - p.delay;
-            
+
             double px = p.startX;
             double py = p.startY;
             double vx = p.startVx;
             double vy = p.startVy;
-            
+
             double dt = 1.0 / 120.0;
             double t = 0;
-            
+
             while (t < simTime) {
                 double step = Math.min(dt, simTime - t);
                 vy += grav * step;
@@ -476,24 +479,24 @@ public class ExplosionSampleGenerator {
                 py += vy * step;
                 t += step;
             }
-            
+
             p.x = px;
             p.y = py;
-            
+
             double progress = simTime / Math.max(0.001, simDuration);
             p.life = Math.max(0, 1.0 - (progress / p.lifeFactor));
         }
     }
-    
+
     private void drawParticle(int size, double cx, double cy, double psize, int[] color, double alpha, boolean isSpark, boolean additive) {
         int icx = (int) cx;
         int icy = (int) cy;
         int radius = (int) Math.ceil(psize / 2);
-        
+
         int r = color[0];
         int g = color[1];
         int b = color[2];
-        
+
         if (isSpark) {
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dx = -1; dx <= 1; dx++) {
@@ -516,19 +519,19 @@ public class ExplosionSampleGenerator {
             }
             return;
         }
-        
+
         for (int dy = -radius; dy <= radius; dy++) {
             for (int dx = -radius; dx <= radius; dx++) {
                 int px = icx + dx;
                 int py = icy + dy;
                 if (px < 0 || px >= size || py < 0 || py >= size) continue;
-                
+
                 double dist = Math.sqrt(dx * dx + dy * dy);
                 if (dist <= psize / 2) {
                     double falloff = 1.0 - (dist / (psize / 2));
                     falloff = falloff * falloff;
                     int a = (int)(alpha * falloff * 255);
-                    
+
                     if (additive) {
                         accumulatorR[py][px] = Math.min(255 * 4, accumulatorR[py][px] + r * a / 255);
                         accumulatorG[py][px] = Math.min(255 * 4, accumulatorG[py][px] + g * a / 255);
@@ -546,7 +549,7 @@ public class ExplosionSampleGenerator {
             }
         }
     }
-    
+
     private int[] interpolateColor(int[] c1, int[] c2, double t) {
         t = Math.max(0, Math.min(1, t));
         return new int[] {
@@ -555,11 +558,11 @@ public class ExplosionSampleGenerator {
             (int)(c1[2] + (c2[2] - c1[2]) * t)
         };
     }
-    
+
     private byte[] encodePng8BitRgba(int[] pixels, int w, int h) throws IOException {
         byte[] rawData = new byte[h * (1 + w * 4)];
         int idx = 0;
-        
+
         for (int y = 0; y < h; y++) {
             rawData[idx++] = 0;
             for (int x = 0; x < w; x++) {
@@ -574,24 +577,24 @@ public class ExplosionSampleGenerator {
                 rawData[idx++] = (byte) a;
             }
         }
-        
+
         Deflater deflater = new Deflater(Deflater.DEFAULT_COMPRESSION);
         deflater.setInput(rawData);
         deflater.finish();
-        
+
         byte[] compressedBuffer = new byte[rawData.length + 1024];
         int compressedLen = deflater.deflate(compressedBuffer);
         deflater.end();
-        
+
         byte[] compressed = new byte[compressedLen];
         System.arraycopy(compressedBuffer, 0, compressed, 0, compressedLen);
-        
+
         verifyInflate(compressed, w, h);
-        
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        
+
         out.write(new byte[] {(byte)0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A});
-        
+
         ByteArrayOutputStream ihdr = new ByteArrayOutputStream();
         writeInt(ihdr, w);
         writeInt(ihdr, h);
@@ -601,14 +604,14 @@ public class ExplosionSampleGenerator {
         ihdr.write(0);
         ihdr.write(0);
         writeChunk(out, "IHDR", ihdr.toByteArray());
-        
+
         writeChunk(out, "IDAT", compressed);
-        
+
         writeChunk(out, "IEND", new byte[0]);
-        
+
         return out.toByteArray();
     }
-    
+
     private void verifyInflate(byte[] compressed, int w, int h) throws IOException {
         try {
             java.util.zip.Inflater inflater = new java.util.zip.Inflater();
@@ -621,7 +624,7 @@ public class ExplosionSampleGenerator {
                 total += count;
             }
             inflater.end();
-            
+
             int expected = h * (1 + w * 4);
             if (total < expected) {
                 throw new IOException("Inflate verification failed: got " + total + " bytes, expected " + expected);
@@ -630,7 +633,7 @@ public class ExplosionSampleGenerator {
             throw new IOException("Inflate verification failed: " + e.getMessage());
         }
     }
-    
+
     private void writeChunk(OutputStream out, String type, byte[] data) throws IOException {
         writeInt(out, data.length);
         byte[] typeBytes = type.getBytes("ASCII");
@@ -641,18 +644,18 @@ public class ExplosionSampleGenerator {
         crc.update(data);
         writeInt(out, (int) crc.getValue());
     }
-    
+
     private void writeInt(OutputStream out, int value) throws IOException {
         out.write((value >> 24) & 0xFF);
         out.write((value >> 16) & 0xFF);
         out.write((value >> 8) & 0xFF);
         out.write(value & 0xFF);
     }
-    
+
     private enum ParticleType {
         CORE, FIRE, SPARK, SMOKE, DEBRIS
     }
-    
+
     private static class Particle {
         double x, y;
         double startX, startY;
@@ -662,7 +665,7 @@ public class ExplosionSampleGenerator {
         double lifeFactor;
         double delay;
         ParticleType type;
-        
+
         Particle(double x, double y, double vx, double vy, double size, ParticleType type, double lifeFactor, double delay) {
             this.x = x;
             this.y = y;

@@ -8,6 +8,8 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -73,6 +75,48 @@ class ShopItemTest {
                     () -> assertEquals(2, ShopItem.DOUBLE.targetGrade(), "DOUBLE → grado 2"),
                     () -> assertEquals(3, ShopItem.TRIPLE.targetGrade(), "TRIPLE → grado 3"),
                     () -> assertEquals(4, ShopItem.QUAD.targetGrade(), "QUAD → grado 4")
+            );
+        }
+    }
+    
+    @Nested
+    @DisplayName("Dado un objeto que es un arma especial")
+    class ObjetosQueSonArmas {
+
+        @Test
+        @DisplayName("Entonces se desbloquea con las mismas condiciones que su arma")
+        void elDesbloqueoDependeDelArma() {
+            assertAll("TWIN_BEAM en la tienda",
+                    () -> assertFalse(ShopItem.TWIN_BEAM.isUnlocked(0, 1, 0, 0, 0, 0),
+                            "Al empezar la partida debería estar bloqueado"),
+                    () -> assertTrue(ShopItem.TWIN_BEAM.isUnlocked(3, 1, 0, 0, 0, 0),
+                            "Con rango 3 debería estar desbloqueado")
+            );
+        }
+
+        @ParameterizedTest(name = "Entonces {0} muestra la pista de su arma")
+        @EnumSource(value = ShopItem.class, names = {"TWIN_BEAM", "PLASMA_ORB", "ARC_LANCE", "SWEEP_LASER"})
+        void laPistaEsLaDelArma(ShopItem item) {
+            assertEquals(item.weapon().unlockHint(), item.unlockHint(),
+                    item + " debería mostrar la pista de su arma");
+        }
+    }
+
+    @Nested
+    @DisplayName("Dado cualquier objeto de la tienda")
+    class DatosDeCadaObjeto {
+
+        @ParameterizedTest(name = "Entonces {0} tiene todos sus datos")
+        @EnumSource(ShopItem.class)
+        void cadaObjetoTieneSusDatos(ShopItem item) {
+            assertAll("Datos de " + item,
+                    () -> assertFalse(item.displayName().isBlank(), "Nombre visible"),
+                    () -> assertFalse(item.typeTag().isBlank(), "Etiqueta de tipo"),
+                    () -> assertFalse(item.description().isBlank(), "Descripción"),
+                    () -> assertNotNull(item.kind(), "Tipo de objeto"),
+                    () -> assertNotNull(item.colorTag(), "Color"),
+                    () -> assertEquals(item.kind() == ShopItem.Kind.WEAPON, item.weapon() != null,
+                            "Solo las armas tienen un ShopWeapon asociado")
             );
         }
     }

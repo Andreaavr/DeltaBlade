@@ -29,7 +29,7 @@ import static com.almasb.fxgl.dsl.FXGL.getSettings;
  */
 public final class SoundHelper {
 
-    private static final Set<String> loggedMissing = new HashSet<>();
+    private static final Set<String> LOGGED_MISSING = new HashSet<>();
     private static final double DEFAULT_MASTER = 0.55;
     private static final double WARP_RATIO = 0.18 / DEFAULT_MASTER;
     private static final int MAX_VOICES = 8;
@@ -44,8 +44,8 @@ public final class SoundHelper {
             "missile_launch.wav", "shop.wav", "bad_drop.wav"
     };
 
-    private static final Map<String, Sample> samples = new ConcurrentHashMap<>();
-    private static final Map<String, List<Clip>> voices = new ConcurrentHashMap<>();
+    private static final Map<String, Sample> SAMPLES = new ConcurrentHashMap<>();
+    private static final Map<String, List<Clip>> VOICES = new ConcurrentHashMap<>();
     private static volatile double previewVolume = -1;
 
     private record Sample(AudioFormat format, byte[] pcm) {}
@@ -67,7 +67,7 @@ public final class SoundHelper {
         if (name == null || name.isEmpty()) {
             return;
         }
-        Sample sample = samples.computeIfAbsent(name, SoundHelper::loadSample);
+        Sample sample = SAMPLES.computeIfAbsent(name, SoundHelper::loadSample);
         if (sample == null) {
             return;
         }
@@ -84,7 +84,7 @@ public final class SoundHelper {
             getSettings().setGlobalSoundVolume(masterVolume());
         } catch (Exception ignored) {
         }
-        for (List<Clip> clips : voices.values()) {
+        for (List<Clip> clips : VOICES.values()) {
             synchronized (clips) {
                 for (Clip clip : clips) {
                     applyGain(clip);
@@ -117,7 +117,7 @@ public final class SoundHelper {
         if (name == null || name.isEmpty()) {
             return;
         }
-        List<Clip> clips = voices.get(name);
+        List<Clip> clips = VOICES.get(name);
         if (clips != null) {
             synchronized (clips) {
                 for (Clip clip : clips) {
@@ -145,7 +145,7 @@ public final class SoundHelper {
         if (name == null || name.isEmpty()) {
             return false;
         }
-        if (samples.containsKey(name)) {
+        if (SAMPLES.containsKey(name)) {
             return true;
         }
         return loadSample(name) != null;
@@ -153,7 +153,7 @@ public final class SoundHelper {
 
     private static boolean playClip(String name) {
         try {
-            Sample sample = samples.computeIfAbsent(name, SoundHelper::loadSample);
+            Sample sample = SAMPLES.computeIfAbsent(name, SoundHelper::loadSample);
             if (sample == null) {
                 return false;
             }
@@ -168,7 +168,7 @@ public final class SoundHelper {
             clip.start();
             return true;
         } catch (Exception e) {
-            if (loggedMissing.add("play:" + name)) {
+            if (LOGGED_MISSING.add("play:" + name)) {
                 System.err.println("[SoundHelper] Clip play failed: " + name + " - " + e.getMessage());
             }
             return false;
@@ -176,7 +176,7 @@ public final class SoundHelper {
     }
 
     private static Clip voice(String name, Sample sample) throws LineUnavailableException {
-        List<Clip> clips = voices.computeIfAbsent(name, key -> new ArrayList<>());
+        List<Clip> clips = VOICES.computeIfAbsent(name, key -> new ArrayList<>());
         synchronized (clips) {
             for (Clip clip : clips) {
                 if (!clip.isRunning()) {
@@ -193,7 +193,7 @@ public final class SoundHelper {
     }
 
     private static Clip ensureVoice(String name, Sample sample) throws LineUnavailableException {
-        List<Clip> clips = voices.computeIfAbsent(name, key -> new ArrayList<>());
+        List<Clip> clips = VOICES.computeIfAbsent(name, key -> new ArrayList<>());
         synchronized (clips) {
             if (clips.size() >= MAX_VOICES) {
                 return clips.get(0);
@@ -221,7 +221,7 @@ public final class SoundHelper {
         String path = "/assets/sounds/" + name;
         try (InputStream raw = SoundHelper.class.getResourceAsStream(path)) {
             if (raw == null) {
-                if (loggedMissing.add(name)) {
+                if (LOGGED_MISSING.add(name)) {
                     System.err.println("[SoundHelper] Sound not found: " + name);
                 }
                 return null;
@@ -253,7 +253,7 @@ public final class SoundHelper {
                 return new Sample(outFormat, normalizePcm(data, outFormat));
             }
         } catch (Exception e) {
-            if (loggedMissing.add(name)) {
+            if (LOGGED_MISSING.add(name)) {
                 System.err.println("[SoundHelper] Failed to load: " + name + " - " + e.getMessage());
             }
             return null;
@@ -336,14 +336,14 @@ public final class SoundHelper {
             getSettings().setGlobalSoundVolume(volumeOf(name));
             Sound sound = getAssetLoader().loadSound(name);
             if (sound == null) {
-                if (loggedMissing.add(name)) {
+                if (LOGGED_MISSING.add(name)) {
                     System.err.println("[SoundHelper] Sound not found: " + name);
                 }
                 return;
             }
             getAudioPlayer().playSound(sound);
         } catch (Exception e) {
-            if (loggedMissing.add(name)) {
+            if (LOGGED_MISSING.add(name)) {
                 System.err.println("[SoundHelper] Failed to play sound: " + name + " - " + e.getMessage());
             }
         }

@@ -128,11 +128,11 @@ public class DeltaBladeFactory implements EntityFactory {
         Image bankSheet = EmbeddedTextures.getImage("player_blue_bank.png", 384, 48);
         Image bowwaveSheet = EmbeddedTextures.getImage("player_blue_bowwave.png", 384, 48);
         Image beamSheet = EmbeddedTextures.getImage("player_blue_beam.png", 384, 48);
-        
+
         if (thrusterSheet != null && !thrusterSheet.isError()) {
             PlayerAnimationComponent animComp = new PlayerAnimationComponent(thrusterSheet, bankSheet, bowwaveSheet, beamSheet);
             ImageView view = animComp.getView();
-            
+
             return FXGL.entityBuilder(data)
                     .type(EntityType.PLAYER)
                     .viewWithBBox(view)
@@ -142,7 +142,7 @@ public class DeltaBladeFactory implements EntityFactory {
                     .with(animComp)
                     .build();
         }
-        
+
         return FXGL.entityBuilder(data)
                 .type(EntityType.PLAYER)
                 .viewWithBBox(safeTexture("player.png", SHIP_SIZE, SHIP_SIZE, Color.DODGERBLUE))
@@ -793,7 +793,7 @@ public class DeltaBladeFactory implements EntityFactory {
     public Entity newExtraLetterOrb(SpawnData data) {
         char letter = data.get("letter");
         int letterIndex = data.get("letterIndex");
-        
+
         Color[] letterColors = {
             Color.rgb(255, 100, 100),
             Color.rgb(100, 255, 100),
@@ -801,10 +801,10 @@ public class DeltaBladeFactory implements EntityFactory {
             Color.rgb(255, 200, 100),
             Color.rgb(200, 100, 255)
         };
-        
+
         Color orbColor = letterColors[letterIndex % letterColors.length];
         Color innerColor = orbColor.brighter().brighter();
-        
+
         RadialGradient gradient = new RadialGradient(
             0, 0, 0.25, 0.25, 0.9, true, CycleMethod.NO_CYCLE,
             new Stop(0, innerColor),
@@ -812,21 +812,21 @@ public class DeltaBladeFactory implements EntityFactory {
             new Stop(0.7, orbColor),
             new Stop(1, orbColor.darker().darker())
         );
-        
+
         Circle orb = new Circle(16);
         orb.setFill(gradient);
-        
+
         Text letterText = new Text(String.valueOf(letter));
         letterText.setFont(Font.font("Monospace", FontWeight.BOLD, 16));
         letterText.setFill(Color.WHITE);
         letterText.setTranslateX(-6);
         letterText.setTranslateY(6);
-        
+
         ExtraLetterPickupComponent component = new ExtraLetterPickupComponent(letter, letterIndex, letterText);
         Group flipWrapper = component.getFlipWrapper();
-        
+
         Group group = new Group(orb, flipWrapper != null ? flipWrapper : letterText);
-        
+
         return FXGL.entityBuilder(data)
                 .type(EntityType.EXTRA_LETTER_PICKUP)
                 .viewWithBBox(group)
@@ -948,9 +948,9 @@ public class DeltaBladeFactory implements EntityFactory {
         double opacity = data.get("opacity");
         double scrollSpeed = data.get("scrollSpeed");
         boolean isNear = data.hasKey("isNear") && data.<Boolean>get("isNear");
-        
+
         Circle star = new Circle(size / 2);
-        
+
         if (isNear && size > 2.5) {
             RadialGradient flare = new RadialGradient(
                 0, 0, 0.5, 0.5, 0.5, true, CycleMethod.NO_CYCLE,
@@ -965,10 +965,10 @@ public class DeltaBladeFactory implements EntityFactory {
             star.setFill(starColor);
         }
         star.setOpacity(opacity);
-        
+
         double twinkleSpeed = 1.5 + Math.random() * 2.0;
         double twinkleAmount = 0.15 + Math.random() * 0.15;
-        
+
         return FXGL.entityBuilder(data)
                 .view(star)
                 .zIndex(isNear ? -90 : -100)
@@ -981,7 +981,7 @@ public class DeltaBladeFactory implements EntityFactory {
         double radius = data.get("radius");
         Color color = data.get("color");
         double opacity = data.get("opacity");
-        
+
         RadialGradient gradient = new RadialGradient(
             0, 0, 0.5, 0.5, 0.5, true, CycleMethod.NO_CYCLE,
             new Stop(0, Color.color(color.getRed(), color.getGreen(), color.getBlue(), opacity * 0.8)),
@@ -989,10 +989,10 @@ public class DeltaBladeFactory implements EntityFactory {
             new Stop(0.7, Color.color(color.getRed(), color.getGreen(), color.getBlue(), opacity * 0.15)),
             new Stop(1, Color.TRANSPARENT)
         );
-        
+
         Circle blob = new Circle(radius);
         blob.setFill(gradient);
-        
+
         return FXGL.entityBuilder(data)
                 .view(blob)
                 .zIndex(-500)
@@ -1002,7 +1002,7 @@ public class DeltaBladeFactory implements EntityFactory {
     @Spawns("distantPlanet")
     public Entity newDistantPlanet(SpawnData data) {
         double radius = data.get("radius");
-        
+
         RadialGradient planetGradient = new RadialGradient(
             -45, 0.3, 0.3, 0.3, 0.8, true, CycleMethod.NO_CYCLE,
             new Stop(0, Color.rgb(60, 50, 80)),
@@ -1010,11 +1010,11 @@ public class DeltaBladeFactory implements EntityFactory {
             new Stop(0.8, Color.rgb(25, 20, 35)),
             new Stop(1, Color.rgb(15, 12, 22))
         );
-        
+
         Circle planet = new Circle(radius);
         planet.setFill(planetGradient);
         planet.setOpacity(0.6);
-        
+
         return FXGL.entityBuilder(data)
                 .view(planet)
                 .zIndex(-400)
@@ -1163,11 +1163,20 @@ public class DeltaBladeFactory implements EntityFactory {
         int displaySize;
         double durationSec;
         switch (size) {
-            case "hit" -> { displaySize = 80; durationSec = 0.35; }
-            case "big" -> { displaySize = 280; durationSec = 0.9; }
-            default -> { displaySize = 192; durationSec = 0.7; }
+            case "hit" -> {
+                displaySize = 80;
+                durationSec = 0.35;
+            }
+            case "big" -> {
+                displaySize = 280;
+                durationSec = 0.9;
+            }
+            default -> {
+                displaySize = 192;
+                durationSec = 0.7;
+            }
         }
-        
+
         Group circleGroup = new Group();
         double center = displaySize / 2.0;
 
@@ -1205,21 +1214,21 @@ public class DeltaBladeFactory implements EntityFactory {
     @Spawns("coin")
     public Entity newCoin(SpawnData data) {
         String coinTypeStr = data.hasKey("coinType") ? data.<String>get("coinType") : "white";
-        
+
         CoinComponent.CoinType coinType = switch (coinTypeStr) {
             case "green" -> CoinComponent.CoinType.GREEN;
             case "blue" -> CoinComponent.CoinType.BLUE;
             case "violet" -> CoinComponent.CoinType.VIOLET;
             default -> CoinComponent.CoinType.WHITE;
         };
-        
+
         Color coinColor = switch (coinType) {
             case WHITE -> Color.rgb(240, 240, 240);
             case GREEN -> Color.rgb(100, 220, 100);
             case BLUE -> Color.rgb(100, 150, 255);
             case VIOLET -> Color.rgb(200, 100, 255);
         };
-        
+
         Color highlightColor = coinColor.brighter();
 
         Circle outer = new Circle(8);

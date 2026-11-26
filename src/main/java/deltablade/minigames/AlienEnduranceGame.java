@@ -864,11 +864,31 @@ public class AlienEnduranceGame implements Minigame {
         a.specialCd -= tpf;
         if (a.attackCd <= 0) {
             switch (a.kind) {
-                case SpriteSheets.ALIEN_JELLY -> { fan(a.x, bottom, 5, 0.9, 170, Color.HOTPINK); a.attackCd = 2.2; }
-                case SpriteSheets.ALIEN_EYE -> { aimedShot(a.x - 14, bottom, 230, Color.MEDIUMPURPLE); aimedShot(a.x, bottom, 230, Color.MEDIUMPURPLE); aimedShot(a.x + 14, bottom, 230, Color.MEDIUMPURPLE); a.attackCd = 1.7; }
-                case SpriteSheets.ALIEN_MOTH -> { for (int i = 0; i < 3; i++) { enemyBullet(a.x + (rng.nextDouble() - 0.5) * a.size, bottom, (rng.nextDouble() - 0.5) * 60, 210, Color.GOLD); } a.attackCd = 1.2; }
-                case SpriteSheets.ALIEN_CRAB -> { fan(a.x, bottom, 7, 1.2, 140, Color.TURQUOISE); a.attackCd = 2.6; }
-                case SpriteSheets.ALIEN_LEAF -> { ring(a.x, a.y, 10, 150, Color.LIMEGREEN); a.attackCd = 3.0; }
+                case SpriteSheets.ALIEN_JELLY -> {
+                    fan(a.x, bottom, 5, 0.9, 170, Color.HOTPINK);
+                    a.attackCd = 2.2;
+                }
+                case SpriteSheets.ALIEN_EYE -> {
+                    aimedShot(a.x - 14, bottom, 230, Color.MEDIUMPURPLE);
+                    aimedShot(a.x, bottom, 230, Color.MEDIUMPURPLE);
+                    aimedShot(a.x + 14, bottom, 230, Color.MEDIUMPURPLE);
+                    a.attackCd = 1.7;
+                }
+                case SpriteSheets.ALIEN_MOTH -> {
+                    for (int i = 0; i < 3; i++) {
+                        enemyBullet(a.x + (rng.nextDouble() - 0.5) * a.size, bottom,
+                                (rng.nextDouble() - 0.5) * 60, 210, Color.GOLD);
+                    }
+                    a.attackCd = 1.2;
+                }
+                case SpriteSheets.ALIEN_CRAB -> {
+                    fan(a.x, bottom, 7, 1.2, 140, Color.TURQUOISE);
+                    a.attackCd = 2.6;
+                }
+                case SpriteSheets.ALIEN_LEAF -> {
+                    ring(a.x, a.y, 10, 150, Color.LIMEGREEN);
+                    a.attackCd = 3.0;
+                }
                 default -> { // brain
                     fan(a.x, bottom, a.phase >= 2 ? 7 : 5, 1.0, 170, Color.ORCHID);
                     aimedShot(a.x, bottom, 220, Color.VIOLET);

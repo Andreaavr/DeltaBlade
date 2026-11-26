@@ -8,7 +8,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 
 public class PlayerComponent extends Component {
-    
+
     private static final double MAX_TPF = 1.0 / 30.0;
     private static final int SHIP_SIZE = 48;
     private static final int SHIELD_SIZE = 64;
@@ -23,15 +23,15 @@ public class PlayerComponent extends Component {
     private Circle shieldRing;
     private Circle shieldHalo;
     private int scoopCharges = 0;
-    
+
     private double fireCooldown = 0;
     private static final double FIRE_RATE = 0.10;
-    
+
     private boolean wasMovingLeft = false;
     private boolean wasMovingRight = false;
     private double fireAnimTimer = 0;
     private static final double FIRE_ANIM_DURATION = 0.36;
-    
+
     @Override
     public void onAdded() {
         double radius = SHIELD_SIZE / 2.0;
@@ -56,7 +56,7 @@ public class PlayerComponent extends Component {
     @Override
     public void onUpdate(double tpf) {
         tpf = Math.min(tpf, MAX_TPF);
-        
+
         if (fireCooldown > 0) {
             fireCooldown -= tpf;
         }
@@ -69,7 +69,7 @@ public class PlayerComponent extends Component {
             shieldTimer = Math.max(0, shieldTimer - tpf);
         }
         updateShieldView();
-        
+
         if (invulnerable) {
             invulnerableTimer -= tpf;
             if (invulnerableTimer <= 0) {
@@ -81,7 +81,7 @@ public class PlayerComponent extends Component {
             }
         }
     }
-    
+
     public void moveLeft(double tpf) {
         double newX = entity.getX() - speed * tpf;
         double minX = GameVars.RAIL_WIDTH;
@@ -93,7 +93,7 @@ public class PlayerComponent extends Component {
         wasMovingLeft = true;
         updateAnimationState();
     }
-    
+
     public void moveRight(double tpf) {
         double newX = entity.getX() + speed * tpf;
         double maxX = FXGL.getAppWidth() - entity.getWidth() - GameVars.RAIL_WIDTH;
@@ -105,7 +105,7 @@ public class PlayerComponent extends Component {
         wasMovingRight = true;
         updateAnimationState();
     }
-    
+
     public void updateIdle() {
         if (!wasMovingLeft && !wasMovingRight) {
             if (fireAnimTimer > 0) {
@@ -117,7 +117,7 @@ public class PlayerComponent extends Component {
         wasMovingLeft = false;
         wasMovingRight = false;
     }
-    
+
     private void updateAnimationState() {
         if (wasMovingLeft && !wasMovingRight) {
             setAnimationState(PlayerAnimationComponent.AnimationState.BANKING_LEFT);
@@ -127,21 +127,21 @@ public class PlayerComponent extends Component {
             setAnimationState(PlayerAnimationComponent.AnimationState.IDLE);
         }
     }
-    
+
     private void setAnimationState(PlayerAnimationComponent.AnimationState state) {
         if (entity.hasComponent(PlayerAnimationComponent.class)) {
             entity.getComponent(PlayerAnimationComponent.class).setState(state);
         }
     }
-    
+
     public boolean canFire(int grade) {
         if (fireCooldown > 0) return false;
-        
+
         int activeBullets = FXGL.geti(GameVars.ACTIVE_BULLETS);
         int ammoCap = FXGL.geti(GameVars.AMMO_CAP);
         return activeBullets + grade <= ammoCap;
     }
-    
+
     public void onFired() {
         fireCooldown = FIRE_RATE;
         fireAnimTimer = FIRE_ANIM_DURATION;
@@ -149,12 +149,12 @@ public class PlayerComponent extends Component {
             setAnimationState(PlayerAnimationComponent.AnimationState.FIRING);
         }
     }
-    
+
     public void makeInvulnerable() {
         invulnerable = true;
         invulnerableTimer = INVULNERABLE_DURATION;
     }
-    
+
     public boolean isInvulnerable() {
         return invulnerable || isShielded();
     }
@@ -249,11 +249,11 @@ public class PlayerComponent extends Component {
         shieldView.setScaleX(1.18);
         shieldView.setScaleY(1.18);
     }
-    
+
     public double getCenterX() {
         return entity.getX() + entity.getWidth() / 2;
     }
-    
+
     public double getTopY() {
         return entity.getY();
     }

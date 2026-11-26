@@ -19,7 +19,7 @@ public class StarComponent extends Component {
     private final double baseOpacity;
     private final Circle circle;
     private final Rectangle streak;
-    
+
     private double twinklePhase;
     private final double twinkleSpeed;
     private final double twinkleAmount;
@@ -52,11 +52,11 @@ public class StarComponent extends Component {
     public void onUpdate(double tpf) {
         double speed = scrollSpeed * (1 + warp * 16);
         entity.translateY(speed * tpf);
-        
+
         if (entity.getY() > getAppHeight() + 40) {
             entity.setY(-40);
         }
-        
+
         if (twinkleAmount > 0 && warp < 0.2) {
             twinklePhase += twinkleSpeed * tpf;
             double opacityMod = Math.sin(twinklePhase) * twinkleAmount;
