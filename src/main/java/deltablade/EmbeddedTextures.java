@@ -15,7 +15,7 @@ import java.util.zip.Inflater;
  * Embedded PNG textures as Base64 byte arrays.
  * This ensures textures work regardless of classpath/Maven issues.
  * Original PNGs remain in resources for attribution.
- * 
+ *
  * PNG decoding uses only java.util.zip.Inflater and PixelWriter.
  * No AWT, no ImageIO, no JavaFX Image(InputStream).
  */
@@ -139,7 +139,7 @@ public final class EmbeddedTextures {
                 preloadError = e.getMessage();
             }
         }
-        
+
         preloadError = "missing key and resource";
         return null;
     }
@@ -160,7 +160,7 @@ public final class EmbeddedTextures {
     private static WritableImage decodePng(byte[] png, String name) {
         int offset = 0;
 
-        if (png.length < 8 || 
+        if (png.length < 8 ||
             png[0] != (byte)0x89 || png[1] != 'P' || png[2] != 'N' || png[3] != 'G' ||
             png[4] != 0x0D || png[5] != 0x0A || png[6] != 0x1A || png[7] != 0x0A) {
             preloadError = "invalid PNG signature";

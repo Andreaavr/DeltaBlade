@@ -106,26 +106,29 @@ public final class TestMode {
             {5, 0, 5}, {1, 4, 7}, {2, 5, 8}, {3, 6, 9}, {1, 5, 9}, {7, 8, 9}, {3, 5, 7}
     };
     private static final String[] WAVE_NAMES = {"BOSS", "KREISEL", "ZANGE", "WASSERFALL", "STURM", "ALIEN_ENDURANCE", "MONSTER_BOSS"};
-    private static final String[] WAVE_LABELS = {"BOSS", "SPINNER", "PINCER", "CASCADE", "RUSH", "KOBARMARU YASHI TEST", "MONSTER + ALIEN BOSS"};
-    private static final int[] waveSeq = new int[WAVE_CODES.length];
-    private static final long[] waveSeqAt = new long[WAVE_CODES.length];
+    private static final String[] WAVE_LABELS = {
+        "BOSS", "SPINNER", "PINCER", "CASCADE", "RUSH", "KOBARMARU YASHI TEST", "MONSTER + ALIEN BOSS"
+    };
+    private static final int[] WAVE_SEQ = new int[WAVE_CODES.length];
+    private static final long[] WAVE_SEQ_AT = new long[WAVE_CODES.length];
 
     private static Optional<Drop> feedWaveSequence(int i, int digit, long now) {
         int[] code = WAVE_CODES[i];
-        if (now - waveSeqAt[i] > TIMEOUT_MS) {
-            waveSeq[i] = 0;
+        if (now - WAVE_SEQ_AT[i] > TIMEOUT_MS) {
+            WAVE_SEQ[i] = 0;
         }
-        waveSeqAt[i] = now;
-        if (digit == code[waveSeq[i]]) {
-            waveSeq[i]++;
-            if (waveSeq[i] >= code.length) {
-                waveSeq[i] = 0;
+        WAVE_SEQ_AT[i] = now;
+        if (digit == code[WAVE_SEQ[i]]) {
+            WAVE_SEQ[i]++;
+            if (WAVE_SEQ[i] >= code.length) {
+                WAVE_SEQ[i] = 0;
                 String n = WAVE_NAMES[i];
-                return Optional.of(new Drop((n.startsWith("ALIEN") || n.startsWith("MONSTER_")) ? n : "WAVE:" + n, "TEST  " + WAVE_LABELS[i]));
+                String spawnName = (n.startsWith("ALIEN") || n.startsWith("MONSTER_")) ? n : "WAVE:" + n;
+                return Optional.of(new Drop(spawnName, "TEST  " + WAVE_LABELS[i]));
             }
             return Optional.empty();
         }
-        waveSeq[i] = (digit == code[0]) ? 1 : 0;
+        WAVE_SEQ[i] = (digit == code[0]) ? 1 : 0;
         return Optional.empty();
     }
 

@@ -774,7 +774,10 @@ public class MazeEscapeGame implements Minigame {
                 double sc = 1.0 + 0.06 * wave + 0.25 * f;
                 shieldBubble.setScaleX(sc);
                 shieldBubble.setScaleY(sc);
-                shieldBubble.setOpacity(shieldUp() ? (shieldTime <= 3 ? Math.min(1.0, 0.25 + 0.75 * wave + f) : Math.min(1.0, 0.6 + 0.3 * wave + f)) : f);
+                double shieldOpacity = shieldTime <= 3
+                        ? Math.min(1.0, 0.25 + 0.75 * wave + f)
+                        : Math.min(1.0, 0.6 + 0.3 * wave + f);
+                shieldBubble.setOpacity(shieldUp() ? shieldOpacity : f);
             }
         }
     }

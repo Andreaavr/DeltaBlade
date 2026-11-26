@@ -31,7 +31,7 @@ public final class HighScoreClient {
             .build();
 
     private static volatile List<HighScoreStore.Entry> cache;
-    private static final AtomicBoolean submitting = new AtomicBoolean(false);
+    private static final AtomicBoolean SUBMITTING = new AtomicBoolean(false);
 
     public record SubmitResult(boolean ok, int rank, List<HighScoreStore.Entry> entries) {
         public static SubmitResult fail() {
@@ -75,7 +75,7 @@ public final class HighScoreClient {
     }
 
     public static void submit(String name, int score, int wave, Consumer<SubmitResult> onDone) {
-        if (!submitting.compareAndSet(false, true)) {
+        if (!SUBMITTING.compareAndSet(false, true)) {
             complete(onDone, SubmitResult.fail());
             return;
         }
@@ -100,7 +100,7 @@ public final class HighScoreClient {
                             }
                         }
                     } finally {
-                        submitting.set(false);
+                        SUBMITTING.set(false);
                     }
                     complete(onDone, result);
                 });
