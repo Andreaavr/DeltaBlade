@@ -36,9 +36,10 @@ import static com.almasb.fxgl.dsl.FXGL.geti;
 import static com.almasb.fxgl.dsl.FXGL.inc;
 
 /**
- * Full-screen dodge minigame: navigate a solvable maze from bottom-center to
- * top-center while rim turrets fire slow inward bullets. Single-shot silences
- * one rim ship; shield gives 10s invulnerability (stacks).
+ * Minijuego de esquivar a pantalla completa: recorre un laberinto con solución desde
+ * el centro inferior hasta el centro superior mientras las torretas del borde disparan
+ * balas lentas hacia dentro. El disparo único silencia una nave del borde; el escudo
+ * da 10 s de invulnerabilidad (acumulables).
  */
 public class MazeEscapeGame implements Minigame {
 
@@ -49,27 +50,27 @@ public class MazeEscapeGame implements Minigame {
     private static final double RIM = 32;
     private static final int RIM_SHIP = 28;
     private static final int BONUS_ICON = 22;
-    /** Radius vs walls — smaller than sprite so corridors feel open. */
+    /** Radio para chocar con las paredes: más pequeño que el sprite para que los pasillos parezcan amplios. */
     private static final double PLAYER_WALL_R = 9.0;
-    /** Radius vs turret bullets — keep a fair hurtbox. */
+    /** Radio para las balas de las torretas: una zona de impacto justa. */
     private static final double PLAYER_HURT_R = 14.0;
-    /** Off-center distance (px) still pulled into a corridor gap. */
+    /** Distancia al centro (px) desde la que todavía se atrae al jugador hacia la entrada de un pasillo. */
     private static final double GAP_ASSIST = 14.0;
-    /** Pull speed toward corridor center while entering a gap. */
+    /** Velocidad de atracción hacia el centro del pasillo al entrar en un hueco. */
     private static final double GAP_ASSIST_SPEED = 280;
     private static final double PLAYER_SPEED = 155;
     private static final double BULLET_SPEED = 78;
     private static final double BULLET_R = 4.5;
-    /** Rim fire cooldown range (seconds), rolled per shot. */
+    /** Rango de espera entre disparos del borde (segundos), sorteado en cada disparo. */
     private static final double FIRE_GAP_MIN = 2.8;
     private static final double FIRE_GAP_MAX = 5.8;
     private static final double SHOT_BOLT_SPEED = 420;
     private static final double SHOT_BOLT_R = 5;
     private static final double TIME_LIMIT = 48;
     private static final double FIRE_GRACE = 2.0;
-    /** Show HURRY UP once when time drops to this (seconds). */
+    /** Mostrar HURRY UP una vez cuando el tiempo baja de este valor (segundos). */
     private static final double HURRY_THRESHOLD = 9.0;
-    /** Rim reload multiplier during hurry (< 1 = faster). */
+    /** Multiplicador de recarga del borde con prisa (< 1 = más rápido). */
     private static final double HURRY_FIRE_SCALE = 0.78;
     private static final int PLAYER_ICON = 34;
     private static final int EXTRA_LINKS = 10;
@@ -93,7 +94,7 @@ public class MazeEscapeGame implements Minigame {
     private double mazeW;
     private double mazeH;
 
-    /** True = wall blocks movement between cells / on border. */
+    /** True = hay una pared que bloquea el paso entre casillas o en el borde. */
     private boolean[][] vWall; // [COLS+1][ROWS]
     private boolean[][] hWall; // [COLS][ROWS+1]
 
@@ -106,7 +107,7 @@ public class MazeEscapeGame implements Minigame {
     private int moneyCollected;
     private int shotsLoaded;
     private double shieldTime;
-    // Geheimer Bonus: alle Extras im Maze eingesammelt.
+    // Bonus secreto: se han recogido todos los extras del laberinto.
     private boolean perfectRun;
     private int perfectScore;
     private static final int SCORE_MULT = 10;
@@ -193,7 +194,7 @@ public class MazeEscapeGame implements Minigame {
         }
     }
 
-    /** Player single-shot bolt toward a rim turret (UI-layer, like enemy bullets). */
+    /** Disparo único del jugador hacia una torreta del borde (capa de interfaz, como las balas enemigas). */
     private static final class ShotBolt {
         double x;
         double y;
@@ -240,8 +241,8 @@ public class MazeEscapeGame implements Minigame {
         this.awaitingSettlement = false;
         this.settlementRoot = null;
 
-        // World player sits under FXGL UI nodes; maze is opaque UI, so hide the
-        // world sprite and draw a UI proxy on top of the maze layers.
+        // El jugador del mundo queda debajo de los nodos de interfaz de FXGL; el laberinto es interfaz opaca,
+        // así que se oculta el sprite del mundo y se dibuja una copia en la interfaz, encima del laberinto.
         host.hidePlayer(true);
         generateMaze();
         layoutPlayfield();
@@ -256,7 +257,7 @@ public class MazeEscapeGame implements Minigame {
 
     @Override
     public boolean usesPlayerShip() {
-        // Full 4-way movement handled here (host only drives L/R for other games).
+        // Aquí se gestiona el movimiento en 4 direcciones (en los otros juegos el anfitrión solo controla izquierda/derecha).
         return false;
     }
 
@@ -348,7 +349,7 @@ public class MazeEscapeGame implements Minigame {
         }
     }
 
-    /** Space/X — once after missile pickup; otherwise brief NO SHOT. */
+    /** Espacio/X: una vez después de recoger el misil; si no, un breve NO SHOT. */
     private void tryFireShot() {
         if (!active || finished) {
             return;
@@ -394,7 +395,7 @@ public class MazeEscapeGame implements Minigame {
         readyText = null;
     }
 
-    // --- maze generation ---------------------------------------------------
+    // --- generación del laberinto ------------------------------------------
 
     private void generateMaze() {
         vWall = new boolean[COLS + 1][ROWS];
@@ -439,7 +440,7 @@ public class MazeEscapeGame implements Minigame {
             stack.push(new Cell(nc, nr));
         }
 
-        // Extra links so the maze is not a pure dead-end tree.
+        // Conexiones extra para que el laberinto no sea solo un árbol de callejones sin salida.
         int links = 0;
         int guard = 0;
         while (links < EXTRA_LINKS && guard++ < 400) {
@@ -462,12 +463,12 @@ public class MazeEscapeGame implements Minigame {
         exitCol = COLS / 2;
         exitRow = 0;
 
-        // Open a notch at start (bottom) and exit (top) through the outer rim of the maze.
+        // Abrir un hueco en la entrada (abajo) y en la salida (arriba) del borde exterior del laberinto.
         hWall[startCol][ROWS] = false;
         hWall[exitCol][0] = false;
 
         if (!pathExists(startCol, startRow, exitCol, exitRow)) {
-            // Extremely unlikely; force a vertical shaft as fallback.
+            // Muy poco probable; como alternativa, se fuerza un pasillo vertical.
             for (int r = 0; r < ROWS; r++) {
                 if (r + 1 < ROWS) {
                     knockWall(startCol, r, startCol, r + 1);
@@ -581,7 +582,7 @@ public class MazeEscapeGame implements Minigame {
         return (((long) c) << 32) | (r & 0xffffffffL);
     }
 
-    // --- layout / views ----------------------------------------------------
+    // --- disposición / vistas ----------------------------------------------
 
     private void layoutPlayfield() {
         mazeW = COLS * CELL + (COLS + 1) * WALL;
@@ -590,13 +591,13 @@ public class MazeEscapeGame implements Minigame {
         double playH = host.playBottom() - host.playTop();
         originX = host.playLeft() + (playW - mazeW) / 2.0;
         originY = host.playTop() + (playH - mazeH) / 2.0;
-        // Keep a rim band around the maze for turrets.
+        // Dejar una franja alrededor del laberinto para las torretas.
         originX = Math.max(host.playLeft() + RIM, Math.min(originX, host.playRight() - RIM - mazeW));
         originY = Math.max(host.playTop() + RIM, Math.min(originY, host.playBottom() - RIM - mazeH));
     }
 
     private void buildViews() {
-        // Dim sealed playfield frame.
+        // Marco atenuado del área de juego cerrada.
         Rectangle seal = new Rectangle(
                 host.playRight() - host.playLeft(),
                 host.playBottom() - host.playTop());
@@ -616,7 +617,7 @@ public class MazeEscapeGame implements Minigame {
         floor.setStrokeWidth(1.5);
         mazeLayer.getChildren().add(floor);
 
-        // Vertical walls.
+        // Paredes verticales.
         for (int c = 0; c <= COLS; c++) {
             for (int r = 0; r < ROWS; r++) {
                 if (!vWall[c][r]) {
@@ -629,7 +630,7 @@ public class MazeEscapeGame implements Minigame {
                 mazeLayer.getChildren().add(w);
             }
         }
-        // Horizontal walls.
+        // Paredes horizontales.
         for (int c = 0; c < COLS; c++) {
             for (int r = 0; r <= ROWS; r++) {
                 if (!hWall[c][r]) {
@@ -642,7 +643,7 @@ public class MazeEscapeGame implements Minigame {
                 mazeLayer.getChildren().add(w);
             }
         }
-        // Outer border sealed (except start/exit notches already opened in wall flags).
+        // Borde exterior cerrado (salvo los huecos de entrada y salida ya abiertos en las paredes).
         Rectangle outer = new Rectangle(mazeW, mazeH);
         outer.setFill(Color.TRANSPARENT);
         outer.setStroke(Color.rgb(140, 100, 220, 0.9));
@@ -682,7 +683,7 @@ public class MazeEscapeGame implements Minigame {
         host.addUi(bulletLayer);
         ui.add(bulletLayer);
 
-        // Player proxy above maze/bonuses/bullets so it is never covered by UI floor.
+        // La copia del jugador va encima del laberinto, los extras y las balas para que nunca quede tapada.
         playerLayer = new Group();
         playerLayer.setMouseTransparent(true);
         playerShipView = createPlayerShipView();
@@ -744,7 +745,7 @@ public class MazeEscapeGame implements Minigame {
         }
     }
 
-    /** Sanftes Pulsieren fuer Rakete/Schild-Extras und die Schild-Blase. */
+    /** Pulso suave para los extras de misil y escudo, y para la burbuja del escudo. */
     private void animateExtras(double tpf) {
         extraPulse += tpf * 3.0;
         double wave = 0.5 + 0.5 * Math.sin(extraPulse);
@@ -768,7 +769,7 @@ public class MazeEscapeGame implements Minigame {
             if (show) {
                 double f = shieldFlash / 0.35;
                 if (shieldTime > 0 && shieldTime <= 3) {
-                    // Letzte 3 Sekunden: schneller blinken.
+                    // Últimos 3 segundos: parpadeo más rápido.
                     wave = 0.5 + 0.5 * Math.sin(shieldTime * 14);
                 }
                 double sc = 1.0 + 0.06 * wave + 0.25 * f;
@@ -792,7 +793,7 @@ public class MazeEscapeGame implements Minigame {
     }
 
     private void armRimTurrets() {
-        // Irregular first shots — no full salvo at GO.
+        // Primeros disparos irregulares: nada de ráfaga completa al empezar.
         for (int i = 0; i < rimShips.size(); i++) {
             RimShip ship = rimShips.get(i);
             if (!ship.silenced) {
@@ -857,7 +858,7 @@ public class MazeEscapeGame implements Minigame {
         }
     }
 
-    // --- bonuses / rim -----------------------------------------------------
+    // --- extras / borde ---------------------------------------------------
 
     private void placeBonuses() {
         Set<Long> path = shortestPathCells();
@@ -907,11 +908,11 @@ public class MazeEscapeGame implements Minigame {
             case AMMO -> textureIcon("pickup_ammo.png", BONUS_ICON, Color.CYAN);
         };
         Group g = new Group(icon);
-        // Center the icon on the cell (texture icons are top-left anchored).
+        // Centrar el icono en la casilla (los iconos con textura se anclan en la esquina superior izquierda).
         g.setTranslateX(cellCenter(col, row)[0] - BONUS_ICON / 2.0);
         g.setTranslateY(cellCenter(col, row)[1] - BONUS_ICON / 2.0);
         if (kind == BonusKind.MONEY) {
-            // coinIcon is already centered at (0,0) with radius 8
+            // coinIcon ya está centrado en (0,0) con radio 8
             g.setTranslateX(cellCenter(col, row)[0]);
             g.setTranslateY(cellCenter(col, row)[1]);
         }
@@ -949,7 +950,7 @@ public class MazeEscapeGame implements Minigame {
     }
 
     private void placeRimShips() {
-        // Top edge (fire down), bottom (fire up), left (fire right), right (fire left).
+        // Borde superior (dispara hacia abajo), inferior (hacia arriba), izquierdo (hacia la derecha), derecho (hacia la izquierda).
         int topCount = 5;
         int sideCount = 4;
         for (int i = 0; i < topCount; i++) {
@@ -980,7 +981,7 @@ public class MazeEscapeGame implements Minigame {
 
     private void addRimShip(double x, double y, double nx, double ny, double cd) {
         RimShip ship = new RimShip(x, y, nx, ny, cd);
-        // Ship textures nose toward top (0°). Rotate so nose faces into the maze.
+        // Las texturas de las naves apuntan hacia arriba (0°). Se giran para que apunten hacia el laberinto.
         double facing = rimFacingDegrees(nx, ny);
         javafx.scene.Node body = rimShipSprite();
         body.setRotate(facing);
@@ -992,18 +993,18 @@ public class MazeEscapeGame implements Minigame {
         rimShips.add(ship);
     }
 
-    /** Degrees clockwise from nose-up for an inward fire normal (nx, ny). */
+    /** Grados en sentido horario desde "morro arriba" para disparar hacia dentro según la normal (nx, ny). */
     private static double rimFacingDegrees(double nx, double ny) {
         if (ny > 0) {
-            return 180; // top rim → face down
+            return 180; // borde superior → mira hacia abajo
         }
         if (ny < 0) {
-            return 0;   // bottom rim → face up
+            return 0;   // borde inferior → mira hacia arriba
         }
         if (nx > 0) {
-            return 90;  // left rim → face right
+            return 90;  // borde izquierdo → mira a la derecha
         }
-        return -90;     // right rim → face left
+        return -90;     // borde derecho → mira a la izquierda
     }
 
     private javafx.scene.Node rimShipSprite() {
@@ -1046,7 +1047,7 @@ public class MazeEscapeGame implements Minigame {
         player.getTransformComponent().setRotationOrigin(
                 new Point2D(player.getWidth() / 2.0, player.getHeight() / 2.0));
         double[] ctr = cellCenter(startCol, startRow);
-        // Nudge slightly below center so the ship sits in the start cell; nose up toward exit.
+        // Se baja un poco del centro para que la nave quede en la casilla de inicio, con el morro hacia la salida.
         player.setX(ctr[0] - player.getWidth() / 2.0);
         player.setY(ctr[1] - player.getHeight() / 2.0 + 4);
         player.setRotation(0);
@@ -1072,7 +1073,7 @@ public class MazeEscapeGame implements Minigame {
         return new double[]{x, y};
     }
 
-    // --- gameplay ----------------------------------------------------------
+    // --- jugabilidad -------------------------------------------------------
 
     private void movePlayer(double tpf) {
         Entity player = host.player();
@@ -1097,7 +1098,7 @@ public class MazeEscapeGame implements Minigame {
         if (ix == 0 && iy == 0) {
             return;
         }
-        // Nose-up sprite: 0° = up, 90° = right, 180° = down, -90° = left.
+        // Sprite con el morro arriba: 0° = arriba, 90° = derecha, 180° = abajo, -90° = izquierda.
         player.setRotation(Math.toDegrees(Math.atan2(ix, -iy)));
 
         double len = Math.hypot(ix, iy);
@@ -1107,8 +1108,8 @@ public class MazeEscapeGame implements Minigame {
         double x = player.getX() + player.getWidth() / 2.0;
         double y = player.getY() + player.getHeight() / 2.0;
 
-        // Arcade gap assist: when aiming into a corridor, pull toward its center
-        // so you "flutscht" into the opening without pixel-perfect lining up.
+        // Ayuda arcade para los huecos: al dirigirte a un pasillo, se te atrae hacia su centro
+        // para que te "cueles" en la abertura sin tener que alinearte al píxel.
         boolean preferVert = Math.abs(iy) >= Math.abs(ix) && iy != 0;
         boolean preferHorz = Math.abs(ix) > Math.abs(iy) && ix != 0;
         if (preferVert) {
@@ -1132,7 +1133,7 @@ public class MazeEscapeGame implements Minigame {
             movedY = true;
         }
 
-        // Blocked on the intended axis? Snap harder toward center and retry once.
+        // ¿Bloqueado en el eje deseado? Se ajusta más hacia el centro y se reintenta una vez.
         if (preferVert && !movedY) {
             x = assistAxis(x, y, true, tpf * 2.5);
             ny = clampToPlay(y + dy, false);
@@ -1153,8 +1154,8 @@ public class MazeEscapeGame implements Minigame {
     }
 
     /**
-     * Pull the cross-axis coordinate toward the nearest cell center when close
-     * enough to slip into a gap. {@code towardX} true = adjust X (for vertical travel).
+     * Acerca la coordenada del eje transversal al centro de la casilla más cercana cuando
+     * está lo bastante cerca para colarse en un hueco. {@code towardX} true = ajustar X (al moverse en vertical).
      */
     private double assistAxis(double x, double y, boolean towardX, double tpf) {
         int col = colAt(x);
@@ -1196,12 +1197,12 @@ public class MazeEscapeGame implements Minigame {
     }
 
     private boolean circleHitsWall(double cx, double cy, double radius, boolean bulletsIgnoreOuter) {
-        // Local coords inside maze.
+        // Coordenadas locales dentro del laberinto.
         double lx = cx - originX;
         double ly = cy - originY;
         if (!bulletsIgnoreOuter) {
             if (lx < radius || ly < radius || lx > mazeW - radius || ly > mazeH - radius) {
-                // Allow exit notch at top-center and start notch at bottom-center.
+                // Permitir el hueco de salida arriba en el centro y el de entrada abajo en el centro.
                 if (inExitNotch(cx, cy, radius) || inStartNotch(cx, cy, radius)) {
                     return false;
                 }
@@ -1209,7 +1210,7 @@ public class MazeEscapeGame implements Minigame {
             }
         }
 
-        // Vertical wall segments.
+        // Tramos de pared verticales.
         for (int c = 0; c <= COLS; c++) {
             for (int r = 0; r < ROWS; r++) {
                 if (!vWall[c][r]) {
@@ -1225,7 +1226,7 @@ public class MazeEscapeGame implements Minigame {
                 }
             }
         }
-        // Horizontal wall segments.
+        // Tramos de pared horizontales.
         for (int c = 0; c < COLS; c++) {
             for (int r = 0; r <= ROWS; r++) {
                 if (!hWall[c][r]) {
@@ -1304,7 +1305,7 @@ public class MazeEscapeGame implements Minigame {
             b.view.setTranslateX(b.x);
             b.view.setTranslateY(b.y);
 
-            // Pass through maze walls; despawn only at sealed playfield rim / far edge.
+            // Atraviesan las paredes del laberinto; solo desaparecen en el borde cerrado del área de juego o en el extremo.
             boolean out = b.x < host.playLeft() || b.x > host.playRight()
                     || b.y < host.playTop() || b.y > host.playBottom();
             if (out) {
@@ -1385,7 +1386,7 @@ public class MazeEscapeGame implements Minigame {
             bulletLayer.getChildren().remove(b.view);
             bullets.remove(i);
             if (shieldUp()) {
-                // Schild blockt jeden Treffer, solange Zeit uebrig ist.
+                // El escudo bloquea cualquier impacto mientras le quede tiempo.
                 shieldFlash = 0.35;
             } else {
                 host.spawnExplosion(px, py, "ship");
@@ -1424,7 +1425,7 @@ public class MazeEscapeGame implements Minigame {
         double px = player.getX() + player.getWidth() / 2.0;
         double py = player.getY() + player.getHeight() / 2.0;
         double rot = Math.toRadians(player.getRotation());
-        // Nose-up sprite: 0° → (0,-1)
+        // Sprite con el morro arriba: 0° → (0,-1)
         double fdx = Math.sin(rot);
         double fdy = -Math.cos(rot);
 
@@ -1483,7 +1484,7 @@ public class MazeEscapeGame implements Minigame {
                 continue;
             }
             double dot = (dx / dist) * fdx + (dy / dist) * fdy;
-            // Prefer turrets roughly in front (dot > 0.25 ≈ within ~75°).
+            // Preferir las torretas que están más o menos delante (producto escalar > 0.25 ≈ dentro de ~75°).
             if (dot > 0.25) {
                 double score = dist / (0.35 + dot);
                 if (score < bestFacingScore) {
@@ -1550,7 +1551,7 @@ public class MazeEscapeGame implements Minigame {
         int leftover = Math.max(0, (int) Math.ceil(timeLeft));
         int turrets = silencedTurretCount();
         int picked = collectedKinds.size();
-        // Alle Punkte x10 (SCORE_MULT); Geld bleibt gleich.
+        // Todos los puntos x10 (SCORE_MULT); el dinero se queda igual.
         int timeScore = leftover * 70 * SCORE_MULT;
         int turretScore = turrets * 280 * SCORE_MULT;
         int bonusScore = picked * 150 * SCORE_MULT;
@@ -1560,7 +1561,7 @@ public class MazeEscapeGame implements Minigame {
             score += 350 * SCORE_MULT;
             money += 20;
         }
-        // Geheimer Super-Bonus: wirklich ALLE Extras im Maze geholt.
+        // Súper bonus secreto: se han cogido de verdad TODOS los extras del laberinto.
         perfectRun = !bonuses.isEmpty() && bonuses.stream().allMatch(b -> b.taken);
         if (perfectRun) {
             perfectScore = score * 4 + 5000 * SCORE_MULT;
@@ -1707,7 +1708,7 @@ public class MazeEscapeGame implements Minigame {
         ui.add(settlementRoot);
     }
 
-    /** Bunt blinkende, pulsierende PERFEKT-Zeile. */
+    /** Línea de PERFECTO que parpadea en colores y late. */
     private void animatePerfectLine() {
         if (perfectText == null) {
             return;

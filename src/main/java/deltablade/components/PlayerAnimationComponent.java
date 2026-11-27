@@ -6,13 +6,13 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 /**
- * Animated player ship from Gerald's blue-player sheets.
- * Each sheet is 384x48 (8 frames of 48x48, 120ms).
+ * Nave del jugador animada a partir de las hojas de sprites azules de Gerald.
+ * Cada hoja mide 384x48 (8 fotogramas de 48x48, 120 ms).
  *
- * Düsenausstoß: looping idle thruster
- * Seitliches Krängen: frames 1-3 bank right, 5-7 bank left (both directions in one sheet)
- * Bugwelle: nose cone, reserved for forward thrust
- * Strahl-Puls: muzzle flash while firing
+ * Propulsión: llama del motor en bucle cuando la nave está parada.
+ * Inclinación lateral: fotogramas 1-3 inclinan a la derecha y 5-7 a la izquierda (ambas direcciones en una sola hoja).
+ * Morro: punta de la nave, reservada para el empuje hacia delante.
+ * Pulso del disparo: fogonazo del cañón mientras se dispara.
  */
 public class PlayerAnimationComponent extends Component {
 

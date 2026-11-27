@@ -110,7 +110,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private boolean extraTimeWarned = false;
     private boolean ufoSpawnedThisWave = false;
     private double extraTimePulse = 0;
-    /** Seconds remaining after HURRY UP before the UFO may spawn. */
+    /** Segundos que quedan después de HURRY UP antes de que pueda aparecer el ovni. */
     private double hurryUfoDelay = 0;
     private boolean pendingHurryUfo = false;
     private double scoopHitLock = 0;
@@ -149,8 +149,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         settings.setPreserveResizeRatio(true);
         settings.setScaleAffectedOnResize(true);
         settings.setFullScreenAllowed(true);
-        // LaunchServices (Doppelklick) startet mit cwd "/" oder dem read-only DMG.
-        // FXGL legt sonst "logs/" an und beendet sich still mit Read-only file system.
+        // LaunchServices (doble clic) arranca con el directorio de trabajo "/" o con el DMG de solo lectura.
+        // Si no, FXGL crea "logs/" y se cierra sin avisar con el error Read-only file system.
         settings.setFileSystemWriteAllowed(false);
     }
 
@@ -574,8 +574,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
 
     /**
-     * FXGL's bundled cursor image is corrupt pixel data, not a real pointer.
-     * Replace it with the OS cursor so we don't show a giant blob.
+     * La imagen de cursor que trae FXGL son píxeles corruptos, no un puntero real.
+     * Se sustituye por el cursor del sistema para no mostrar una mancha gigante.
      */
     private void applySystemCursor() {
         getGameScene().setCursor(Cursor.DEFAULT);
@@ -688,8 +688,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
 
     /**
-     * Show a high-contrast full-width banner at the top of the screen.
-     * Visible over title screen and during gameplay.
+     * Muestra un aviso de alto contraste a todo lo ancho, en la parte superior de la pantalla.
+     * Se ve sobre la pantalla de título y durante la partida.
      */
     private void showBanner(String message, Color textColor) {
         showBanner(message, textColor, 2.0);
@@ -739,7 +739,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         activeBanners.add(banner);
         getGameScene().addUINode(banner);
 
-        // JavaFX timeline — must work while the game engine is paused (shop/options).
+        // Timeline de JavaFX: tiene que funcionar aunque el motor del juego esté en pausa (tienda/opciones).
         PauseTransition hide = new PauseTransition(Duration.seconds(durationSeconds));
         hide.setOnFinished(e -> {
             getGameScene().removeUINode(banner);
@@ -1080,7 +1080,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         if (gameOver) {
             return;
         }
-        // Minigames must get Space/X even if a missile/steer path would otherwise swallow it.
+        // Los minijuegos deben recibir Espacio/X aunque el misil dirigido se los fuera a quedar.
         if (minigameActive) {
             if (activeMinigame != null) {
                 activeMinigame.onFirePress();
@@ -1239,7 +1239,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         if (shopWeapon == ShopWeapon.NEEDLE_LASER
                 || shopWeapon == ShopWeapon.TWIN_BEAM
                 || shopWeapon == ShopWeapon.SWEEP_LASER) {
-            // Continuous beams are driven from onUpdate while fire is held / autofire.
+            // Los rayos continuos se controlan desde onUpdate mientras se mantiene el disparo o el autodisparo.
             return;
         }
 
@@ -1558,7 +1558,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         SoundHelper.play("explode_ship.wav");
     }
 
-    /** Boss Phase 2+: kleine Helfer stuerzen sich auf den Spieler. */
+    /** Jefe en fase 2+: pequeños ayudantes se lanzan sobre el jugador. */
     public void spawnBossHelpers(Entity boss, int count) {
         if (boss == null || !boss.isActive() || player == null) {
             return;
@@ -1582,7 +1582,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private int alienBossCount = 0;
     private boolean alienBossPending = false;
 
-    /** Monster wave: a big alien from the new sheet joins the fight (Crab, Brain, Eye in turn). */
+    /** Oleada de monstruos: un alienígena grande de la hoja nueva se une al combate (cangrejo, cerebro y ojo por turnos). */
     private void spawnAlienBoss() {
         alienBossPending = false;
         if (gameOver || minigameActive || warping || player == null
@@ -1613,7 +1613,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         SoundHelper.play("ufo_appear.wav");
     }
 
-    /** Brain Octopus calls little monsters that dive at the player. */
+    /** El pulpo cerebro llama a monstruos pequeños que se lanzan en picado sobre el jugador. */
     public void spawnAlienBossHelpers(Entity boss, int count) {
         if (boss == null || !boss.isActive() || player == null) {
             return;
@@ -1636,7 +1636,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
     }
 
-    /** Boss shot aimed at the player. */
+    /** Disparo del jefe apuntado al jugador. */
     public void spawnAimedBossBullet(double x, double y, double speed) {
         if (player == null) {
             spawnEnemyBullet(x, y, 0, speed, false);
@@ -1648,12 +1648,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         spawnEnemyBullet(x, y, dx / d * speed, dy / d * speed, false);
     }
 
-    /** Boss-Schuss mit freier Richtung. */
+    /** Disparo del jefe en cualquier dirección. */
     public void spawnBossBullet(double x, double y, double vx, double vy) {
         spawnEnemyBullet(x, y, vx, vy, false);
     }
 
-    // --- Boss-Lebensbalken oben im Bild -------------------------------------
+    // --- Barra de vida del jefe en la parte superior --------------------------
     private Group bossBar;
     private javafx.scene.shape.Rectangle bossBarFill;
     private Text bossBarLabel;
@@ -1699,11 +1699,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         bossBarFill.setFill(ratio > 0.5 ? Color.ORANGE : ratio > 0.25 ? Color.ORANGERED : Color.RED);
         bossBarLabel.setText(boss.bossLabel());
         bossBar.setVisible(true);
-        // Nach Neustart werden alle UI-Knoten entfernt -> Balken wieder einhaengen.
+        // Al reiniciar se eliminan todos los nodos de la interfaz -> hay que volver a añadir la barra.
         if (bossBar.getParent() == null) {
             getGameScene().addUINode(bossBar);
         }
-        // Immer ganz oben zeichnen (Banner, Laser, HUD kommen spaeter dazu).
+        // Dibujarla siempre encima de todo (los avisos, láseres y el HUD se añaden después).
         bossBar.toFront();
     }
 
@@ -1966,7 +1966,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         double roll = RANDOM.nextDouble();
 
         if (roll < GameVars.MINIGAME_DROP_CHANCE) {
-            // Equal share: meteor / cognitive / maze / alien endurance (same total rarity).
+            // Reparto a partes iguales: meteoritos / cognitivo / laberinto / alien endurance (misma rareza total).
             int which = RANDOM.nextInt(4);
             String mini = switch (which) {
                 case 0 -> "meteorPickup";
@@ -2090,8 +2090,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
 
     /**
-     * Boss death: 3-5 staggered big explosions with irregular audio.
-     * First explosion is immediate with shockwave/flash; others are subdued.
+     * Muerte del jefe: 3-5 explosiones grandes escalonadas con sonido irregular.
+     * La primera explosión es inmediata, con onda expansiva y destello; las demás son más suaves.
      */
     private void spawnBossDeathSequence(double centerX, double centerY) {
         int boomCount = 3 + RANDOM.nextInt(3);
@@ -2287,7 +2287,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         if (waveManager.hasPendingSpawns() || hasLiveCombatEnemies() || alienBossPending) {
             return;
         }
-        // Nach dem Boss: kurze Sammel-Phase, damit man die Beute holen kann.
+        // Después del jefe: una fase corta de recogida para poder coger el botín.
         if ((waveManager.getCurrentWaveType() == WaveManager.WaveType.BOSS || waveManager.alienBossThisWave())
                 && !bossCollectDone) {
             if (bossCollectLeft <= 0) {
@@ -2297,9 +2297,9 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
         waveTransition = true;
         set(GameVars.ENEMIES_REMAINING, 0);
-        // Warp + Shop: frueher hing das an der Kamikaze-Welle in Level 10, 20, 30 ...
-        // Seit die Wellen-Reihenfolge zufaellig ist, kommt der Warp fest alle WARP_EVERY Level
-        // (und zusaetzlich nach jeder Kamikaze-Welle).
+        // Salto + tienda: antes dependía de la oleada kamikaze de los niveles 10, 20, 30...
+        // Desde que el orden de las oleadas es aleatorio, el salto llega siempre cada WARP_EVERY niveles
+        // (y además después de cada oleada kamikaze).
         int lvl = geti(GameVars.LEVEL);
         if ((lvl > 0 && lvl % GameVars.WARP_EVERY == 0)
                 || waveManager.getCurrentWaveType() == WaveManager.WaveType.KAMIKAZE) {
@@ -2322,7 +2322,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             EntityType.PICKUP, EntityType.COIN, EntityType.RANK_MARKER, EntityType.EXTRA_LETTER_PICKUP
     };
 
-    /** Sammel-Phase nach dem Boss: Beute treibt sanft zum Spieler. Max. 5 s oder bis alles weg ist. */
+    /** Fase de recogida después del jefe: el botín flota suavemente hacia el jugador. Máx. 5 s o hasta recogerlo todo. */
     private void updateBossCollect(double tpf) {
         if (bossCollectLeft <= 0 || bossCollectDone) {
             return;
@@ -2841,7 +2841,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         cancelGetReady();
         minigameActive = true;
         if (waveManager != null) {
-            waveManager.stop(); // no late main-game spawns during the minigame
+            waveManager.stop(); // que no aparezcan enemigos del juego principal durante el minijuego
         }
         clearWaveEntities();
         activeMinigame = game;
@@ -3161,8 +3161,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             clearLaserBeams();
             return;
         }
-        // Strahl-Waffen feuern NUR, solange Leertaste/X wirklich gedrueckt ist.
-        // (Autofire zaehlt hier nicht: ein Strahl ist ohnehin Dauerfeuer.)
+        // Las armas de rayo disparan SOLO mientras Espacio/X está realmente pulsado.
+        // (Aquí el autodisparo no cuenta: un rayo ya es fuego continuo.)
         installFireKeyTracking();
         boolean wantFire = fireKeyPhysicallyDown();
         if (weapon == ShopWeapon.SWEEP_LASER) {
@@ -3176,7 +3176,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private boolean spaceDown = false;
     private boolean xDown = false;
 
-    /** Eigene, verlaessliche Erkennung ob die Feuertaste gerade gehalten wird. */
+    /** Detección propia y fiable de si la tecla de disparo se está manteniendo pulsada. */
     private void installFireKeyTracking() {
         if (fireKeyTrackingInstalled) {
             return;
@@ -3194,7 +3194,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             if (e.getCode() == KeyCode.SPACE) spaceDown = false;
             if (e.getCode() == KeyCode.X) xDown = false;
         });
-        // Fenster verliert den Fokus -> nichts gilt mehr als gedrueckt.
+        // La ventana pierde el foco -> ya no se considera pulsada ninguna tecla.
         stage.focusedProperty().addListener((obs, was, now) -> {
             if (!now) {
                 spaceDown = false;
@@ -3335,7 +3335,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             int dmg = damage;
             EnemyComponent tec = nearest.getComponent(EnemyComponent.class);
             if (tec.isBoss() && currentShopWeapon() != ShopWeapon.SWEEP_LASER) {
-                // Needle/Twin machen am Boss nur halben Schaden (Rest wird angespart).
+                // Needle/Twin solo hacen la mitad de daño al jefe (el resto se acumula).
                 bossLaserCarry += damage * LASER_BOSS_FACTOR;
                 dmg = (int) bossLaserCarry;
                 bossLaserCarry -= dmg;
@@ -3347,7 +3347,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
     }
 
-    // Laser-Balance: Needle 1 Schaden / 0,15 s; Twin pro Strahl 1 / 0,20 s; Sweep unveraendert (2 / 0,10 s).
+    // Equilibrio de los láseres: Needle 1 de daño / 0,15 s; Twin 1 por rayo / 0,20 s; Sweep sin cambios (2 / 0,10 s).
     private static final double NEEDLE_TICK = 0.15;
     private static final double TWIN_TICK = 0.20;
     private static final double SWEEP_TICK = 0.10;
@@ -3763,7 +3763,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         waveManager.onEnemyDestroyed(ec.getSquadId(), ec.isEntering());
         if (ec.isMonster() && waveManager.noteMonsterKillAndCheckBoss()) {
             runOnce(this::spawnAlienBoss, Duration.seconds(1.5));
-            inc(GameVars.ENEMIES_REMAINING, 1); // keep the wave open until the boss is down
+            inc(GameVars.ENEMIES_REMAINING, 1); // mantener la oleada abierta hasta que caiga el jefe
             alienBossPending = true;
         }
         ec.dock();
@@ -3845,7 +3845,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 inc(GameVars.BOSS_KILLS, 1);
                 spawnBossDeathSequence(deathX, deathY);
                 spawnBossCoins(deathX, deathY);
-                // Belohnung: viel Geld + garantiert Schild oder Rakete.
+                // Recompensa: mucho dinero + escudo o misil garantizado.
                 int bossMoney = GameVars.BOSS_KILL_MONEY * ec.getBossNumber();
                 inc(GameVars.MONEY, bossMoney);
                 spawn(RANDOM.nextBoolean() ? "shieldPickup" : "missilePickup", deathX - 14, deathY - 14);
@@ -4062,7 +4062,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             waveManager.update(tpf);
             updateBossCollect(tpf);
             if (isBossWave()) {
-                // Boss-Level: kein Zeitdruck.
+                // Nivel de jefe: sin límite de tiempo.
                 extraTime = extraTimeMax;
                 extraTimeWarned = true;
                 pendingHurryUfo = false;
@@ -4125,7 +4125,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             return;
         }
         if (waveTransition || getReadyRemaining > 0) {
-            // Keep pending so we retry when combat resumes / wave settles.
+            // Se deja pendiente para reintentarlo cuando se reanude el combate o se estabilice la oleada.
             pendingHurryUfo = true;
             return;
         }

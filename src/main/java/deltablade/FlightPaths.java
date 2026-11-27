@@ -9,19 +9,19 @@ import static com.almasb.fxgl.dsl.FXGL.getAppHeight;
 import static com.almasb.fxgl.dsl.FXGL.getAppWidth;
 
 /**
- * Galaga-artige Einflug-Wege. Alle Punkte sind Bildschirm-Koordinaten (Mitte des Schiffs).
- * Die Wege bleiben oberhalb von ca. 62 % der Bildhoehe, damit der Spieler nicht gerammt wird.
+ * Trayectorias de entrada al estilo Galaga. Todos los puntos son coordenadas de pantalla (centro de la nave).
+ * Las trayectorias se mantienen por encima del 62 % de la altura de la pantalla, para que no choquen con el jugador.
  */
 public final class FlightPaths {
 
     public enum Kind {
-        BOGEN,       // grosser Bogen von der Seite
-        SCHLEIFE,    // von oben runter, eine Schleife, dann hoch
-        S_KURVE,     // Schlangenlinie von oben
-        KREIS,       // von der Seite rein, ein Kreis um die Mitte
-        HAKEN,       // steil runter, dann Haken zurueck nach oben
-        SPIRALE,     // enger werdender Kreis
-        WELLE        // flache Welle quer ueber das Feld
+        BOGEN,       // gran arco desde un lateral
+        SCHLEIFE,    // baja desde arriba, hace un rizo y vuelve a subir
+        S_KURVE,     // zigzag en forma de serpiente desde arriba
+        KREIS,       // entra por un lateral y da una vuelta alrededor del centro
+        HAKEN,       // baja en vertical y luego hace un gancho de vuelta hacia arriba
+        SPIRALE,     // círculo que se va cerrando
+        WELLE        // onda suave que cruza el campo
     }
 
     private FlightPaths() {}
@@ -87,11 +87,11 @@ public final class FlightPaths {
         return out;
     }
 
-    /** Crossing paths for Alien Endurance: they cross the whole screen and leave it again. */
+    /** Trayectorias de cruce para Alien Endurance: atraviesan toda la pantalla y vuelven a salir. */
     public enum Cross {
-        ACHT,      // figure eight
-        ZICKZACK,  // zigzag down
-        SCHWARM,   // loose wobbling swarm
+        ACHT,      // figura de ocho
+        ZICKZACK,  // zigzag hacia abajo
+        SCHWARM,   // enjambre suelto que se tambalea
         REGEN      // steep diagonal rain
     }
 

@@ -30,7 +30,7 @@ import static com.almasb.fxgl.dsl.FXGL.getAppHeight;
 import static com.almasb.fxgl.dsl.FXGL.getAppWidth;
 
 /**
- * Post-warp shop: left preview/description, right list (teuerste oben).
+ * Tienda tras el salto: a la izquierda la vista previa y la descripción, a la derecha la lista (los más caros arriba).
  */
 public final class ShopOverlay {
 

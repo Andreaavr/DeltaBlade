@@ -1,5 +1,6 @@
 package deltablade.tools;
 
+import deltablade.I18n;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -49,13 +50,13 @@ import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 
 /**
- * Standalone explosion editor for DeltaBlade.
- * Creates procedural pixel-art explosions and exports them as sprite sheets.
+ * Editor independiente de explosiones para DeltaBlade.
+ * Crea explosiones procedurales en pixel-art y las exporta como hojas de sprites.
  *
- * Run with: mvn javafx:run -Pexplosions
+ * Se ejecuta con: mvn javafx:run -Pexplosions
  *
- * Integration note (future PR): To play exported sheets in-game, load the PNG
- * using EmbeddedTextures.decodePng(), then draw frame N based on elapsed time:
+ * Nota de integración: para reproducir en el juego las hojas exportadas, carga el PNG
+ * con EmbeddedTextures.decodePng() y dibuja el fotograma N según el tiempo transcurrido:
  *   int frame = (int)((elapsedMs / 1000.0) * fps) % frameCount;
  *   gc.drawImage(sheet, frame * frameW, 0, frameW, frameH, x, y, frameW, frameH);
  */
@@ -115,7 +116,7 @@ public class ExplosionEditor extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        primaryStage.setTitle("DeltaBlade Explosion Editor v1.0");
+        primaryStage.setTitle(I18n.tr("editor.title"));
 
         BorderPane root = new BorderPane();
         root.setStyle("-fx-background-color: linear-gradient(to bottom, #0d1117, #161b22);");
@@ -188,14 +189,14 @@ public class ExplosionEditor extends Application {
         HBox headerBox = new HBox(10);
         headerBox.setAlignment(Pos.CENTER_LEFT);
 
-        Label title = new Label("VORSCHAU");
+        Label title = new Label(I18n.tr("editor.preview"));
         title.setFont(Font.font("Monospace", FontWeight.BOLD, 14));
         title.setTextFill(Color.web("#8b949e"));
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        presetNameLabel = new Label("Schiff");
+        presetNameLabel = new Label(I18n.tr("editor.preset.schiff"));
         presetNameLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 16));
         presetNameLabel.setTextFill(Color.web("#58a6ff"));
 
@@ -241,9 +242,9 @@ public class ExplosionEditor extends Application {
         controls.setStyle("-fx-background-color: transparent;");
         controls.setPrefWidth(340);
 
-        controls.getChildren().add(createSection("TIMING",
-            createSliderRow("Dauer", "s", 0.15, 2.0, 0.6, s -> durationSlider = s),
-            createSliderRow("Frames", "", 4, 24, 8, s -> {
+        controls.getChildren().add(createSection(I18n.tr("editor.section.timing"),
+            createSliderRow(I18n.tr("editor.duration"), "s", 0.15, 2.0, 0.6, s -> durationSlider = s),
+            createSliderRow(I18n.tr("editor.frames"), "", 4, 24, 8, s -> {
                 frameCountSlider = s;
                 s.setSnapToTicks(true);
                 s.setMajorTickUnit(1);
@@ -251,38 +252,38 @@ public class ExplosionEditor extends Application {
             createFrameSizeRow()
         ));
 
-        controls.getChildren().add(createSection("PARTIKEL",
-            createSliderRow("Anzahl", "", 20, 400, 100, s -> particleCountSlider = s),
-            createSliderRow("Größe/Leben", "×", 0.2, 2.5, 1.0, s -> sizeOverLifeSlider = s),
-            createSliderRow("Debris", "", 0, 30, 8, s -> debrisSlider = s)
+        controls.getChildren().add(createSection(I18n.tr("editor.section.particles"),
+            createSliderRow(I18n.tr("editor.count"), "", 20, 400, 100, s -> particleCountSlider = s),
+            createSliderRow(I18n.tr("editor.sizeOverLife"), "×", 0.2, 2.5, 1.0, s -> sizeOverLifeSlider = s),
+            createSliderRow(I18n.tr("editor.debris"), "", 0, 30, 8, s -> debrisSlider = s)
         ));
 
-        controls.getChildren().add(createSection("FARBEN",
-            createColorRow("Kern:", Color.WHITE, c -> coreColorPicker = c),
-            createColorRow("Feuer:", Color.ORANGE, c -> midColorPicker = c),
-            createColorRow("Rauch:", Color.rgb(60, 55, 50), c -> smokeColorPicker = c)
+        controls.getChildren().add(createSection(I18n.tr("editor.section.colors"),
+            createColorRow(I18n.tr("editor.color.core"), Color.WHITE, c -> coreColorPicker = c),
+            createColorRow(I18n.tr("editor.color.fire"), Color.ORANGE, c -> midColorPicker = c),
+            createColorRow(I18n.tr("editor.color.smoke"), Color.rgb(60, 55, 50), c -> smokeColorPicker = c)
         ));
 
-        controls.getChildren().add(createSection("PHYSIK",
-            createSliderRow("Velocity", "", 30, 500, 180, s -> velocitySlider = s),
-            createSliderRow("Gravity", "", -300, 300, 60, s -> gravitySlider = s),
-            createSliderRow("Drag", "", 0.3, 6.0, 2.2, s -> dragSlider = s),
-            createSliderRow("Flash", "", 0, 1.5, 0.8, s -> flashIntensitySlider = s)
+        controls.getChildren().add(createSection(I18n.tr("editor.section.physics"),
+            createSliderRow(I18n.tr("editor.velocity"), "", 30, 500, 180, s -> velocitySlider = s),
+            createSliderRow(I18n.tr("editor.gravity"), "", -300, 300, 60, s -> gravitySlider = s),
+            createSliderRow(I18n.tr("editor.drag"), "", 0.3, 6.0, 2.2, s -> dragSlider = s),
+            createSliderRow(I18n.tr("editor.flash"), "", 0, 1.5, 0.8, s -> flashIntensitySlider = s)
         ));
 
-        controls.getChildren().add(createSection("LAYER",
+        controls.getChildren().add(createSection(I18n.tr("editor.section.layers"),
             createTogglesRow()
         ));
 
-        controls.getChildren().add(createSection("SEED",
+        controls.getChildren().add(createSection(I18n.tr("editor.section.seed"),
             createSeedRow()
         ));
 
-        controls.getChildren().add(createSection("PRESETS",
+        controls.getChildren().add(createSection(I18n.tr("editor.section.presets"),
             createPresetsGrid()
         ));
 
-        controls.getChildren().add(createSection("EXPORT",
+        controls.getChildren().add(createSection(I18n.tr("editor.section.export"),
             createExportButtons()
         ));
 
@@ -348,7 +349,7 @@ public class ExplosionEditor extends Application {
         HBox row = new HBox(8);
         row.setAlignment(Pos.CENTER_LEFT);
 
-        Label nameLabel = new Label("Größe:");
+        Label nameLabel = new Label(I18n.tr("editor.size"));
         nameLabel.setFont(Font.font("Monospace", 12));
         nameLabel.setTextFill(Color.web("#c9d1d9"));
         nameLabel.setMinWidth(80);
@@ -381,12 +382,12 @@ public class ExplosionEditor extends Application {
     private FlowPane createTogglesRow() {
         FlowPane flow = new FlowPane(10, 6);
 
-        fireToggle = createToggle("Feuer", true);
-        sparksToggle = createToggle("Funken", true);
-        smokeToggle = createToggle("Rauch", true);
-        shockwaveToggle = createToggle("Schock", false);
-        debrisToggle = createToggle("Debris", true);
-        flashToggle = createToggle("Flash", true);
+        fireToggle = createToggle(I18n.tr("editor.layer.fire"), true);
+        sparksToggle = createToggle(I18n.tr("editor.layer.sparks"), true);
+        smokeToggle = createToggle(I18n.tr("editor.layer.smoke"), true);
+        shockwaveToggle = createToggle(I18n.tr("editor.layer.shock"), false);
+        debrisToggle = createToggle(I18n.tr("editor.layer.debris"), true);
+        flashToggle = createToggle(I18n.tr("editor.layer.flash"), true);
 
         flow.getChildren().addAll(fireToggle, sparksToggle, smokeToggle, shockwaveToggle, debrisToggle, flashToggle);
         return flow;
@@ -411,7 +412,7 @@ public class ExplosionEditor extends Application {
         seedField.setStyle("-fx-background-color: #21262d; -fx-text-fill: #c9d1d9; -fx-border-color: #30363d;");
         seedField.setOnAction(e -> restartExplosion());
 
-        Button randomBtn = createStyledButton("🎲 Neu", "#238636", "#2ea043");
+        Button randomBtn = createStyledButton(I18n.tr("editor.random"), "#238636", "#2ea043");
         randomBtn.setOnAction(e -> randomizeSeed());
 
         Button copyBtn = createStyledButton("📋", "#30363d", "#3d444d");
@@ -431,12 +432,12 @@ public class ExplosionEditor extends Application {
         grid.setVgap(6);
 
         String[][] presets = {
-            {"Treffer", "treffer", "#f85149"},
-            {"Schiff", "schiff", "#f0883e"},
-            {"Tough", "tough", "#a371f7"},
-            {"Boss", "boss", "#db61a2"},
-            {"Plasma", "plasma", "#3fb950"},
-            {"Funken", "funken", "#58a6ff"}
+            {I18n.tr("editor.preset.treffer"), "treffer", "#f85149"},
+            {I18n.tr("editor.preset.schiff"), "schiff", "#f0883e"},
+            {I18n.tr("editor.preset.tough"), "tough", "#a371f7"},
+            {I18n.tr("editor.preset.boss"), "boss", "#db61a2"},
+            {I18n.tr("editor.preset.plasma"), "plasma", "#3fb950"},
+            {I18n.tr("editor.preset.funken"), "funken", "#58a6ff"}
         };
 
         for (int i = 0; i < presets.length; i++) {
@@ -474,12 +475,12 @@ public class ExplosionEditor extends Application {
     private VBox createExportButtons() {
         VBox box = new VBox(6);
 
-        Button sheetBtn = createStyledButton("📦 Sprite Sheet exportieren...", "#238636", "#2ea043");
+        Button sheetBtn = createStyledButton(I18n.tr("editor.exportSheet"), "#238636", "#2ea043");
         sheetBtn.setMaxWidth(Double.MAX_VALUE);
         sheetBtn.setFont(Font.font("Monospace", FontWeight.BOLD, 12));
         sheetBtn.setOnAction(e -> exportSpriteSheet());
 
-        Button framesBtn = createStyledButton("🖼 Einzelframes exportieren...", "#1f6feb", "#388bfd");
+        Button framesBtn = createStyledButton(I18n.tr("editor.exportFrames"), "#1f6feb", "#388bfd");
         framesBtn.setMaxWidth(Double.MAX_VALUE);
         framesBtn.setOnAction(e -> exportIndividualFrames());
 
@@ -524,7 +525,7 @@ public class ExplosionEditor extends Application {
         restartBtn.setStyle("-fx-background-color: #30363d; -fx-text-fill: #c9d1d9; -fx-background-radius: 6;");
         restartBtn.setOnAction(e -> restartExplosion());
 
-        CheckBox loopToggle = new CheckBox("Loop");
+        CheckBox loopToggle = new CheckBox(I18n.tr("editor.loop"));
         loopToggle.setSelected(true);
         loopToggle.setFont(Font.font("Monospace", 11));
         loopToggle.setTextFill(Color.web("#8b949e"));
@@ -540,7 +541,7 @@ public class ExplosionEditor extends Application {
             }
         });
 
-        currentFrameLabel = new Label("Frame: 1/8");
+        currentFrameLabel = new Label(I18n.tr("editor.frameLabel", 1, 8));
         currentFrameLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 12));
         currentFrameLabel.setTextFill(Color.web("#58a6ff"));
         currentFrameLabel.setMinWidth(90);
@@ -553,7 +554,7 @@ public class ExplosionEditor extends Application {
         Region spacer = new Region();
         spacer.setMinWidth(20);
 
-        Label durationLabel = new Label("Dauer:");
+        Label durationLabel = new Label(I18n.tr("editor.durationLabel"));
         durationLabel.setFont(Font.font("Monospace", 12));
         durationLabel.setTextFill(Color.web("#c9d1d9"));
 
@@ -1204,7 +1205,7 @@ public class ExplosionEditor extends Application {
         int frameCount = (int) frameCountSlider.getValue();
         double duration = durationSlider.getValue();
         int currentFrame = Math.min(frameCount, (int) (playbackTime / duration * frameCount) + 1);
-        currentFrameLabel.setText("Frame: " + currentFrame + "/" + frameCount);
+        currentFrameLabel.setText(I18n.tr("editor.frameLabel", currentFrame, frameCount));
         playbackTimeLabel.setText(String.format("%.2fs", playbackTime));
     }
 
@@ -1273,7 +1274,7 @@ public class ExplosionEditor extends Application {
 
     private void exportSpriteSheet() {
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Sprite Sheet speichern");
+        fileChooser.setTitle(I18n.tr("editor.saveSheet"));
         fileChooser.setInitialFileName("explosion_" + currentPresetName.toLowerCase() + ".png");
         fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PNG", "*.png"));
 
@@ -1321,19 +1322,18 @@ public class ExplosionEditor extends Application {
             );
             Files.writeString(Path.of(jsonPath), json);
 
-            showAlert(Alert.AlertType.INFORMATION, "Export erfolgreich",
-                "Sprite Sheet gespeichert:\n" + file.getName() + "\n\n" +
-                "Größe: " + (cols * frameSize) + "×" + (rows * frameSize) + " px\n" +
-                "Frames: " + frameCount + " @ " + String.format("%.1f", fps) + " FPS");
+            showAlert(Alert.AlertType.INFORMATION, I18n.tr("editor.exportOk"),
+                I18n.tr("editor.sheetSaved", file.getName(), cols * frameSize, rows * frameSize,
+                    frameCount, String.format("%.1f", fps)));
 
         } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "Export fehlgeschlagen", e.getMessage());
+            showAlert(Alert.AlertType.ERROR, I18n.tr("editor.exportFailed"), e.getMessage());
         }
     }
 
     private void exportIndividualFrames() {
         DirectoryChooser dirChooser = new DirectoryChooser();
-        dirChooser.setTitle("Ordner für Einzelframes wählen");
+        dirChooser.setTitle(I18n.tr("editor.chooseFolder"));
 
         File dir = dirChooser.showDialog(previewCanvas.getScene().getWindow());
         if (dir == null) return;
@@ -1362,11 +1362,11 @@ public class ExplosionEditor extends Application {
             );
             Files.writeString(Path.of(jsonPath), json);
 
-            showAlert(Alert.AlertType.INFORMATION, "Export erfolgreich",
-                frameCount + " Frames exportiert nach:\n" + dir.getAbsolutePath());
+            showAlert(Alert.AlertType.INFORMATION, I18n.tr("editor.exportOk"),
+                I18n.tr("editor.framesExported", frameCount, dir.getAbsolutePath()));
 
         } catch (Exception e) {
-            showAlert(Alert.AlertType.ERROR, "Export fehlgeschlagen", e.getMessage());
+            showAlert(Alert.AlertType.ERROR, I18n.tr("editor.exportFailed"), e.getMessage());
         }
     }
 

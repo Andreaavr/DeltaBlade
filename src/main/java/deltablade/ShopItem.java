@@ -1,7 +1,7 @@
 package deltablade;
 
 /**
- * All buyable shop entries, listed expensive-first in {@link #catalog()}.
+ * Todos los objetos que se pueden comprar en la tienda, ordenados del más caro al más barato en {@link #catalog()}.
  */
 public enum ShopItem {
     SWEEP_LASER(12_000, "SWEEP LASER", "SWEEP",
@@ -98,7 +98,7 @@ public enum ShopItem {
         return colorTag;
     }
 
-    /** Catalog order: teuerste zuerst. */
+    /** Orden del catálogo: primero los más caros. */
     public static ShopItem[] catalog() {
         return values();
     }
