@@ -936,39 +936,39 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
 
         switch (waveType) {
             case BOSS -> {
-                message = "BOSS - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.boss", geti(GameVars.LEVEL));
                 color = Color.MAGENTA;
             }
             case KAMIKAZE -> {
-                message = "KAMIKAZE - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.kamikaze", geti(GameVars.LEVEL));
                 color = Color.ORANGERED;
             }
             case BONUS -> {
-                message = "BONUS - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.bonus", geti(GameVars.LEVEL));
                 color = Color.GOLD;
             }
             case RANK -> {
-                message = "RANK - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.rank", geti(GameVars.LEVEL));
                 color = Color.HOTPINK;
             }
             case PEARL -> {
-                message = "ATTACK - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.attack", geti(GameVars.LEVEL));
                 color = Color.AQUA;
             }
             case MONSTER -> {
-                message = "SWARM - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.swarm", geti(GameVars.LEVEL));
                 color = Color.MEDIUMPURPLE;
             }
             case KREISEL -> {
-                message = "SPINNER - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.spinner", geti(GameVars.LEVEL));
                 color = Color.LIGHTGREEN;
             }
             case ZANGE -> {
-                message = "PINCER - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.pincer", geti(GameVars.LEVEL));
                 color = Color.DEEPSKYBLUE;
             }
             case WASSERFALL -> {
-                message = "CASCADE - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.cascade", geti(GameVars.LEVEL));
                 color = Color.LIGHTSKYBLUE;
             }
             case STURM -> {
@@ -976,11 +976,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 color = Color.ORANGE;
             }
             case METEOR -> {
-                message = "METEOR CHALLENGE";
+                message = I18n.tr("wave.meteor");
                 color = Color.SANDYBROWN;
             }
             default -> {
-                message = "WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.normal", geti(GameVars.LEVEL));
                 color = Color.YELLOW;
             }
         }
@@ -1000,13 +1000,13 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
 
     public void showBonusPerfect(int bonus) {
         boolean roundClear = bonus >= GameVars.BONUS_ROUND_PERFECT_SCORE;
-        showBanner("PERFECT", Color.GOLD, roundClear ? 2.2 : 1.6);
+        showBanner(I18n.tr("banner.perfect"), Color.GOLD, roundClear ? 2.2 : 1.6);
         showScorePopup(bonus, Color.GOLD, roundClear ? 48 : 36);
         SoundHelper.play("bonus_perfect.wav");
     }
 
     public void showSquadCombo(int bonus) {
-        showBanner("SQUAD COMBO", Color.ORANGE, 1.8);
+        showBanner(I18n.tr("banner.squadCombo"), Color.ORANGE, 1.8);
         showScorePopup(bonus, Color.ORANGE, 36);
         if (comboPlate != null) {
             comboPlate.setStroke(Color.GOLD);
