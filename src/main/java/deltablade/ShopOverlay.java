@@ -128,7 +128,7 @@ public final class ShopOverlay {
 
         HBox header = new HBox();
         header.setAlignment(Pos.CENTER_LEFT);
-        Text armory = mono("SHOP", 24, Color.CYAN);
+        Text armory = mono(I18n.tr("shop.title"), 24, Color.CYAN);
         armory.setEffect(new DropShadow(10, Color.rgb(40, 180, 255, 0.6)));
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -148,7 +148,7 @@ public final class ShopOverlay {
         previewBox.setStroke(Color.web("#4a90d9"));
         previewBox.setStrokeWidth(2);
         StackPane previewPane = new StackPane(previewBox);
-        previewLabel = mono("NO IMAGE", 12, Color.rgb(120, 140, 160));
+        previewLabel = mono(I18n.tr("shop.noImage"), 12, Color.rgb(120, 140, 160));
         previewImage = new ImageView();
         previewImage.setFitWidth(PREVIEW_SIZE);
         previewImage.setFitHeight(PREVIEW_SIZE);
@@ -189,18 +189,18 @@ public final class ShopOverlay {
 
         body.getChildren().addAll(left, right);
 
-        buyButton = new Button("BUY");
+        buyButton = new Button(I18n.tr("shop.buy"));
         styleButton(buyButton, true);
         buyButton.setOnAction(e -> tryPurchase());
 
-        Button continueButton = new Button("CONTINUE");
+        Button continueButton = new Button(I18n.tr("shop.continue"));
         styleButton(continueButton, true);
         continueButton.setOnAction(e -> closeShop());
 
         HBox actions = new HBox(16, buyButton, continueButton);
         actions.setAlignment(Pos.CENTER);
 
-        Text hint = mono("UP/DOWN  SELECT   ENTER  BUY   ESC  CONTINUE", 11, Color.rgb(140, 160, 180));
+        Text hint = mono(I18n.tr("shop.hint"), 11, Color.rgb(140, 160, 180));
         hint.setTextAlignment(TextAlignment.CENTER);
 
         panel.getChildren().addAll(header, body, actions, hint);
@@ -320,11 +320,11 @@ public final class ShopOverlay {
         descText.setText(item.description());
 
         if (!unlocked) {
-            priceText.setText("LOCKED");
+            priceText.setText(I18n.tr("shop.locked"));
             priceText.setFill(Color.ORANGERED);
             unlockText.setText(item.unlockHint());
         } else if (maxed) {
-            priceText.setText(item.kind() == ShopItem.Kind.WEAPON ? "EQUIPPED" : "MAX");
+            priceText.setText(item.kind() == ShopItem.Kind.WEAPON ? I18n.tr("shop.equipped") : I18n.tr("shop.max"));
             priceText.setFill(Color.LIMEGREEN);
             unlockText.setText("");
         } else {
@@ -345,10 +345,10 @@ public final class ShopOverlay {
             String right;
             Color color;
             if (!itemUnlocked) {
-                right = "LOCKED";
+                right = I18n.tr("shop.locked");
                 color = Color.rgb(120, 90, 90);
             } else if (itemMaxed) {
-                right = rowItem.kind() == ShopItem.Kind.WEAPON ? "ON" : "MAX";
+                right = rowItem.kind() == ShopItem.Kind.WEAPON ? I18n.tr("shop.on") : I18n.tr("shop.max");
                 color = Color.LIMEGREEN;
             } else {
                 right = "$" + rowItem.price();

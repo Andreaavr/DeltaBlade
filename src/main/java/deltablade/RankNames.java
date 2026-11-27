@@ -6,81 +6,49 @@ package deltablade;
  */
 public final class RankNames {
 
-    private static final String[] TITLES = {
-            "RECRUIT",
-            "SEAMAN 3RD CLASS",
-            "SEAMAN 2ND CLASS",
-            "SEAMAN 1ST CLASS",
-            "PETTY OFFICER 3RD CLASS",
-            "PETTY OFFICER 2ND CLASS",
-            "PETTY OFFICER 1ST CLASS",
-            "CHIEF PETTY OFFICER",
-            "SENIOR CHIEF",
-            "MASTER CHIEF",
-            "WARRANT OFFICER",
-            "ENSIGN",
-            "LIEUTENANT J.G.",
-            "LIEUTENANT",
-            "LT. COMMANDER",
-            "COMMANDER",
-            "CAPTAIN",
-            "COMMODORE",
-            "REAR ADMIRAL",
-            "VICE ADMIRAL",
-            "ADMIRAL",
-            "FLEET ADMIRAL",
-            "GRAND ADMIRAL",
-            "STAR MARSHAL"
-    };
-
-    private static final String[] SHORT_TITLES = {
-            "RECRUIT",
-            "SN 3RD CLASS",
-            "SN 2ND CLASS",
-            "SN 1ST CLASS",
-            "PO 3RD CLASS",
-            "PO 2ND CLASS",
-            "PO 1ST CLASS",
-            "CHIEF PO",
-            "SR CHIEF",
-            "MASTER CHIEF",
-            "WARRANT",
-            "ENSIGN",
-            "LT J.G.",
-            "LIEUTENANT",
-            "LT CMDR",
-            "COMMANDER",
-            "CAPTAIN",
-            "COMMODORE",
-            "REAR ADM",
-            "VICE ADM",
-            "ADMIRAL",
-            "FLEET ADM",
-            "GRAND ADM",
-            "STAR MSHL"
-    };
+    /** Número de rangos con nombre propio (claves rank.title.0 a rank.title.23 en los ficheros i18n). */
+    static final int TITLE_COUNT = 24;
 
     private RankNames() {}
 
+    /**
+     * Nombre completo del rango en el idioma actual.
+     * Por encima del último rango se añade un número romano (II, III...).
+     *
+     * @param rank índice del rango (los negativos se tratan como 0)
+     * @return el nombre del rango traducido
+     */
     public static String title(int rank) {
         int index = Math.max(0, rank);
-        if (index < TITLES.length) {
-            return TITLES[index];
+        if (index < TITLE_COUNT) {
+            return I18n.tr("rank.title." + index);
         }
-        int extra = index - TITLES.length + 1;
-        return TITLES[TITLES.length - 1] + " " + toRoman(extra + 1);
+        int extra = index - TITLE_COUNT + 1;
+        return I18n.tr("rank.title." + (TITLE_COUNT - 1)) + " " + toRoman(extra + 1);
     }
 
+    /**
+     * Nombre abreviado del rango para el marcador lateral.
+     *
+     * @param rank índice del rango (los negativos se tratan como 0)
+     * @return el nombre corto traducido
+     */
     public static String shortTitle(int rank) {
         int index = Math.max(0, rank);
-        if (index < SHORT_TITLES.length) {
-            return SHORT_TITLES[index];
+        if (index < TITLE_COUNT) {
+            return I18n.tr("rank.short." + index);
         }
         return title(rank);
     }
 
+    /**
+     * Texto del aviso que se muestra al subir de rango.
+     *
+     * @param rank índice del rango
+     * @return el aviso traducido, por ejemplo "RANGO  RECLUTA"
+     */
     public static String banner(int rank) {
-        return "RANK  " + title(rank);
+        return I18n.tr("rank.banner", title(rank));
     }
 
     private static String toRoman(int value) {

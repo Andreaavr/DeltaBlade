@@ -111,6 +111,7 @@ class ShopItemTest {
         void cadaObjetoTieneSusDatos(ShopItem item) {
             assertAll("Datos de " + item,
                     () -> assertFalse(item.displayName().isBlank(), "Nombre visible"),
+                    () -> assertFalse(item.displayName().contains("."), "El nombre está traducido"),
                     () -> assertFalse(item.typeTag().isBlank(), "Etiqueta de tipo"),
                     () -> assertFalse(item.description().isBlank(), "Descripción"),
                     () -> assertNotNull(item.kind(), "Tipo de objeto"),

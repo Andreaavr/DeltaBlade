@@ -141,6 +141,7 @@ class ShopWeaponTest {
             assertAll("Datos de " + arma,
                     () -> assertTrue(arma.price() > 0, "Precio positivo"),
                     () -> assertFalse(arma.displayName().isBlank(), "Nombre visible"),
+                    () -> assertFalse(arma.displayName().contains("."), "El nombre está traducido"),
                     () -> assertFalse(arma.typeTag().isBlank(), "Etiqueta de tipo"),
                     () -> assertFalse(arma.description().isBlank(), "Descripción"),
                     () -> assertNotNull(arma.colorTag(), "Color")

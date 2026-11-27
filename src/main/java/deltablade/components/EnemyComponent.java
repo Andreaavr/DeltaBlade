@@ -210,12 +210,12 @@ public class EnemyComponent extends Component {
 
     public String bossLabel() {
         if (alienBoss < 0) {
-            return "BOSS " + bossNo;
+            return deltablade.I18n.tr("boss.numbered", bossNo);
         }
         return switch (alienBoss) {
-            case deltablade.SpriteSheets.ALIEN_CRAB -> "GIANT CRAB";
-            case deltablade.SpriteSheets.ALIEN_BRAIN -> "BRAIN OCTOPUS";
-            default -> "GIANT EYE";
+            case deltablade.SpriteSheets.ALIEN_CRAB -> deltablade.I18n.tr("boss.crab");
+            case deltablade.SpriteSheets.ALIEN_BRAIN -> deltablade.I18n.tr("boss.brain");
+            default -> deltablade.I18n.tr("boss.eye");
         };
     }
 
@@ -865,11 +865,11 @@ public class EnemyComponent extends Component {
     private void onBossPhaseChange(int phase) {
         var app = FXGL.<deltablade.DeltaBladeApp>getAppCast();
         if (phase == 2 && alienBoss >= 0) {
-            app.bossAnnounce(bossLabel() + " IS HURT!");
+            app.bossAnnounce(deltablade.I18n.tr("boss.hurt", bossLabel()));
         } else if (phase == 2) {
-            app.bossAnnounce("BOSS CALLS FOR HELP!");
+            app.bossAnnounce(deltablade.I18n.tr("boss.callsForHelp"));
         } else if (phase == 3) {
-            app.bossAnnounce("BOSS IS ENRAGED!");
+            app.bossAnnounce(deltablade.I18n.tr("boss.enraged"));
             javafx.scene.effect.Lighting red = new javafx.scene.effect.Lighting(
                     new javafx.scene.effect.Light.Distant(45, 50, javafx.scene.paint.Color.rgb(255, 90, 90)));
             entity.getViewComponent().getParent().setEffect(red);

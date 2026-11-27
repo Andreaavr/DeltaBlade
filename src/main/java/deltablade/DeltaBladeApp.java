@@ -972,7 +972,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 color = Color.LIGHTSKYBLUE;
             }
             case STURM -> {
-                message = "RUSH - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.rush", geti(GameVars.LEVEL));
                 color = Color.ORANGE;
             }
             case METEOR -> {
@@ -1608,8 +1608,9 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 .put("alienBoss", kind)
                 .put("alienCycle", alienBossCount));
         refillWaveTimer();
-        String name = kind == SpriteSheets.ALIEN_CRAB ? "GIANT CRAB" : kind == SpriteSheets.ALIEN_BRAIN ? "BRAIN OCTOPUS" : "GIANT EYE";
-        showBanner("WARNING!  " + name, Color.MEDIUMORCHID, 1.8);
+        String name = kind == SpriteSheets.ALIEN_CRAB ? I18n.tr("boss.crab")
+                : kind == SpriteSheets.ALIEN_BRAIN ? I18n.tr("boss.brain") : I18n.tr("boss.eye");
+        showBanner(I18n.tr("banner.warning", name), Color.MEDIUMORCHID, 1.8);
         SoundHelper.play("ufo_appear.wav");
     }
 
@@ -1684,7 +1685,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             bg.setTranslateY(-2);
             bossBarFill = new javafx.scene.shape.Rectangle(BOSS_BAR_W, 10);
             bossBarFill.setFill(Color.ORANGERED);
-            bossBarLabel = new Text("BOSS");
+            bossBarLabel = new Text(I18n.tr("boss.bar"));
             bossBarLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 12));
             bossBarLabel.setFill(Color.WHITE);
             bossBarLabel.setTranslateY(-6);
@@ -2150,7 +2151,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
 
     private void showExtraLifeFlash() {
-        showBanner("+1 LIFE!", Color.GOLD, 1.5);
+        showBanner(I18n.tr("banner.extraLife"), Color.GOLD, 1.5);
     }
 
     private void applyPickup(PickupComponent.PickupType type) {
@@ -2160,7 +2161,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                     inc(GameVars.WEAPON_GRADE, 1);
                 }
                 inc(GameVars.SCORE, 50);
-                showBanner("WEAPON", Color.GOLD, 1.2);
+                showBanner(I18n.tr("banner.weapon"), Color.GOLD, 1.2);
                 SoundHelper.play("weapon.wav");
             }
             case EXTRA_AMMO -> {
@@ -2168,7 +2169,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                     inc(GameVars.AMMO_CAP, 1);
                 }
                 inc(GameVars.SCORE, 25);
-                showBanner("AMMO", Color.CYAN, 1.2);
+                showBanner(I18n.tr("banner.ammo"), Color.CYAN, 1.2);
                 SoundHelper.play("ammo.wav");
             }
             case EXTRA_LIFE -> {
@@ -2180,7 +2181,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             case AUTOFIRE -> {
                 set(GameVars.AUTOFIRE, true);
                 inc(GameVars.SCORE, 100);
-                showBanner("AUTO", Color.CYAN, 1.2);
+                showBanner(I18n.tr("banner.auto"), Color.CYAN, 1.2);
                 SoundHelper.play("autofire.wav");
             }
             case METEOR -> {
@@ -2203,7 +2204,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             case EXTRA_TIME -> {
                 changeLevelTime(GameVars.LEVEL_TIME_PICKUP);
                 inc(GameVars.SCORE, 25);
-                showBanner("TIME +" + GameVars.LEVEL_TIME_PICKUP, Color.LIMEGREEN, 1.1);
+                showBanner(I18n.tr("banner.time", GameVars.LEVEL_TIME_PICKUP), Color.LIMEGREEN, 1.1);
                 SoundHelper.play("extra_time.wav");
             }
             case SHIELD -> {
@@ -2211,23 +2212,23 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                     player.getComponent(PlayerComponent.class).addShield(GameVars.SHIELD_DURATION);
                 }
                 inc(GameVars.SCORE, 25);
-                showBanner("SHIELD +" + (int) GameVars.SHIELD_DURATION, Color.AQUA, 1.1);
+                showBanner(I18n.tr("banner.shield", (int) GameVars.SHIELD_DURATION), Color.AQUA, 1.1);
                 SoundHelper.play("shield.wav");
                 updateShieldHud();
             }
             case SCOOP -> {
                 attachScoops();
                 inc(GameVars.SCORE, 25);
-                showBanner("SCOOP", Color.LIMEGREEN, 1.1);
+                showBanner(I18n.tr("banner.scoop"), Color.LIMEGREEN, 1.1);
                 SoundHelper.play("scoop.wav");
             }
             case MISSILE -> {
                 inc(GameVars.SCORE, 25);
                 if (findActiveMissile() == null) {
                     launchPlayerMissile();
-                    showBanner("MISSILE  SPACE = STEER", Color.ORANGERED, 1.2);
+                    showBanner(I18n.tr("banner.missileSteer"), Color.ORANGERED, 1.2);
                 } else {
-                    showBanner("MISSILE LIVE", Color.ORANGERED, 1.0);
+                    showBanner(I18n.tr("banner.missileLive"), Color.ORANGERED, 1.0);
                 }
             }
             case SKULL -> applySkullCurse();
@@ -2920,7 +2921,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         warpElapsed = 0;
         clearScoops();
         clearWaveEntities();
-        showBanner("WARP", Color.CYAN, 2.2);
+        showBanner(I18n.tr("banner.warp"), Color.CYAN, 2.2);
         MusicHelper.stop();
         SoundHelper.play("warp.mp3");
         ensureWarpFlash();
@@ -3018,7 +3019,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 }
                 inc(GameVars.MONEY, -item.price());
                 set(GameVars.AUTOFIRE, true);
-                showBanner("AUTO", Color.CYAN, 1.1);
+                showBanner(I18n.tr("banner.auto"), Color.CYAN, 1.1);
                 SoundHelper.play("autofire.wav");
                 yield true;
             }
@@ -3033,14 +3034,14 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             }
             inc(GameVars.MONEY, -item.price());
             inc(GameVars.AMMO_CAP, 1);
-            showBanner("AMMO", Color.CYAN, 1.1);
+            showBanner(I18n.tr("banner.ammo"), Color.CYAN, 1.1);
             SoundHelper.play("ammo.wav");
             return true;
         }
         if (item == ShopItem.EXTRA_TIME) {
             inc(GameVars.MONEY, -item.price());
             changeLevelTime(5);
-            showBanner("TIME +5", Color.LIMEGREEN, 1.1);
+            showBanner(I18n.tr("banner.time", 5), Color.LIMEGREEN, 1.1);
             SoundHelper.play("extra_time.wav");
             return true;
         }
@@ -3491,35 +3492,35 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 if (geti(GameVars.WEAPON_GRADE) > 1) {
                     inc(GameVars.WEAPON_GRADE, -1);
                 }
-                showBanner("WEAPON DOWN", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.weaponDown"), Color.ORANGERED, 1.4);
             }
             case 1 -> {
                 pendingHurryUfo = true;
                 hurryUfoDelay = 0;
                 spawnHurryUpUfo();
-                showBanner("UFO NOW", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.ufoNow"), Color.ORANGERED, 1.4);
             }
             case 2 -> {
                 controlReverseRemaining = GameVars.CURSE_REVERSE_SECONDS;
-                showBanner("REVERSE", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.reverse"), Color.ORANGERED, 1.4);
             }
             case 3 -> {
                 fireJamRemaining = GameVars.CURSE_JAM_SECONDS;
                 clearLaserBeams();
-                showBanner("JAM", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.jam"), Color.ORANGERED, 1.4);
             }
             case 4 -> {
                 changeLevelTime(-5);
-                showBanner("TIME DRAIN", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.timeDrain"), Color.ORANGERED, 1.4);
             }
             case 5 -> {
                 int cap = Math.max(GameVars.INITIAL_AMMO_CAP, geti(GameVars.AMMO_CAP) - 2);
                 set(GameVars.AMMO_CAP, cap);
-                showBanner("AMMO LEAK", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.ammoLeak"), Color.ORANGERED, 1.4);
             }
             case 6 -> {
                 set(GameVars.MONEY, Math.max(0, geti(GameVars.MONEY) - 50));
-                showBanner("MONEY STING", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.moneySting"), Color.ORANGERED, 1.4);
             }
             case 7 -> {
                 int mask = geti(GameVars.RANK_MASK);
@@ -3536,11 +3537,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                         updateRankHud();
                     }
                 }
-                showBanner("RANK BLEED", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.rankBleed"), Color.ORANGERED, 1.4);
             }
             default -> {
                 spawnSkullSwarm();
-                showBanner("SWARM", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.swarm"), Color.ORANGERED, 1.4);
             }
         }
     }
@@ -3849,7 +3850,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 int bossMoney = GameVars.BOSS_KILL_MONEY * ec.getBossNumber();
                 inc(GameVars.MONEY, bossMoney);
                 spawn(RANDOM.nextBoolean() ? "shieldPickup" : "missilePickup", deathX - 14, deathY - 14);
-                showBanner("BOSS DEFEATED  +" + ec.getScoreValue() + "  $+" + bossMoney, Color.GOLD, 2.0);
+                showBanner(I18n.tr("banner.bossDefeated", ec.getScoreValue(), bossMoney), Color.GOLD, 2.0);
                 trySpawnRankMarker(deathX, deathY, ec.getType());
             } else {
                 String explosionSize = (ec.getType() == EnemyComponent.EnemyType.TOUGH) ? "big" : "ship";
@@ -4117,7 +4118,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         extraTimeWarned = true;
         hurryUfoDelay = Math.max(hurryUfoDelay, GameVars.HURRY_UFO_DELAY);
         SoundHelper.play("hurry_warning.wav");
-        showBanner("HURRY UP", Color.ORANGERED, 1.2);
+        showBanner(I18n.tr("banner.hurryUp"), Color.ORANGERED, 1.2);
     }
 
     private void spawnHurryUpUfo() {
@@ -4138,7 +4139,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 .put("level", geti(GameVars.LEVEL)));
         inc(GameVars.ENEMIES_REMAINING, 1);
         SoundHelper.play("ufo_appear.wav");
-        showBanner("UFO", Color.CYAN, 1.3);
+        showBanner(I18n.tr("banner.ufo"), Color.CYAN, 1.3);
     }
 
     private Group[] extraLetterGroups = new Group[5];
