@@ -1,8 +1,8 @@
 package deltablade;
 
 /**
- * Navy-style ranks, shown after each full set of rank markers.
- * Index 0 is the starting rank; 1 is the first promotion.
+ * Rangos de estilo naval, que se muestran tras completar cada serie de marcadores de rango.
+ * El índice 0 es el rango inicial; el 1 es el primer ascenso.
  */
 public final class RankNames {
 

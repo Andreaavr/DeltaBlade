@@ -6,10 +6,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 /**
- * Component that plays an explosion animation from a sprite sheet.
- * Supports both horizontal strips (1 row) and grid layouts (multiple rows).
- * For grids, frames are read row-major: left-to-right, then top-to-bottom.
- * After the last frame, the entity is removed from the world.
+ * Componente que reproduce una animación de explosión a partir de una hoja de sprites.
+ * Admite tanto tiras horizontales (1 fila) como rejillas (varias filas).
+ * En las rejillas, los fotogramas se leen por filas: de izquierda a derecha y de arriba abajo.
+ * Después del último fotograma, la entidad se elimina del mundo.
  */
 public class ExplosionComponent extends Component {
 
@@ -25,14 +25,14 @@ public class ExplosionComponent extends Component {
     private boolean finished = false;
 
     /**
-     * Creates an explosion animation component.
+     * Crea un componente de animación de explosión.
      *
-     * @param spriteSheet the sprite sheet image (strip or grid)
-     * @param frameCount  total number of frames in the sheet
-     * @param frameWidth  width of each frame in pixels
-     * @param frameHeight height of each frame in pixels
-     * @param columns     number of columns in the grid (for strips, this equals frameCount)
-     * @param totalDuration total animation duration in seconds
+     * @param spriteSheet imagen de la hoja de sprites (tira o rejilla)
+     * @param frameCount  número total de fotogramas de la hoja
+     * @param frameWidth  ancho de cada fotograma en píxeles
+     * @param frameHeight alto de cada fotograma en píxeles
+     * @param columns     número de columnas de la rejilla (en las tiras, es igual a frameCount)
+     * @param totalDuration duración total de la animación en segundos
      */
     public ExplosionComponent(Image spriteSheet, int frameCount, int frameWidth, int frameHeight, int columns, double totalDuration) {
         this.frameCount = frameCount;
@@ -50,14 +50,14 @@ public class ExplosionComponent extends Component {
     }
 
     /**
-     * Returns the ImageView to be used as the entity's view.
+     * Devuelve el ImageView que se usa como vista de la entidad.
      */
     public ImageView getView() {
         return imageView;
     }
 
     /**
-     * Sets the display size of the explosion, independent of frame size.
+     * Fija el tamaño con el que se muestra la explosión, independientemente del tamaño del fotograma.
      */
     public void setDisplaySize(int width, int height) {
         this.imageView.setFitWidth(width);

@@ -14,10 +14,10 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 /**
- * User music folder: {@code <Music>/DeltaBlade}.
+ * Carpeta de música del usuario: {@code <Música>/DeltaBlade}.
  * macOS/Windows: ~/Music.
  * Linux: XDG_MUSIC_DIR, ~/.config/user-dirs.dirs, xdg-user-dir,
- * then ~/Musik or ~/Music (German locale prefers Musik).
+ * y después ~/Musik o ~/Music (con el sistema en alemán se prefiere Musik).
  */
 final class MusicLocations {
 

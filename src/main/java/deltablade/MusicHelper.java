@@ -10,8 +10,9 @@ import static com.almasb.fxgl.dsl.FXGL.getAudioPlayer;
 import static com.almasb.fxgl.dsl.FXGL.getSettings;
 
 /**
- * Background music: loop the selected catalog track, honor on/off and volume.
- * Player tracks live in the OS music folder ({@code DeltaBlade}); bundled files seed that folder.
+ * Música de fondo: repite en bucle la canción elegida del catálogo y respeta el encendido/apagado y el volumen.
+ * Las canciones del jugador están en la carpeta de música del sistema ({@code DeltaBlade});
+ * los ficheros incluidos con el juego se copian ahí al principio.
  */
 public final class MusicHelper {
 
@@ -46,7 +47,7 @@ public final class MusicHelper {
     }
 
     /**
-     * Apply stored options: volume always, start or stop the loop as needed.
+     * Aplica las opciones guardadas: el volumen siempre, y arranca o para el bucle según haga falta.
      */
     public static void applyFromStore() {
         setVolume(OptionsStore.getMusicVolume());

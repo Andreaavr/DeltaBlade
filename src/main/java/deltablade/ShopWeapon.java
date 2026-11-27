@@ -1,8 +1,8 @@
 package deltablade;
 
 /**
- * Shop-exclusive special weapons. Ordinal 0 = NONE (grade bullets).
- * Prices and unlock gates are tunable constants.
+ * Armas especiales exclusivas de la tienda. Ordinal 0 = NONE (balas según el grado).
+ * Los precios y las condiciones de desbloqueo son constantes ajustables.
  */
 public enum ShopWeapon {
     NONE(0, "", "", "", ColorTag.CYAN),

@@ -24,7 +24,7 @@ import static com.almasb.fxgl.dsl.FXGL.getAppHeight;
 import static com.almasb.fxgl.dsl.FXGL.getAppWidth;
 
 /**
- * End-of-run bonus breakdown before hiscore entry.
+ * Desglose de los bonus al final de la partida, antes de introducir el récord.
  */
 public final class SettlementOverlay {
 

@@ -8,8 +8,8 @@ import javafx.scene.shape.Rectangle;
 import static com.almasb.fxgl.dsl.FXGL.getAppHeight;
 
 /**
- * Component for scrolling stars with vertical wrapping and optional twinkle effect.
- * During warp, stars stretch into streaks and accelerate.
+ * Componente para las estrellas que se desplazan en vertical en bucle, con efecto de parpadeo opcional.
+ * Durante el salto, las estrellas se alargan en estelas y aceleran.
  */
 public class StarComponent extends Component {
 

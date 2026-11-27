@@ -18,7 +18,7 @@ import java.net.URL;
 import java.util.Locale;
 
 /**
- * MP3/WAV playback through JavaSound so Linux works without GStreamer.
+ * Reproducción de MP3/WAV con JavaSound para que en Linux funcione sin GStreamer.
  */
 final class JavaSoundMusic {
 

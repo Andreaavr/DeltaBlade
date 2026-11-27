@@ -3,7 +3,7 @@ package deltablade;
 import java.util.prefs.Preferences;
 
 /**
- * Persistent player options. Survives restarts via Java Preferences.
+ * Opciones del jugador que se conservan al reiniciar gracias a Java Preferences.
  */
 public final class OptionsStore {
 

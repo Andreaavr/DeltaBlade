@@ -30,7 +30,7 @@ import static com.almasb.fxgl.dsl.FXGL.getAppHeight;
 import static com.almasb.fxgl.dsl.FXGL.getAppWidth;
 
 /**
- * Arcade hiscore table and name entry (1–10 letters).
+ * Tabla de récords estilo arcade e introducción del nombre (1-10 letras).
  */
 public final class HighScoreOverlay {
 

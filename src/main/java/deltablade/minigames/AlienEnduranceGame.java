@@ -26,8 +26,8 @@ import static com.almasb.fxgl.dsl.FXGL.getAppWidth;
 import static com.almasb.fxgl.dsl.FXGL.geti;
 
 /**
- * Alien Endurance: survive as long as possible against colourful alien swarms.
- * Own life counter (the main game's lives are never touched).
+ * Alien Endurance: sobrevive el mayor tiempo posible contra enjambres de alienígenas de colores.
+ * Tiene su propio contador de vidas (nunca se tocan las vidas del juego principal).
  */
 public class AlienEnduranceGame implements Minigame {
 
@@ -41,9 +41,9 @@ public class AlienEnduranceGame implements Minigame {
     final Random rng = new Random();
     MinigameHost host;
     final Group layer = new Group();
-    /** Aliens, shots, bullets, hearts. */
+    /** Alienígenas, disparos, balas y corazones. */
     final Group world = new Group();
-    /** HUD, boss bar, popups, settlement: always above the world, no per-frame toFront. */
+    /** HUD, barra del jefe, mensajes emergentes y resultados: siempre encima del mundo, sin toFront en cada fotograma. */
     final Group top = new Group();
     private Text hudText;
 
@@ -75,14 +75,14 @@ public class AlienEnduranceGame implements Minigame {
         boolean boss;
         double hitFlash;
         FlightGroup group;
-        // boss data
+        // datos del jefe
         boolean big;
         double swayPhase, bobPhase;
         double bossT, attackCd, specialCd, helperCd, homeX;
         int phase;
     }
 
-    /** One flight group: bonus when every member is shot down and none escaped. */
+    /** Un grupo de vuelo: da bonus si se derriba a todos sus miembros y no escapa ninguno. */
     static final class FlightGroup {
         int size, killed, escaped, stage;
     }
@@ -129,7 +129,7 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    // ---------- live duration bonus (every 10 s, shown big; settlement sums the same curve) ----------
+    // ---------- bonus de duración en directo (cada 10 s, en grande; los resultados suman la misma curva) ----------
 
     private double nextDurationMark = 10;
     private Text durationText;
@@ -170,7 +170,7 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    /** Survival points rise steeply: 100 * ((1 + t/30)^3 - 1). 1:00=2600, 2:00=12400, 5:00=133000. */
+    /** Los puntos por supervivencia crecen rápido: 100 * ((1 + t/30)^3 - 1). 1:00=2600, 2:00=12400, 5:00=133000. */
     static int timePoints(double seconds) {
         double f = 1 + seconds / 30.0;
         return (int) Math.round(100 * (f * f * f - 1));
@@ -269,9 +269,9 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    // ---------- hooks for later steps ----------
+    // ---------- enganches para pasos posteriores ----------
 
-    // ---------- falling hearts (extra lives) ----------
+    // ---------- corazones que caen (vidas extra) ----------
 
     private static final class Heart {
         javafx.scene.Node node;
@@ -341,7 +341,7 @@ public class AlienEnduranceGame implements Minigame {
         hearts.add(h);
     }
 
-    // ---------- settlement ----------
+    // ---------- resultados ----------
 
     static final int PTS_HEART = 500;
     static final int PTS_MINIBOSS = 3000;
@@ -484,7 +484,7 @@ public class AlienEnduranceGame implements Minigame {
         return t;
     }
 
-    // ---------- player ----------
+    // ---------- jugador ----------
 
     double playerX() {
         Entity p = host.player();
@@ -541,16 +541,16 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    // ---------- spawning ----------
+    // ---------- aparición de enemigos ----------
 
-    /** Danger level: rises by one every 30 seconds. */
+    /** Nivel de peligro: sube uno cada 30 segundos. */
     int stage() {
         return (int) (time / 30.0);
     }
 
     private int announcedStage;
 
-    /** Spawn pace multiplier (bosses slow the stream down). */
+    /** Multiplicador del ritmo de aparición (los jefes lo ralentizan). */
     double paceFactor() {
         return activeBoss != null ? 0.45 : 1.0;
     }
@@ -574,7 +574,7 @@ public class AlienEnduranceGame implements Minigame {
         boolean mirror = rng.nextBoolean();
         spawnGroupOnPath(kind, randomPath(st, mirror), count, speed, mixed);
         if (st >= 5 && rng.nextDouble() < 0.5) {
-            // twin group from the other side
+            // grupo gemelo desde el otro lado
             spawnGroupOnPath(rng.nextInt(kindsUnlocked), randomPath(st, !mirror), Math.max(3, count - 3), speed, mixed);
         }
     }
@@ -640,7 +640,7 @@ public class AlienEnduranceGame implements Minigame {
         return a;
     }
 
-    /** Squeeze every path point between the side rails so no alien flies over the sidebars. */
+    /** Ajusta cada punto de la trayectoria entre las barras laterales para que ningún alienígena vuele sobre ellas. */
     List<Point2D> insideField(List<Point2D> path, double half) {
         double min = host.playLeft() + half;
         double max = host.playRight() - half;
@@ -651,7 +651,7 @@ public class AlienEnduranceGame implements Minigame {
         return out;
     }
 
-    /** Path continues off the bottom/side so the group leaves the screen. */
+    /** La trayectoria sigue fuera por abajo o por un lado para que el grupo salga de la pantalla. */
     static List<Point2D> withExit(List<Point2D> path) {
         List<Point2D> out = new ArrayList<>(path);
         Point2D last = path.get(path.size() - 1);
@@ -662,7 +662,7 @@ public class AlienEnduranceGame implements Minigame {
         return out;
     }
 
-    // ---------- movement ----------
+    // ---------- movimiento ----------
 
     private void updateShots(double tpf) {
         Iterator<Shot> it = shots.iterator();
@@ -777,7 +777,7 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    // ---------- bosses ----------
+    // ---------- jefes ----------
 
     private static final int[] MINI_ROTATION = {
             SpriteSheets.ALIEN_JELLY, SpriteSheets.ALIEN_EYE, SpriteSheets.ALIEN_MOTH,
@@ -889,7 +889,7 @@ public class AlienEnduranceGame implements Minigame {
                     ring(a.x, a.y, 10, 150, Color.LIMEGREEN);
                     a.attackCd = 3.0;
                 }
-                default -> { // brain
+                default -> { // cerebro
                     fan(a.x, bottom, a.phase >= 2 ? 7 : 5, 1.0, 170, Color.ORCHID);
                     aimedShot(a.x, bottom, 220, Color.VIOLET);
                     a.attackCd = a.phase >= 2 ? 1.6 : 2.2;
@@ -980,7 +980,7 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    /** @return true when the alien has run off the end of its path. */
+    /** @return true cuando el alienígena ha llegado al final de su trayectoria. */
     private boolean followPath(Alien a, double tpf) {
         double step = a.speed * tpf;
         while (step > 0 && a.idx < a.path.size()) {
@@ -1085,7 +1085,7 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    // ---------- HUD ----------
+    // ---------- marcador (HUD) ----------
 
     String timeLabel() {
         int s = (int) time;

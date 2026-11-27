@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.util.Locale;
 
 /**
- * Renames jpackage output to DeltaBlade-&lt;version&gt;-&lt;os&gt;-&lt;arch&gt;.
+ * Renombra la salida de jpackage a DeltaBlade-&lt;versión&gt;-&lt;so&gt;-&lt;arquitectura&gt;.
  */
 public final class NameDist {
 

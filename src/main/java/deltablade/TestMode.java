@@ -5,11 +5,11 @@ import javafx.scene.input.KeyCode;
 import java.util.Optional;
 
 /**
- * Debug codes: tap the same number key three times
- * (000 Missile, 111 Meteor Challenge, 222 Cognitive, 333 Shield, 444 Warp, 555 UFO, 666 Bonus, 777 Attack, 888 Scoop, 999 Swarm).
- * Sequence 890 = Money cheat. Sequence 456 = Maze Escape minigame.
- * 789 Alien Endurance minigame. 357 Monster wave with alien boss right away.
- * Wellen-Tests: 505 Boss sofort, 147 Kreisel, 258 Zange, 369 Wasserfall, 159 Sturm.
+ * Códigos de depuración: pulsa tres veces la misma tecla numérica
+ * (000 misil, 111 desafío de meteoritos, 222 cognitivo, 333 escudo, 444 salto, 555 ovni, 666 bonus, 777 ataque, 888 scoop, 999 enjambre).
+ * Secuencia 890 = truco de dinero. Secuencia 456 = minijuego del laberinto.
+ * 789 minijuego Alien Endurance. 357 oleada de monstruos con jefe alienígena desde el principio.
+ * Pruebas de oleadas: 505 jefe inmediato, 147 torbellino, 258 tenaza, 369 cascada, 159 asalto.
  */
 public final class TestMode {
 
@@ -101,7 +101,7 @@ public final class TestMode {
     }
 
 
-    /** Wellen-Test-Codes: Ziffernfolge -> Wellen-Art. */
+    /** Códigos de prueba de oleadas: secuencia de dígitos -> tipo de oleada. */
     private static final int[][] WAVE_CODES = {
             {5, 0, 5}, {1, 4, 7}, {2, 5, 8}, {3, 6, 9}, {1, 5, 9}, {7, 8, 9}, {3, 5, 7}
     };

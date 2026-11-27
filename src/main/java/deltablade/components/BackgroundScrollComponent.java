@@ -6,7 +6,7 @@ import javafx.scene.image.ImageView;
 import static com.almasb.fxgl.dsl.FXGL.getAppHeight;
 
 /**
- * Vertically wraps two stacked tiles of a seamless space background.
+ * Desplaza en vertical y en bucle dos casillas apiladas de un fondo espacial continuo.
  */
 public class BackgroundScrollComponent extends Component {
 

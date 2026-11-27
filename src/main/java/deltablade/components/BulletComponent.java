@@ -18,11 +18,11 @@ public class BulletComponent extends Component {
     private String shotKind = "bolt";
     private double wobble;
 
-    /** Delay before the missile starts turning. */
+    /** Tiempo de espera antes de que el misil empiece a girar. */
     private static final double HOMING_ACQUIRE = 0.10;
-    /** How long it may steer after lock-on. Then it flies straight. */
+    /** Cuánto tiempo puede dirigirse después de fijar el blanco. Después vuela recto. */
     private static final double HOMING_DURATION = 1.45;
-    /** Stop steering in the last stretch above the player. */
+    /** Deja de dirigirse en el último tramo, por encima del jugador. */
     private static final double HOMING_CUTOFF_Y_RATIO = 0.84;
 
     public BulletComponent(double speedY, boolean isPlayerBullet) {
@@ -112,7 +112,7 @@ public class BulletComponent extends Component {
                 speedY = speedY / n * speed;
             }
         } catch (Exception ignored) {
-            // Player may be gone during reset.
+            // Puede que el jugador ya no exista durante el reinicio.
         }
     }
 

@@ -44,7 +44,7 @@ public class CoverMeteorComponent extends Component {
         return health;
     }
 
-    /** True if this rock's visible body sits over the world point (rotated sprite). */
+    /** True si la parte visible de esta roca está sobre ese punto del mundo (sprite girado). */
     public boolean coversPoint(double worldX, double worldY) {
         if (entity == null) {
             return false;

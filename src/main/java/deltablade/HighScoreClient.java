@@ -16,8 +16,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 /**
- * Outbound HTTPS client for the global top-10 on spoteroxe.de.
- * Players never open a port; the existing web host handles 443.
+ * Cliente HTTPS saliente para el top 10 global en spoteroxe.de.
+ * Los jugadores nunca abren ningún puerto; el servidor web existente atiende el 443.
  */
 public final class HighScoreClient {
 

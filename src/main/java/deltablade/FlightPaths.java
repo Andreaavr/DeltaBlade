@@ -92,7 +92,7 @@ public final class FlightPaths {
         ACHT,      // figura de ocho
         ZICKZACK,  // zigzag hacia abajo
         SCHWARM,   // enjambre suelto que se tambalea
-        REGEN      // steep diagonal rain
+        REGEN      // lluvia en diagonal muy inclinada
     }
 
     public static List<Point2D> crossing(Cross kind, boolean mirror, double seed) {

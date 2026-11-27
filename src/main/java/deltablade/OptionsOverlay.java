@@ -27,7 +27,7 @@ import static com.almasb.fxgl.dsl.FXGL.getAppHeight;
 import static com.almasb.fxgl.dsl.FXGL.getAppWidth;
 
 /**
- * Arcade-styled options panel: music on/off, music/effect volume, track picker.
+ * Panel de opciones estilo arcade: idioma, música sí/no, volumen de música y efectos, y selector de canción.
  */
 public final class OptionsOverlay {
 
@@ -314,7 +314,7 @@ public final class OptionsOverlay {
     }
 
     /**
-     * Fat click-and-drag bar: large hit target, live volume, persist on release.
+     * Barra gruesa de pulsar y arrastrar: zona de clic grande, volumen en directo y se guarda al soltar.
      */
     private static final class VolumeBar extends Group {
         private static final double TRACK_HEIGHT = 12;
