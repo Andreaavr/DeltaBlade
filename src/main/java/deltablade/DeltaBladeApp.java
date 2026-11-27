@@ -469,7 +469,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
 
         centerHorizontally(title, 150);
 
-        Text subtitle = new Text("- ARCADE SHOOTER -");
+        Text subtitle = new Text(I18n.tr("menu.subtitle"));
         subtitle.setFont(Font.font("Monospace", 16));
         subtitle.setFill(Color.LIGHTGRAY);
         centerHorizontally(subtitle, 188);
@@ -485,13 +485,13 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         titleHiLine.setFill(Color.GOLD);
         centerHorizontally(titleHiLine, 226);
 
-        Button startButton = createMenuButton("START GAME");
+        Button startButton = createMenuButton(I18n.tr("menu.start"));
         startButton.setOnAction(e -> startActualGame());
 
-        Button optionsButton = createMenuButton("OPTIONS");
+        Button optionsButton = createMenuButton(I18n.tr("menu.options"));
         optionsButton.setOnAction(e -> showOptions());
 
-        Button hiscoreButton = createMenuButton("HISCORE");
+        Button hiscoreButton = createMenuButton(I18n.tr("menu.hiscore"));
         hiscoreButton.setOnAction(e -> showHighScoreTable(null, null, true, true));
 
         VBox menuBox = new VBox(12, startButton, optionsButton, hiscoreButton);
@@ -500,17 +500,17 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         menuBox.setTranslateX(getAppWidth() / 2.0 - 130);
         menuBox.setTranslateY(240);
 
-        Text controls = new Text("ARROWS/A,D = MOVE | SPACE/X = FIRE (TAP)");
+        Text controls = new Text(I18n.tr("menu.controls"));
         controls.setFont(Font.font("Monospace", 12));
         controls.setFill(Color.GRAY);
         centerHorizontally(controls, 455);
 
-        Text extraInfo = new Text("B = SHOTS AT ONCE | W = WEAPON | EXTRA = LIFE");
+        Text extraInfo = new Text(I18n.tr("menu.extraInfo"));
         extraInfo.setFont(Font.font("Monospace", 12));
         extraInfo.setFill(Color.GOLD);
         centerHorizontally(extraInfo, 478);
 
-        Text optionsHint = new Text("ESC = OPTIONS");
+        Text optionsHint = new Text(I18n.tr("menu.optionsHint"));
         optionsHint.setFont(Font.font("Monospace", 11));
         optionsHint.setFill(Color.rgb(120, 160, 190));
         centerHorizontally(optionsHint, 500);
@@ -2473,12 +2473,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
 
     private String titleHiText(boolean global) {
         var table = global ? HighScoreClient.cachedEntries() : HighScoreStore.entries();
-        String tag = global ? "GLOBAL" : "LOCAL";
+        String tag = global ? I18n.tr("menu.hiGlobal") : I18n.tr("menu.hiLocal");
         if (table.isEmpty()) {
-            return "HI " + tag + "  ---  000000";
+            return tag + "  ---  000000";
         }
         var top = table.getFirst();
-        return "HI " + tag + "  " + top.name() + "  " + HighScoreStore.formatScore(top.score());
+        return tag + "  " + top.name() + "  " + HighScoreStore.formatScore(top.score());
     }
 
     private boolean enteringHighScoreName() {
@@ -4303,7 +4303,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         autoLamp.setTranslateY(autoY);
         getGameScene().addUINode(autoLamp);
 
-        autoLampText = new Text("AUTO");
+        autoLampText = new Text(I18n.tr("hud.auto"));
         autoLampText.setFont(Font.font("Monospace", FontWeight.BOLD, 8));
         autoLampText.setFill(Color.rgb(60, 60, 60));
         autoLampText.setTranslateX(xOffset + 13);
@@ -4322,7 +4322,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         getGameScene().addUINode(moneyLabel);
 
         int accuracyY = moneyY + 16;
-        accuracyHudText = new Text("ACC --%");
+        accuracyHudText = new Text(I18n.tr("hud.accuracyEmpty"));
         accuracyHudText.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
         accuracyHudText.setFill(Color.rgb(120, 220, 255));
         accuracyHudText.setTranslateX(xOffset);
@@ -4332,7 +4332,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         updateAccuracyHud();
 
         int legendY = accuracyY + 18;
-        Text coinCaption = new Text("COINS");
+        Text coinCaption = new Text(I18n.tr("hud.coins"));
         coinCaption.setFont(Font.font("Monospace", FontWeight.BOLD, 8));
         coinCaption.setFill(Color.rgb(160, 160, 170));
         coinCaption.setTranslateX(xOffset);
@@ -4394,7 +4394,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         hudEdge.setTranslateY(43);
         getGameScene().addUINode(hudEdge);
 
-        Text scoreCaption = new Text("SCORE");
+        Text scoreCaption = new Text(I18n.tr("hud.score"));
         scoreCaption.setFont(Font.font("Monospace", FontWeight.BOLD, 9));
         scoreCaption.setFill(Color.rgb(90, 210, 240));
         scoreCaption.setTranslateX(playX + 12);
@@ -4425,7 +4425,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         comboPlate.setTranslateY(8);
         getGameScene().addUINode(comboPlate);
 
-        Text comboCaption = new Text("COMBO");
+        Text comboCaption = new Text(I18n.tr("hud.combo"));
         comboCaption.setFont(Font.font("Monospace", FontWeight.BOLD, 8));
         comboCaption.setFill(Color.rgb(255, 170, 60));
         comboCaption.setTranslateX(comboX + 8);
@@ -4456,7 +4456,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         wavePlate.setTranslateY(8);
         getGameScene().addUINode(wavePlate);
 
-        Text waveCaption = new Text("WAVE");
+        Text waveCaption = new Text(I18n.tr("hud.wave"));
         waveCaption.setFont(Font.font("Monospace", FontWeight.BOLD, 8));
         waveCaption.setFill(Color.rgb(255, 210, 70));
         waveCaption.setTranslateX(waveX + 8);
@@ -4614,11 +4614,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         int shots = Math.max(0, geti(GameVars.SHOTS_FIRED));
         int hits = Math.max(0, geti(GameVars.HITS_LANDED));
         if (shots <= 0) {
-            accuracyHudText.setText("ACC --%");
+            accuracyHudText.setText(I18n.tr("hud.accuracyEmpty"));
             return;
         }
         int pct = (int) Math.round(100.0 * Math.min(1.0, (double) hits / (double) shots));
-        accuracyHudText.setText(String.format("ACC %d%%", pct));
+        accuracyHudText.setText(I18n.tr("hud.accuracy", pct));
     }
 
     private void refillWaveTimer() {

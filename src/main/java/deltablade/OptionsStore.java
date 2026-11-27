@@ -13,6 +13,10 @@ public final class OptionsStore {
     private static final String KEY_MUSIC_VOLUME = "musicVolume";
     private static final String KEY_EFFECT_VOLUME = "effectVolume";
     private static final String KEY_MUSIC_TRACK = "musicTrack";
+    private static final String KEY_LANGUAGE = "language";
+
+    /** Idioma por defecto del juego. */
+    public static final String DEFAULT_LANGUAGE = "es";
 
     public static final double DEFAULT_MUSIC_VOLUME = 0.55;
     public static final double DEFAULT_EFFECT_VOLUME = 0.55;
@@ -52,6 +56,25 @@ public final class OptionsStore {
             return;
         }
         PREFS.put(KEY_MUSIC_TRACK, trackId);
+    }
+
+
+    /**
+     * Devuelve el idioma elegido por el jugador.
+     *
+     * @return "es" para español o "en" para inglés
+     */
+    public static String getLanguage() {
+        return "en".equals(PREFS.get(KEY_LANGUAGE, DEFAULT_LANGUAGE)) ? "en" : "es";
+    }
+
+    /**
+     * Guarda el idioma elegido por el jugador.
+     *
+     * @param language "es" o "en"; cualquier otro valor se guarda como "es"
+     */
+    public static void setLanguage(String language) {
+        PREFS.put(KEY_LANGUAGE, "en".equals(language) ? "en" : "es");
     }
 
     public static int getAlienRecordSeconds() {
