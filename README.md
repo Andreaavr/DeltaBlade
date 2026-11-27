@@ -8,6 +8,42 @@
 
 ---
 
+## ☕ Versión mínima de Java
+
+**DeltaBlade necesita Java 21 o superior** para compilar y ejecutarse.
+
+### Motivo
+El código usa los métodos `getFirst()` y `getLast()` de `java.util.List`, que se añadieron en **Java 21** con las colecciones secuenciadas ([JEP 431](https://openjdk.org/jeps/431)):
+
+| Fichero | Uso |
+|---|---|
+| `HighScoreStore.java` | `table.getLast()` |
+| `DeltaBladeApp.java` | `table.getFirst()` |
+| `MusicCatalog.java` | `tracks.getFirst()` (2 veces) |
+
+### Cómo se ha comprobado
+Compilando el proyecto con versiones anteriores de Java:
+
+| Comando | Resultado |
+|---|---|
+| `mvn clean compile -Dmaven.compiler.release=17` | ❌ 4 errores: `cannot find symbol: method getFirst()/getLast()` |
+| `mvn clean compile -Dmaven.compiler.release=20` | ❌ los mismos 4 errores |
+| `mvn clean compile -Dmaven.compiler.release=21` | ✅ BUILD SUCCESS |
+
+### Comprobación automática
+El `pom.xml` incluye `maven-enforcer-plugin`, que en la fase `validate` comprueba que se usa **Java 21+** y **Maven 3.6.3+**. Con una versión inferior, la compilación se detiene con este mensaje:
+
+```
+DeltaBlade necesita Java 21 o superior (usa List.getFirst()/getLast(), añadidos en Java 21).
+```
+
+Para comprobarlo:
+```bash
+mvn validate
+```
+
+---
+
 ## 🇬🇧 English
 
 ### Requirements
