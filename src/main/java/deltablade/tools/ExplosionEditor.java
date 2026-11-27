@@ -107,7 +107,7 @@ public class ExplosionEditor extends Application {
 
     private final Random random = new Random();
     private long currentSeed = 12345L;
-    private String currentPresetName = "Schiff";
+    private String currentPresetName = "Ship";
 
     private List<Particle> particles = new ArrayList<>();
     private double shockwaveRadius = 0;
@@ -136,7 +136,7 @@ public class ExplosionEditor extends Application {
         primaryStage.setResizable(true);
         primaryStage.show();
 
-        applyPreset("schiff");
+        applyPreset("ship");
         startAnimation();
     }
 
@@ -196,7 +196,7 @@ public class ExplosionEditor extends Application {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        presetNameLabel = new Label(I18n.tr("editor.preset.schiff"));
+        presetNameLabel = new Label(I18n.tr("editor.preset.ship"));
         presetNameLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 16));
         presetNameLabel.setTextFill(Color.web("#58a6ff"));
 
@@ -432,12 +432,12 @@ public class ExplosionEditor extends Application {
         grid.setVgap(6);
 
         String[][] presets = {
-            {I18n.tr("editor.preset.treffer"), "treffer", "#f85149"},
-            {I18n.tr("editor.preset.schiff"), "schiff", "#f0883e"},
+            {I18n.tr("editor.preset.hit"), "hit", "#f85149"},
+            {I18n.tr("editor.preset.ship"), "ship", "#f0883e"},
             {I18n.tr("editor.preset.tough"), "tough", "#a371f7"},
             {I18n.tr("editor.preset.boss"), "boss", "#db61a2"},
             {I18n.tr("editor.preset.plasma"), "plasma", "#3fb950"},
-            {I18n.tr("editor.preset.funken"), "funken", "#58a6ff"}
+            {I18n.tr("editor.preset.sparks"), "sparks", "#58a6ff"}
         };
 
         for (int i = 0; i < presets.length; i++) {
@@ -588,7 +588,7 @@ public class ExplosionEditor extends Application {
         currentPresetName = presetId.substring(0, 1).toUpperCase() + presetId.substring(1);
 
         switch (presetId) {
-            case "treffer" -> {
+            case "hit" -> {
                 durationSlider.setValue(0.2);
                 frameCountSlider.setValue(6);
                 frameSizeCombo.setValue(32);
@@ -609,7 +609,7 @@ public class ExplosionEditor extends Application {
                 debrisToggle.setSelected(true);
                 flashToggle.setSelected(true);
             }
-            case "schiff" -> {
+            case "ship" -> {
                 durationSlider.setValue(0.5);
                 frameCountSlider.setValue(8);
                 frameSizeCombo.setValue(64);
@@ -693,7 +693,7 @@ public class ExplosionEditor extends Application {
                 debrisToggle.setSelected(false);
                 flashToggle.setSelected(true);
             }
-            case "funken" -> {
+            case "sparks" -> {
                 durationSlider.setValue(0.35);
                 frameCountSlider.setValue(8);
                 frameSizeCombo.setValue(48);
@@ -1214,7 +1214,7 @@ public class ExplosionEditor extends Application {
             Path explosionsDir = Path.of("src/main/resources/assets/textures/explosions");
             Files.createDirectories(explosionsDir);
 
-            String[] presets = {"treffer", "schiff", "tough", "boss", "plasma", "funken"};
+            String[] presets = {"hit", "ship", "tough", "boss", "plasma", "sparks"};
 
             for (String preset : presets) {
                 applyPreset(preset);
@@ -1263,7 +1263,7 @@ public class ExplosionEditor extends Application {
                 Files.writeString(explosionsDir.resolve(jsonFilename), json);
             }
 
-            applyPreset("schiff");
+            applyPreset("ship");
             System.out.println("Sample explosions exported to: " + explosionsDir.toAbsolutePath());
 
         } catch (Exception e) {

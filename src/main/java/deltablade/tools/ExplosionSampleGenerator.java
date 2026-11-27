@@ -68,8 +68,8 @@ public class ExplosionSampleGenerator {
 
             System.out.println("Generating sample explosions...");
 
-            gen.generatePreset("treffer", explosionsDir);
-            gen.generatePreset("schiff", explosionsDir);
+            gen.generatePreset("hit", explosionsDir);
+            gen.generatePreset("ship", explosionsDir);
             gen.generatePreset("boss", explosionsDir);
 
             System.out.println("Sample explosions exported to: " + explosionsDir.toAbsolutePath());
@@ -138,7 +138,7 @@ public class ExplosionSampleGenerator {
         currentSeed = presetId.hashCode() * 12345L;
 
         switch (presetId) {
-            case "treffer" -> {
+            case "hit" -> {
                 duration = 0.2;
                 frameCount = 6;
                 frameSize = 32;
@@ -159,7 +159,7 @@ public class ExplosionSampleGenerator {
                 debrisEnabled = true;
                 flashEnabled = true;
             }
-            case "schiff" -> {
+            case "ship" -> {
                 duration = 0.5;
                 frameCount = 8;
                 frameSize = 64;

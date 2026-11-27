@@ -105,7 +105,7 @@ public final class TestMode {
     private static final int[][] WAVE_CODES = {
             {5, 0, 5}, {1, 4, 7}, {2, 5, 8}, {3, 6, 9}, {1, 5, 9}, {7, 8, 9}, {3, 5, 7}
     };
-    private static final String[] WAVE_NAMES = {"BOSS", "KREISEL", "ZANGE", "WASSERFALL", "STURM", "ALIEN_ENDURANCE", "MONSTER_BOSS"};
+    private static final String[] WAVE_NAMES = {"BOSS", "SPINNER", "PINCER", "CASCADE", "RUSH", "ALIEN_ENDURANCE", "MONSTER_BOSS"};
     private static final int[] WAVE_SEQ = new int[WAVE_CODES.length];
     private static final long[] WAVE_SEQ_AT = new long[WAVE_CODES.length];
 

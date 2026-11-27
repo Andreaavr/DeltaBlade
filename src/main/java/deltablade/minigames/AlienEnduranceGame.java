@@ -581,22 +581,22 @@ public class AlienEnduranceGame implements Minigame {
     }
 
     private List<Point2D> randomPath(int st, boolean mirror) {
-        List<Object> pool = new ArrayList<>(List.of(FlightPaths.Kind.BOGEN, FlightPaths.Kind.WELLE, FlightPaths.Kind.S_KURVE));
+        List<Object> pool = new ArrayList<>(List.of(FlightPaths.Kind.ARC, FlightPaths.Kind.WAVE, FlightPaths.Kind.S_CURVE));
         if (st >= 1) {
-            pool.add(FlightPaths.Cross.ZICKZACK);
-            pool.add(FlightPaths.Kind.SCHLEIFE);
+            pool.add(FlightPaths.Cross.ZIGZAG);
+            pool.add(FlightPaths.Kind.LOOP);
         }
         if (st >= 2) {
-            pool.add(FlightPaths.Kind.KREIS);
-            pool.add(FlightPaths.Cross.ACHT);
+            pool.add(FlightPaths.Kind.CIRCLE);
+            pool.add(FlightPaths.Cross.FIGURE_EIGHT);
         }
         if (st >= 3) {
-            pool.add(FlightPaths.Kind.SPIRALE);
-            pool.add(FlightPaths.Cross.SCHWARM);
+            pool.add(FlightPaths.Kind.SPIRAL);
+            pool.add(FlightPaths.Cross.SWARM);
         }
         if (st >= 4) {
-            pool.add(FlightPaths.Cross.REGEN);
-            pool.add(FlightPaths.Kind.HAKEN);
+            pool.add(FlightPaths.Cross.RAIN);
+            pool.add(FlightPaths.Kind.HOOK);
         }
         Object pick = pool.get(rng.nextInt(pool.size()));
         if (pick instanceof FlightPaths.Cross c) {
