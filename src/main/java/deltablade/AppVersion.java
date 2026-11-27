@@ -4,7 +4,7 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * Release version from the Maven build, e.g. 1.0.0.
+ * Versión de la release tomada de la compilación de Maven, por ejemplo 1.0.0.
  */
 public final class AppVersion {
 

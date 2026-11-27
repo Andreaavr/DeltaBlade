@@ -8,8 +8,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Shop pictures. First choice: assets/textures/shop/shop_<item>.png (128x128, transparent).
- * Otherwise an existing game image, enlarged pixel-exact so it stays crisp. null = "NO IMAGE".
+ * Imágenes de la tienda. Primera opción: assets/textures/shop/shop_<objeto>.png (128x128, transparente).
+ * Si no existe, una imagen del juego ampliada píxel a píxel para que quede nítida. null = "NO IMAGE".
  */
 final class ShopImages {
 

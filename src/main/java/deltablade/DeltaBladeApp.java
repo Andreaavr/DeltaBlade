@@ -110,7 +110,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private boolean extraTimeWarned = false;
     private boolean ufoSpawnedThisWave = false;
     private double extraTimePulse = 0;
-    /** Seconds remaining after HURRY UP before the UFO may spawn. */
+    /** Segundos que quedan después de HURRY UP antes de que pueda aparecer el ovni. */
     private double hurryUfoDelay = 0;
     private boolean pendingHurryUfo = false;
     private double scoopHitLock = 0;
@@ -149,8 +149,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         settings.setPreserveResizeRatio(true);
         settings.setScaleAffectedOnResize(true);
         settings.setFullScreenAllowed(true);
-        // LaunchServices (Doppelklick) startet mit cwd "/" oder dem read-only DMG.
-        // FXGL legt sonst "logs/" an und beendet sich still mit Read-only file system.
+        // LaunchServices (doble clic) arranca con el directorio de trabajo "/" o con el DMG de solo lectura.
+        // Si no, FXGL crea "logs/" y se cierra sin avisar con el error Read-only file system.
         settings.setFileSystemWriteAllowed(false);
     }
 
@@ -469,7 +469,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
 
         centerHorizontally(title, 150);
 
-        Text subtitle = new Text("- ARCADE SHOOTER -");
+        Text subtitle = new Text(I18n.tr("menu.subtitle"));
         subtitle.setFont(Font.font("Monospace", 16));
         subtitle.setFill(Color.LIGHTGRAY);
         centerHorizontally(subtitle, 188);
@@ -485,13 +485,13 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         titleHiLine.setFill(Color.GOLD);
         centerHorizontally(titleHiLine, 226);
 
-        Button startButton = createMenuButton("START GAME");
+        Button startButton = createMenuButton(I18n.tr("menu.start"));
         startButton.setOnAction(e -> startActualGame());
 
-        Button optionsButton = createMenuButton("OPTIONS");
+        Button optionsButton = createMenuButton(I18n.tr("menu.options"));
         optionsButton.setOnAction(e -> showOptions());
 
-        Button hiscoreButton = createMenuButton("HISCORE");
+        Button hiscoreButton = createMenuButton(I18n.tr("menu.hiscore"));
         hiscoreButton.setOnAction(e -> showHighScoreTable(null, null, true, true));
 
         VBox menuBox = new VBox(12, startButton, optionsButton, hiscoreButton);
@@ -500,17 +500,17 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         menuBox.setTranslateX(getAppWidth() / 2.0 - 130);
         menuBox.setTranslateY(240);
 
-        Text controls = new Text("ARROWS/A,D = MOVE | SPACE/X = FIRE (TAP)");
+        Text controls = new Text(I18n.tr("menu.controls"));
         controls.setFont(Font.font("Monospace", 12));
         controls.setFill(Color.GRAY);
         centerHorizontally(controls, 455);
 
-        Text extraInfo = new Text("B = SHOTS AT ONCE | W = WEAPON | EXTRA = LIFE");
+        Text extraInfo = new Text(I18n.tr("menu.extraInfo"));
         extraInfo.setFont(Font.font("Monospace", 12));
         extraInfo.setFill(Color.GOLD);
         centerHorizontally(extraInfo, 478);
 
-        Text optionsHint = new Text("ESC = OPTIONS");
+        Text optionsHint = new Text(I18n.tr("menu.optionsHint"));
         optionsHint.setFont(Font.font("Monospace", 11));
         optionsHint.setFill(Color.rgb(120, 160, 190));
         centerHorizontally(optionsHint, 500);
@@ -574,8 +574,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
 
     /**
-     * FXGL's bundled cursor image is corrupt pixel data, not a real pointer.
-     * Replace it with the OS cursor so we don't show a giant blob.
+     * La imagen de cursor que trae FXGL son píxeles corruptos, no un puntero real.
+     * Se sustituye por el cursor del sistema para no mostrar una mancha gigante.
      */
     private void applySystemCursor() {
         getGameScene().setCursor(Cursor.DEFAULT);
@@ -688,8 +688,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
 
     /**
-     * Show a high-contrast full-width banner at the top of the screen.
-     * Visible over title screen and during gameplay.
+     * Muestra un aviso de alto contraste a todo lo ancho, en la parte superior de la pantalla.
+     * Se ve sobre la pantalla de título y durante la partida.
      */
     private void showBanner(String message, Color textColor) {
         showBanner(message, textColor, 2.0);
@@ -739,7 +739,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         activeBanners.add(banner);
         getGameScene().addUINode(banner);
 
-        // JavaFX timeline — must work while the game engine is paused (shop/options).
+        // Timeline de JavaFX: tiene que funcionar aunque el motor del juego esté en pausa (tienda/opciones).
         PauseTransition hide = new PauseTransition(Duration.seconds(durationSeconds));
         hide.setOnFinished(e -> {
             getGameScene().removeUINode(banner);
@@ -936,51 +936,51 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
 
         switch (waveType) {
             case BOSS -> {
-                message = "BOSS - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.boss", geti(GameVars.LEVEL));
                 color = Color.MAGENTA;
             }
             case KAMIKAZE -> {
-                message = "KAMIKAZE - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.kamikaze", geti(GameVars.LEVEL));
                 color = Color.ORANGERED;
             }
             case BONUS -> {
-                message = "BONUS - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.bonus", geti(GameVars.LEVEL));
                 color = Color.GOLD;
             }
             case RANK -> {
-                message = "RANK - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.rank", geti(GameVars.LEVEL));
                 color = Color.HOTPINK;
             }
             case PEARL -> {
-                message = "ATTACK - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.attack", geti(GameVars.LEVEL));
                 color = Color.AQUA;
             }
             case MONSTER -> {
-                message = "SWARM - WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.swarm", geti(GameVars.LEVEL));
                 color = Color.MEDIUMPURPLE;
             }
-            case KREISEL -> {
-                message = "SPINNER - WAVE " + geti(GameVars.LEVEL);
+            case SPINNER -> {
+                message = I18n.tr("wave.spinner", geti(GameVars.LEVEL));
                 color = Color.LIGHTGREEN;
             }
-            case ZANGE -> {
-                message = "PINCER - WAVE " + geti(GameVars.LEVEL);
+            case PINCER -> {
+                message = I18n.tr("wave.pincer", geti(GameVars.LEVEL));
                 color = Color.DEEPSKYBLUE;
             }
-            case WASSERFALL -> {
-                message = "CASCADE - WAVE " + geti(GameVars.LEVEL);
+            case CASCADE -> {
+                message = I18n.tr("wave.cascade", geti(GameVars.LEVEL));
                 color = Color.LIGHTSKYBLUE;
             }
-            case STURM -> {
-                message = "RUSH - WAVE " + geti(GameVars.LEVEL);
+            case RUSH -> {
+                message = I18n.tr("wave.rush", geti(GameVars.LEVEL));
                 color = Color.ORANGE;
             }
             case METEOR -> {
-                message = "METEOR CHALLENGE";
+                message = I18n.tr("wave.meteor");
                 color = Color.SANDYBROWN;
             }
             default -> {
-                message = "WAVE " + geti(GameVars.LEVEL);
+                message = I18n.tr("wave.normal", geti(GameVars.LEVEL));
                 color = Color.YELLOW;
             }
         }
@@ -1000,13 +1000,13 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
 
     public void showBonusPerfect(int bonus) {
         boolean roundClear = bonus >= GameVars.BONUS_ROUND_PERFECT_SCORE;
-        showBanner("PERFECT", Color.GOLD, roundClear ? 2.2 : 1.6);
+        showBanner(I18n.tr("banner.perfect"), Color.GOLD, roundClear ? 2.2 : 1.6);
         showScorePopup(bonus, Color.GOLD, roundClear ? 48 : 36);
         SoundHelper.play("bonus_perfect.wav");
     }
 
     public void showSquadCombo(int bonus) {
-        showBanner("SQUAD COMBO", Color.ORANGE, 1.8);
+        showBanner(I18n.tr("banner.squadCombo"), Color.ORANGE, 1.8);
         showScorePopup(bonus, Color.ORANGE, 36);
         if (comboPlate != null) {
             comboPlate.setStroke(Color.GOLD);
@@ -1080,7 +1080,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         if (gameOver) {
             return;
         }
-        // Minigames must get Space/X even if a missile/steer path would otherwise swallow it.
+        // Los minijuegos deben recibir Espacio/X aunque el misil dirigido se los fuera a quedar.
         if (minigameActive) {
             if (activeMinigame != null) {
                 activeMinigame.onFirePress();
@@ -1239,7 +1239,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         if (shopWeapon == ShopWeapon.NEEDLE_LASER
                 || shopWeapon == ShopWeapon.TWIN_BEAM
                 || shopWeapon == ShopWeapon.SWEEP_LASER) {
-            // Continuous beams are driven from onUpdate while fire is held / autofire.
+            // Los rayos continuos se controlan desde onUpdate mientras se mantiene el disparo o el autodisparo.
             return;
         }
 
@@ -1558,7 +1558,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         SoundHelper.play("explode_ship.wav");
     }
 
-    /** Boss Phase 2+: kleine Helfer stuerzen sich auf den Spieler. */
+    /** Jefe en fase 2+: pequeños ayudantes se lanzan sobre el jugador. */
     public void spawnBossHelpers(Entity boss, int count) {
         if (boss == null || !boss.isActive() || player == null) {
             return;
@@ -1582,7 +1582,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private int alienBossCount = 0;
     private boolean alienBossPending = false;
 
-    /** Monster wave: a big alien from the new sheet joins the fight (Crab, Brain, Eye in turn). */
+    /** Oleada de monstruos: un alienígena grande de la hoja nueva se une al combate (cangrejo, cerebro y ojo por turnos). */
     private void spawnAlienBoss() {
         alienBossPending = false;
         if (gameOver || minigameActive || warping || player == null
@@ -1608,12 +1608,13 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 .put("alienBoss", kind)
                 .put("alienCycle", alienBossCount));
         refillWaveTimer();
-        String name = kind == SpriteSheets.ALIEN_CRAB ? "GIANT CRAB" : kind == SpriteSheets.ALIEN_BRAIN ? "BRAIN OCTOPUS" : "GIANT EYE";
-        showBanner("WARNING!  " + name, Color.MEDIUMORCHID, 1.8);
+        String name = kind == SpriteSheets.ALIEN_CRAB ? I18n.tr("boss.crab")
+                : kind == SpriteSheets.ALIEN_BRAIN ? I18n.tr("boss.brain") : I18n.tr("boss.eye");
+        showBanner(I18n.tr("banner.warning", name), Color.MEDIUMORCHID, 1.8);
         SoundHelper.play("ufo_appear.wav");
     }
 
-    /** Brain Octopus calls little monsters that dive at the player. */
+    /** El pulpo cerebro llama a monstruos pequeños que se lanzan en picado sobre el jugador. */
     public void spawnAlienBossHelpers(Entity boss, int count) {
         if (boss == null || !boss.isActive() || player == null) {
             return;
@@ -1636,7 +1637,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
     }
 
-    /** Boss shot aimed at the player. */
+    /** Disparo del jefe apuntado al jugador. */
     public void spawnAimedBossBullet(double x, double y, double speed) {
         if (player == null) {
             spawnEnemyBullet(x, y, 0, speed, false);
@@ -1648,12 +1649,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         spawnEnemyBullet(x, y, dx / d * speed, dy / d * speed, false);
     }
 
-    /** Boss-Schuss mit freier Richtung. */
+    /** Disparo del jefe en cualquier dirección. */
     public void spawnBossBullet(double x, double y, double vx, double vy) {
         spawnEnemyBullet(x, y, vx, vy, false);
     }
 
-    // --- Boss-Lebensbalken oben im Bild -------------------------------------
+    // --- Barra de vida del jefe en la parte superior --------------------------
     private Group bossBar;
     private javafx.scene.shape.Rectangle bossBarFill;
     private Text bossBarLabel;
@@ -1684,7 +1685,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             bg.setTranslateY(-2);
             bossBarFill = new javafx.scene.shape.Rectangle(BOSS_BAR_W, 10);
             bossBarFill.setFill(Color.ORANGERED);
-            bossBarLabel = new Text("BOSS");
+            bossBarLabel = new Text(I18n.tr("boss.bar"));
             bossBarLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 12));
             bossBarLabel.setFill(Color.WHITE);
             bossBarLabel.setTranslateY(-6);
@@ -1699,11 +1700,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         bossBarFill.setFill(ratio > 0.5 ? Color.ORANGE : ratio > 0.25 ? Color.ORANGERED : Color.RED);
         bossBarLabel.setText(boss.bossLabel());
         bossBar.setVisible(true);
-        // Nach Neustart werden alle UI-Knoten entfernt -> Balken wieder einhaengen.
+        // Al reiniciar se eliminan todos los nodos de la interfaz -> hay que volver a añadir la barra.
         if (bossBar.getParent() == null) {
             getGameScene().addUINode(bossBar);
         }
-        // Immer ganz oben zeichnen (Banner, Laser, HUD kommen spaeter dazu).
+        // Dibujarla siempre encima de todo (los avisos, láseres y el HUD se añaden después).
         bossBar.toFront();
     }
 
@@ -1966,7 +1967,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         double roll = RANDOM.nextDouble();
 
         if (roll < GameVars.MINIGAME_DROP_CHANCE) {
-            // Equal share: meteor / cognitive / maze / alien endurance (same total rarity).
+            // Reparto a partes iguales: meteoritos / cognitivo / laberinto / alien endurance (misma rareza total).
             int which = RANDOM.nextInt(4);
             String mini = switch (which) {
                 case 0 -> "meteorPickup";
@@ -2090,8 +2091,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
 
     /**
-     * Boss death: 3-5 staggered big explosions with irregular audio.
-     * First explosion is immediate with shockwave/flash; others are subdued.
+     * Muerte del jefe: 3-5 explosiones grandes escalonadas con sonido irregular.
+     * La primera explosión es inmediata, con onda expansiva y destello; las demás son más suaves.
      */
     private void spawnBossDeathSequence(double centerX, double centerY) {
         int boomCount = 3 + RANDOM.nextInt(3);
@@ -2150,7 +2151,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
 
     private void showExtraLifeFlash() {
-        showBanner("+1 LIFE!", Color.GOLD, 1.5);
+        showBanner(I18n.tr("banner.extraLife"), Color.GOLD, 1.5);
     }
 
     private void applyPickup(PickupComponent.PickupType type) {
@@ -2160,7 +2161,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                     inc(GameVars.WEAPON_GRADE, 1);
                 }
                 inc(GameVars.SCORE, 50);
-                showBanner("WEAPON", Color.GOLD, 1.2);
+                showBanner(I18n.tr("banner.weapon"), Color.GOLD, 1.2);
                 SoundHelper.play("weapon.wav");
             }
             case EXTRA_AMMO -> {
@@ -2168,7 +2169,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                     inc(GameVars.AMMO_CAP, 1);
                 }
                 inc(GameVars.SCORE, 25);
-                showBanner("AMMO", Color.CYAN, 1.2);
+                showBanner(I18n.tr("banner.ammo"), Color.CYAN, 1.2);
                 SoundHelper.play("ammo.wav");
             }
             case EXTRA_LIFE -> {
@@ -2180,7 +2181,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             case AUTOFIRE -> {
                 set(GameVars.AUTOFIRE, true);
                 inc(GameVars.SCORE, 100);
-                showBanner("AUTO", Color.CYAN, 1.2);
+                showBanner(I18n.tr("banner.auto"), Color.CYAN, 1.2);
                 SoundHelper.play("autofire.wav");
             }
             case METEOR -> {
@@ -2203,7 +2204,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             case EXTRA_TIME -> {
                 changeLevelTime(GameVars.LEVEL_TIME_PICKUP);
                 inc(GameVars.SCORE, 25);
-                showBanner("TIME +" + GameVars.LEVEL_TIME_PICKUP, Color.LIMEGREEN, 1.1);
+                showBanner(I18n.tr("banner.time", GameVars.LEVEL_TIME_PICKUP), Color.LIMEGREEN, 1.1);
                 SoundHelper.play("extra_time.wav");
             }
             case SHIELD -> {
@@ -2211,23 +2212,23 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                     player.getComponent(PlayerComponent.class).addShield(GameVars.SHIELD_DURATION);
                 }
                 inc(GameVars.SCORE, 25);
-                showBanner("SHIELD +" + (int) GameVars.SHIELD_DURATION, Color.AQUA, 1.1);
+                showBanner(I18n.tr("banner.shield", (int) GameVars.SHIELD_DURATION), Color.AQUA, 1.1);
                 SoundHelper.play("shield.wav");
                 updateShieldHud();
             }
             case SCOOP -> {
                 attachScoops();
                 inc(GameVars.SCORE, 25);
-                showBanner("SCOOP", Color.LIMEGREEN, 1.1);
+                showBanner(I18n.tr("banner.scoop"), Color.LIMEGREEN, 1.1);
                 SoundHelper.play("scoop.wav");
             }
             case MISSILE -> {
                 inc(GameVars.SCORE, 25);
                 if (findActiveMissile() == null) {
                     launchPlayerMissile();
-                    showBanner("MISSILE  SPACE = STEER", Color.ORANGERED, 1.2);
+                    showBanner(I18n.tr("banner.missileSteer"), Color.ORANGERED, 1.2);
                 } else {
-                    showBanner("MISSILE LIVE", Color.ORANGERED, 1.0);
+                    showBanner(I18n.tr("banner.missileLive"), Color.ORANGERED, 1.0);
                 }
             }
             case SKULL -> applySkullCurse();
@@ -2287,7 +2288,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         if (waveManager.hasPendingSpawns() || hasLiveCombatEnemies() || alienBossPending) {
             return;
         }
-        // Nach dem Boss: kurze Sammel-Phase, damit man die Beute holen kann.
+        // Después del jefe: una fase corta de recogida para poder coger el botín.
         if ((waveManager.getCurrentWaveType() == WaveManager.WaveType.BOSS || waveManager.alienBossThisWave())
                 && !bossCollectDone) {
             if (bossCollectLeft <= 0) {
@@ -2297,9 +2298,9 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
         waveTransition = true;
         set(GameVars.ENEMIES_REMAINING, 0);
-        // Warp + Shop: frueher hing das an der Kamikaze-Welle in Level 10, 20, 30 ...
-        // Seit die Wellen-Reihenfolge zufaellig ist, kommt der Warp fest alle WARP_EVERY Level
-        // (und zusaetzlich nach jeder Kamikaze-Welle).
+        // Salto + tienda: antes dependía de la oleada kamikaze de los niveles 10, 20, 30...
+        // Desde que el orden de las oleadas es aleatorio, el salto llega siempre cada WARP_EVERY niveles
+        // (y además después de cada oleada kamikaze).
         int lvl = geti(GameVars.LEVEL);
         if ((lvl > 0 && lvl % GameVars.WARP_EVERY == 0)
                 || waveManager.getCurrentWaveType() == WaveManager.WaveType.KAMIKAZE) {
@@ -2322,7 +2323,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             EntityType.PICKUP, EntityType.COIN, EntityType.RANK_MARKER, EntityType.EXTRA_LETTER_PICKUP
     };
 
-    /** Sammel-Phase nach dem Boss: Beute treibt sanft zum Spieler. Max. 5 s oder bis alles weg ist. */
+    /** Fase de recogida después del jefe: el botín flota suavemente hacia el jugador. Máx. 5 s o hasta recogerlo todo. */
     private void updateBossCollect(double tpf) {
         if (bossCollectLeft <= 0 || bossCollectDone) {
             return;
@@ -2421,15 +2422,15 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         int accuracyBonus = (int) Math.floor(hitRate * hitRate * GameVars.SETTLEMENT_ACCURACY_CAP);
 
         List<SettlementOverlay.Line> lines = new ArrayList<>();
-        lines.add(new SettlementOverlay.Line("RANK", geti(GameVars.RANK) * GameVars.SETTLEMENT_RANK));
-        lines.add(new SettlementOverlay.Line("ACCURACY", accuracyBonus));
-        lines.add(new SettlementOverlay.Line("COMBOS", geti(GameVars.SQUAD_COMBOS) * GameVars.SETTLEMENT_COMBO));
-        lines.add(new SettlementOverlay.Line("METEOR", geti(GameVars.METEOR_WINS) * GameVars.SETTLEMENT_METEOR));
-        lines.add(new SettlementOverlay.Line("COGNITIVE", geti(GameVars.COGNITIVE_WINS) * GameVars.SETTLEMENT_COGNITIVE));
-        lines.add(new SettlementOverlay.Line("MAZE", geti(GameVars.MAZE_WINS) * GameVars.SETTLEMENT_MAZE));
-        lines.add(new SettlementOverlay.Line("WAVES", Math.max(0, geti(GameVars.LEVEL) - 1) * GameVars.SETTLEMENT_WAVE));
-        lines.add(new SettlementOverlay.Line("CASH", Math.max(0, geti(GameVars.MONEY)) * GameVars.SETTLEMENT_CASH_MULT));
-        lines.add(new SettlementOverlay.Line("PERFECT", geti(GameVars.BONUS_PERFECT_CLEARS) * GameVars.SETTLEMENT_PERFECT));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.rank"), geti(GameVars.RANK) * GameVars.SETTLEMENT_RANK));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.accuracy"), accuracyBonus));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.combos"), geti(GameVars.SQUAD_COMBOS) * GameVars.SETTLEMENT_COMBO));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.meteor"), geti(GameVars.METEOR_WINS) * GameVars.SETTLEMENT_METEOR));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.cognitive"), geti(GameVars.COGNITIVE_WINS) * GameVars.SETTLEMENT_COGNITIVE));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.maze"), geti(GameVars.MAZE_WINS) * GameVars.SETTLEMENT_MAZE));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.waves"), Math.max(0, geti(GameVars.LEVEL) - 1) * GameVars.SETTLEMENT_WAVE));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.cash"), Math.max(0, geti(GameVars.MONEY)) * GameVars.SETTLEMENT_CASH_MULT));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.perfect"), geti(GameVars.BONUS_PERFECT_CLEARS) * GameVars.SETTLEMENT_PERFECT));
         return lines;
     }
 
@@ -2473,12 +2474,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
 
     private String titleHiText(boolean global) {
         var table = global ? HighScoreClient.cachedEntries() : HighScoreStore.entries();
-        String tag = global ? "GLOBAL" : "LOCAL";
+        String tag = global ? I18n.tr("menu.hiGlobal") : I18n.tr("menu.hiLocal");
         if (table.isEmpty()) {
-            return "HI " + tag + "  ---  000000";
+            return tag + "  ---  000000";
         }
         var top = table.getFirst();
-        return "HI " + tag + "  " + top.name() + "  " + HighScoreStore.formatScore(top.score());
+        return tag + "  " + top.name() + "  " + HighScoreStore.formatScore(top.score());
     }
 
     private boolean enteringHighScoreName() {
@@ -2514,7 +2515,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
 
     private void showHighScoreTable(Integer localHighlight, Integer globalHighlight, boolean fromTitle, boolean fetchRemote) {
         hideHighScoreOverlay();
-        String closeLabel = fromTitle ? "BACK" : "R = RESTART";
+        String closeLabel = fromTitle ? I18n.tr("hiscore.back") : I18n.tr("hiscore.restart");
         Runnable onClose = fromTitle ? this::hideHighScoreOverlay : null;
         highScoreOverlay = HighScoreOverlay.table(localHighlight, globalHighlight, closeLabel, onClose);
         highScoreRoot = highScoreOverlay.getRoot();
@@ -2841,7 +2842,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         cancelGetReady();
         minigameActive = true;
         if (waveManager != null) {
-            waveManager.stop(); // no late main-game spawns during the minigame
+            waveManager.stop(); // que no aparezcan enemigos del juego principal durante el minijuego
         }
         clearWaveEntities();
         activeMinigame = game;
@@ -2920,7 +2921,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         warpElapsed = 0;
         clearScoops();
         clearWaveEntities();
-        showBanner("WARP", Color.CYAN, 2.2);
+        showBanner(I18n.tr("banner.warp"), Color.CYAN, 2.2);
         MusicHelper.stop();
         SoundHelper.play("warp.mp3");
         ensureWarpFlash();
@@ -3018,7 +3019,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 }
                 inc(GameVars.MONEY, -item.price());
                 set(GameVars.AUTOFIRE, true);
-                showBanner("AUTO", Color.CYAN, 1.1);
+                showBanner(I18n.tr("banner.auto"), Color.CYAN, 1.1);
                 SoundHelper.play("autofire.wav");
                 yield true;
             }
@@ -3033,14 +3034,14 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             }
             inc(GameVars.MONEY, -item.price());
             inc(GameVars.AMMO_CAP, 1);
-            showBanner("AMMO", Color.CYAN, 1.1);
+            showBanner(I18n.tr("banner.ammo"), Color.CYAN, 1.1);
             SoundHelper.play("ammo.wav");
             return true;
         }
         if (item == ShopItem.EXTRA_TIME) {
             inc(GameVars.MONEY, -item.price());
             changeLevelTime(5);
-            showBanner("TIME +5", Color.LIMEGREEN, 1.1);
+            showBanner(I18n.tr("banner.time", 5), Color.LIMEGREEN, 1.1);
             SoundHelper.play("extra_time.wav");
             return true;
         }
@@ -3161,8 +3162,8 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             clearLaserBeams();
             return;
         }
-        // Strahl-Waffen feuern NUR, solange Leertaste/X wirklich gedrueckt ist.
-        // (Autofire zaehlt hier nicht: ein Strahl ist ohnehin Dauerfeuer.)
+        // Las armas de rayo disparan SOLO mientras Espacio/X está realmente pulsado.
+        // (Aquí el autodisparo no cuenta: un rayo ya es fuego continuo.)
         installFireKeyTracking();
         boolean wantFire = fireKeyPhysicallyDown();
         if (weapon == ShopWeapon.SWEEP_LASER) {
@@ -3176,7 +3177,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private boolean spaceDown = false;
     private boolean xDown = false;
 
-    /** Eigene, verlaessliche Erkennung ob die Feuertaste gerade gehalten wird. */
+    /** Detección propia y fiable de si la tecla de disparo se está manteniendo pulsada. */
     private void installFireKeyTracking() {
         if (fireKeyTrackingInstalled) {
             return;
@@ -3194,7 +3195,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             if (e.getCode() == KeyCode.SPACE) spaceDown = false;
             if (e.getCode() == KeyCode.X) xDown = false;
         });
-        // Fenster verliert den Fokus -> nichts gilt mehr als gedrueckt.
+        // La ventana pierde el foco -> ya no se considera pulsada ninguna tecla.
         stage.focusedProperty().addListener((obs, was, now) -> {
             if (!now) {
                 spaceDown = false;
@@ -3335,7 +3336,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             int dmg = damage;
             EnemyComponent tec = nearest.getComponent(EnemyComponent.class);
             if (tec.isBoss() && currentShopWeapon() != ShopWeapon.SWEEP_LASER) {
-                // Needle/Twin machen am Boss nur halben Schaden (Rest wird angespart).
+                // Needle/Twin solo hacen la mitad de daño al jefe (el resto se acumula).
                 bossLaserCarry += damage * LASER_BOSS_FACTOR;
                 dmg = (int) bossLaserCarry;
                 bossLaserCarry -= dmg;
@@ -3347,7 +3348,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
     }
 
-    // Laser-Balance: Needle 1 Schaden / 0,15 s; Twin pro Strahl 1 / 0,20 s; Sweep unveraendert (2 / 0,10 s).
+    // Equilibrio de los láseres: Needle 1 de daño / 0,15 s; Twin 1 por rayo / 0,20 s; Sweep sin cambios (2 / 0,10 s).
     private static final double NEEDLE_TICK = 0.15;
     private static final double TWIN_TICK = 0.20;
     private static final double SWEEP_TICK = 0.10;
@@ -3491,35 +3492,35 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 if (geti(GameVars.WEAPON_GRADE) > 1) {
                     inc(GameVars.WEAPON_GRADE, -1);
                 }
-                showBanner("WEAPON DOWN", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.weaponDown"), Color.ORANGERED, 1.4);
             }
             case 1 -> {
                 pendingHurryUfo = true;
                 hurryUfoDelay = 0;
                 spawnHurryUpUfo();
-                showBanner("UFO NOW", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.ufoNow"), Color.ORANGERED, 1.4);
             }
             case 2 -> {
                 controlReverseRemaining = GameVars.CURSE_REVERSE_SECONDS;
-                showBanner("REVERSE", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.reverse"), Color.ORANGERED, 1.4);
             }
             case 3 -> {
                 fireJamRemaining = GameVars.CURSE_JAM_SECONDS;
                 clearLaserBeams();
-                showBanner("JAM", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.jam"), Color.ORANGERED, 1.4);
             }
             case 4 -> {
                 changeLevelTime(-5);
-                showBanner("TIME DRAIN", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.timeDrain"), Color.ORANGERED, 1.4);
             }
             case 5 -> {
                 int cap = Math.max(GameVars.INITIAL_AMMO_CAP, geti(GameVars.AMMO_CAP) - 2);
                 set(GameVars.AMMO_CAP, cap);
-                showBanner("AMMO LEAK", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.ammoLeak"), Color.ORANGERED, 1.4);
             }
             case 6 -> {
                 set(GameVars.MONEY, Math.max(0, geti(GameVars.MONEY) - 50));
-                showBanner("MONEY STING", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.moneySting"), Color.ORANGERED, 1.4);
             }
             case 7 -> {
                 int mask = geti(GameVars.RANK_MASK);
@@ -3536,11 +3537,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                         updateRankHud();
                     }
                 }
-                showBanner("RANK BLEED", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.rankBleed"), Color.ORANGERED, 1.4);
             }
             default -> {
                 spawnSkullSwarm();
-                showBanner("SWARM", Color.ORANGERED, 1.4);
+                showBanner(I18n.tr("curse.swarm"), Color.ORANGERED, 1.4);
             }
         }
     }
@@ -3573,7 +3574,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
         return switch (waveManager.getCurrentWaveType()) {
             case FIGHTERS, MIXED, PEARL, RANK, BONUS, KAMIKAZE, MONSTER,
-                 KREISEL, ZANGE, WASSERFALL, STURM -> true;
+                 SPINNER, PINCER, CASCADE, RUSH -> true;
             default -> false;
         };
     }
@@ -3763,7 +3764,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         waveManager.onEnemyDestroyed(ec.getSquadId(), ec.isEntering());
         if (ec.isMonster() && waveManager.noteMonsterKillAndCheckBoss()) {
             runOnce(this::spawnAlienBoss, Duration.seconds(1.5));
-            inc(GameVars.ENEMIES_REMAINING, 1); // keep the wave open until the boss is down
+            inc(GameVars.ENEMIES_REMAINING, 1); // mantener la oleada abierta hasta que caiga el jefe
             alienBossPending = true;
         }
         ec.dock();
@@ -3845,11 +3846,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 inc(GameVars.BOSS_KILLS, 1);
                 spawnBossDeathSequence(deathX, deathY);
                 spawnBossCoins(deathX, deathY);
-                // Belohnung: viel Geld + garantiert Schild oder Rakete.
+                // Recompensa: mucho dinero + escudo o misil garantizado.
                 int bossMoney = GameVars.BOSS_KILL_MONEY * ec.getBossNumber();
                 inc(GameVars.MONEY, bossMoney);
                 spawn(RANDOM.nextBoolean() ? "shieldPickup" : "missilePickup", deathX - 14, deathY - 14);
-                showBanner("BOSS DEFEATED  +" + ec.getScoreValue() + "  $+" + bossMoney, Color.GOLD, 2.0);
+                showBanner(I18n.tr("banner.bossDefeated", ec.getScoreValue(), bossMoney), Color.GOLD, 2.0);
                 trySpawnRankMarker(deathX, deathY, ec.getType());
             } else {
                 String explosionSize = (ec.getType() == EnemyComponent.EnemyType.TOUGH) ? "big" : "ship";
@@ -4062,7 +4063,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             waveManager.update(tpf);
             updateBossCollect(tpf);
             if (isBossWave()) {
-                // Boss-Level: kein Zeitdruck.
+                // Nivel de jefe: sin límite de tiempo.
                 extraTime = extraTimeMax;
                 extraTimeWarned = true;
                 pendingHurryUfo = false;
@@ -4117,7 +4118,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         extraTimeWarned = true;
         hurryUfoDelay = Math.max(hurryUfoDelay, GameVars.HURRY_UFO_DELAY);
         SoundHelper.play("hurry_warning.wav");
-        showBanner("HURRY UP", Color.ORANGERED, 1.2);
+        showBanner(I18n.tr("banner.hurryUp"), Color.ORANGERED, 1.2);
     }
 
     private void spawnHurryUpUfo() {
@@ -4125,7 +4126,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
             return;
         }
         if (waveTransition || getReadyRemaining > 0) {
-            // Keep pending so we retry when combat resumes / wave settles.
+            // Se deja pendiente para reintentarlo cuando se reanude el combate o se estabilice la oleada.
             pendingHurryUfo = true;
             return;
         }
@@ -4138,7 +4139,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 .put("level", geti(GameVars.LEVEL)));
         inc(GameVars.ENEMIES_REMAINING, 1);
         SoundHelper.play("ufo_appear.wav");
-        showBanner("UFO", Color.CYAN, 1.3);
+        showBanner(I18n.tr("banner.ufo"), Color.CYAN, 1.3);
     }
 
     private Group[] extraLetterGroups = new Group[5];
@@ -4303,7 +4304,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         autoLamp.setTranslateY(autoY);
         getGameScene().addUINode(autoLamp);
 
-        autoLampText = new Text("AUTO");
+        autoLampText = new Text(I18n.tr("hud.auto"));
         autoLampText.setFont(Font.font("Monospace", FontWeight.BOLD, 8));
         autoLampText.setFill(Color.rgb(60, 60, 60));
         autoLampText.setTranslateX(xOffset + 13);
@@ -4322,7 +4323,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         getGameScene().addUINode(moneyLabel);
 
         int accuracyY = moneyY + 16;
-        accuracyHudText = new Text("ACC --%");
+        accuracyHudText = new Text(I18n.tr("hud.accuracyEmpty"));
         accuracyHudText.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
         accuracyHudText.setFill(Color.rgb(120, 220, 255));
         accuracyHudText.setTranslateX(xOffset);
@@ -4332,7 +4333,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         updateAccuracyHud();
 
         int legendY = accuracyY + 18;
-        Text coinCaption = new Text("COINS");
+        Text coinCaption = new Text(I18n.tr("hud.coins"));
         coinCaption.setFont(Font.font("Monospace", FontWeight.BOLD, 8));
         coinCaption.setFill(Color.rgb(160, 160, 170));
         coinCaption.setTranslateX(xOffset);
@@ -4394,7 +4395,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         hudEdge.setTranslateY(43);
         getGameScene().addUINode(hudEdge);
 
-        Text scoreCaption = new Text("SCORE");
+        Text scoreCaption = new Text(I18n.tr("hud.score"));
         scoreCaption.setFont(Font.font("Monospace", FontWeight.BOLD, 9));
         scoreCaption.setFill(Color.rgb(90, 210, 240));
         scoreCaption.setTranslateX(playX + 12);
@@ -4425,7 +4426,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         comboPlate.setTranslateY(8);
         getGameScene().addUINode(comboPlate);
 
-        Text comboCaption = new Text("COMBO");
+        Text comboCaption = new Text(I18n.tr("hud.combo"));
         comboCaption.setFont(Font.font("Monospace", FontWeight.BOLD, 8));
         comboCaption.setFill(Color.rgb(255, 170, 60));
         comboCaption.setTranslateX(comboX + 8);
@@ -4456,7 +4457,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         wavePlate.setTranslateY(8);
         getGameScene().addUINode(wavePlate);
 
-        Text waveCaption = new Text("WAVE");
+        Text waveCaption = new Text(I18n.tr("hud.wave"));
         waveCaption.setFont(Font.font("Monospace", FontWeight.BOLD, 8));
         waveCaption.setFill(Color.rgb(255, 210, 70));
         waveCaption.setTranslateX(waveX + 8);
@@ -4614,11 +4615,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         int shots = Math.max(0, geti(GameVars.SHOTS_FIRED));
         int hits = Math.max(0, geti(GameVars.HITS_LANDED));
         if (shots <= 0) {
-            accuracyHudText.setText("ACC --%");
+            accuracyHudText.setText(I18n.tr("hud.accuracyEmpty"));
             return;
         }
         int pct = (int) Math.round(100.0 * Math.min(1.0, (double) hits / (double) shots));
-        accuracyHudText.setText(String.format("ACC %d%%", pct));
+        accuracyHudText.setText(I18n.tr("hud.accuracy", pct));
     }
 
     private void refillWaveTimer() {

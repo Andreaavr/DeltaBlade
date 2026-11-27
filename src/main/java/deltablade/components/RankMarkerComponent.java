@@ -16,7 +16,7 @@ public class RankMarkerComponent extends Component {
     };
 
     public static final String[] NAMES = {
-            "PINK", "BLAU", "GRUEN", "GELB", "ORANGE", "ROT"
+            "ROSA", "AZUL", "VERDE", "AMARILLO", "NARANJA", "ROJO"
     };
 
     public static final String[] TEXTURES = {

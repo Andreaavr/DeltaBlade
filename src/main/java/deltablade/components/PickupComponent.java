@@ -38,7 +38,7 @@ public class PickupComponent extends Component {
     public void onUpdate(double tpf) {
         entity.translateY(speed * tpf);
 
-        // Shield/Missile: sanfter Extra-Pulse; andere Pickups etwas knackiger.
+        // Escudo/misil: pulso suave del extra; los demás objetos, algo más marcado.
         boolean softExtra = type == PickupType.SHIELD || type == PickupType.MISSILE;
         if (softExtra) {
             pulsePhase += tpf * 3.0;

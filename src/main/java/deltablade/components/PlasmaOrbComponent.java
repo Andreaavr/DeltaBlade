@@ -5,7 +5,7 @@ import com.almasb.fxgl.entity.component.Component;
 import deltablade.GameVars;
 
 /**
- * Slow heavy plasma projectile for the shop Plasma Orb weapon.
+ * Proyectil de plasma lento y pesado del arma Plasma Orb de la tienda.
  */
 public class PlasmaOrbComponent extends Component {
 
@@ -75,7 +75,7 @@ public class PlasmaOrbComponent extends Component {
         return pierceLeft > 0;
     }
 
-    /** @return true if the orb should be removed after this hit */
+    /** @return true si el orbe debe eliminarse después de este impacto */
     public boolean hitAndShouldRemove() {
         if (pierceLeft <= 0) {
             return true;

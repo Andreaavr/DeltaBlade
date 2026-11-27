@@ -30,7 +30,7 @@ import static com.almasb.fxgl.dsl.FXGL.getAppHeight;
 import static com.almasb.fxgl.dsl.FXGL.getAppWidth;
 
 /**
- * Arcade hiscore table and name entry (1–10 letters).
+ * Tabla de récords estilo arcade e introducción del nombre (1-10 letras).
  */
 public final class HighScoreOverlay {
 
@@ -154,10 +154,10 @@ public final class HighScoreOverlay {
 
         if (nameEntry) {
             content.getChildren().addAll(
-                    heading("NEW HISCORE"),
-                    muted(HighScoreStore.formatScore(score) + "   WAVE " + String.format("%02d", wave)),
+                    heading(I18n.tr("hiscore.new")),
+                    muted(I18n.tr("hiscore.scoreWave", HighScoreStore.formatScore(score), String.format("%02d", wave))),
                     buildNameRow(),
-                    muted("TYPE NAME   SPACE = BLANK   ENTER = DONE   X = SKIP")
+                    muted(I18n.tr("hiscore.nameHint"))
             );
             startBlink();
             Timeline arm = new Timeline(new KeyFrame(Duration.millis(350), e -> confirmArmed = true));
@@ -170,12 +170,12 @@ public final class HighScoreOverlay {
             startRotate();
             startSpaceLock();
             if (onClose != null) {
-                Button back = styledButton(closeLabel != null ? closeLabel : "BACK");
+                Button back = styledButton(closeLabel != null ? closeLabel : I18n.tr("hiscore.back"));
                 back.setPrefWidth(180);
                 back.setOnAction(e -> close());
                 content.getChildren().add(back);
             } else {
-                content.getChildren().add(muted(closeLabel != null ? closeLabel : "R = RESTART"));
+                content.getChildren().add(muted(closeLabel != null ? closeLabel : I18n.tr("hiscore.restart")));
             }
         }
 
@@ -415,9 +415,9 @@ public final class HighScoreOverlay {
 
     private String currentTableTitle() {
         if (showingGlobal && globalEntries != null) {
-            return "HISCORE GLOBAL";
+            return I18n.tr("hiscore.global");
         }
-        return "HISCORE LOCAL";
+        return I18n.tr("hiscore.local");
     }
 
     private HBox buildNameRow() {

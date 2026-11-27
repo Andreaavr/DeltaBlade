@@ -12,13 +12,13 @@ import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 
 /**
- * Generates sample explosion sprite sheets without requiring JavaFX Application.
- * Pure Java implementation - no JavaFX runtime needed.
+ * Genera hojas de sprites de explosiones de ejemplo sin necesitar una Application de JavaFX.
+ * Implementación en Java puro: no hace falta el runtime de JavaFX.
  *
- * Run via: mvn exec:java -Dexec.mainClass=deltablade.tools.ExplosionSampleGenerator
+ * Se ejecuta con: mvn exec:java -Dexec.mainClass=deltablade.tools.ExplosionSampleGenerator
  *
- * Outputs 8-bit RGBA PNGs (color type 6, non-interlaced) compatible with
- * DeltaBlade's EmbeddedTextures.decodePng().
+ * Genera PNG RGBA de 8 bits (tipo de color 6, sin entrelazado) compatibles con
+ * EmbeddedTextures.decodePng() de DeltaBlade.
  */
 public class ExplosionSampleGenerator {
 
@@ -68,8 +68,8 @@ public class ExplosionSampleGenerator {
 
             System.out.println("Generating sample explosions...");
 
-            gen.generatePreset("treffer", explosionsDir);
-            gen.generatePreset("schiff", explosionsDir);
+            gen.generatePreset("hit", explosionsDir);
+            gen.generatePreset("ship", explosionsDir);
             gen.generatePreset("boss", explosionsDir);
 
             System.out.println("Sample explosions exported to: " + explosionsDir.toAbsolutePath());
@@ -138,7 +138,7 @@ public class ExplosionSampleGenerator {
         currentSeed = presetId.hashCode() * 12345L;
 
         switch (presetId) {
-            case "treffer" -> {
+            case "hit" -> {
                 duration = 0.2;
                 frameCount = 6;
                 frameSize = 32;
@@ -159,7 +159,7 @@ public class ExplosionSampleGenerator {
                 debrisEnabled = true;
                 flashEnabled = true;
             }
-            case "schiff" -> {
+            case "ship" -> {
                 duration = 0.5;
                 frameCount = 8;
                 frameSize = 64;

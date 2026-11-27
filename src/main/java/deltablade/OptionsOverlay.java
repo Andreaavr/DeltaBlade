@@ -27,7 +27,7 @@ import static com.almasb.fxgl.dsl.FXGL.getAppHeight;
 import static com.almasb.fxgl.dsl.FXGL.getAppWidth;
 
 /**
- * Arcade-styled options panel: music on/off, music/effect volume, track picker.
+ * Panel de opciones estilo arcade: idioma, música sí/no, volumen de música y efectos, y selector de canción.
  */
 public final class OptionsOverlay {
 
@@ -73,6 +73,7 @@ public final class OptionsOverlay {
 
     private final Group root = new Group();
     private Button musicToggle;
+    private Button languageToggle;
     private VolumeBar volumeBar;
     private Text volumeValue;
     private VolumeBar effectBar;
@@ -89,7 +90,7 @@ public final class OptionsOverlay {
         dimmer.setFill(Color.rgb(0, 0, 0, 0.72));
 
         double panelW = 460;
-        double panelH = 500;
+        double panelH = 550;
         double panelX = (width - panelW) / 2.0;
         double panelY = (height - panelH) / 2.0;
 
@@ -110,7 +111,7 @@ public final class OptionsOverlay {
         accent.setTranslateX(panelX);
         accent.setTranslateY(panelY);
 
-        Text title = new Text("OPTIONS");
+        Text title = new Text(I18n.tr("options.title"));
         title.setFont(Font.font("Monospace", FontWeight.BOLD, 28));
         title.setFill(Color.CYAN);
         title.setEffect(new Glow(0.45));
@@ -120,7 +121,18 @@ public final class OptionsOverlay {
         musicToggle.setPrefWidth(92);
         musicToggle.setOnAction(e -> toggleMusic());
 
-        HBox musicRow = labeledRow("MUSIC", musicToggle);
+        HBox musicRow = labeledRow(I18n.tr("options.music"), musicToggle);
+
+        languageToggle = new Button();
+        languageToggle.setFont(Font.font("Monospace", FontWeight.BOLD, 16));
+        languageToggle.setPrefWidth(92);
+        languageToggle.setOnAction(e -> toggleLanguage());
+
+        HBox languageRow = labeledRow(I18n.tr("options.language"), languageToggle);
+        Text languageHint = new Text(I18n.tr("options.languageHint"));
+        languageHint.setFont(Font.font("Monospace", 11));
+        languageHint.setFill(Color.rgb(140, 180, 210));
+        VBox languageBlock = new VBox(4, languageRow, languageHint);
 
         volumeValue = new Text();
         volumeValue.setFont(Font.font("Monospace", FontWeight.BOLD, 16));
@@ -138,7 +150,7 @@ public final class OptionsOverlay {
 
         HBox volumeControls = new HBox(14, volumeBar, volumeValue);
         volumeControls.setAlignment(Pos.CENTER_LEFT);
-        VBox volumeBlock = new VBox(8, sectionLabel("VOLUME"), volumeControls);
+        VBox volumeBlock = new VBox(8, sectionLabel(I18n.tr("options.volume")), volumeControls);
 
         effectValue = new Text();
         effectValue.setFont(Font.font("Monospace", FontWeight.BOLD, 16));
@@ -154,7 +166,7 @@ public final class OptionsOverlay {
 
         HBox effectControls = new HBox(14, effectBar, effectValue);
         effectControls.setAlignment(Pos.CENTER_LEFT);
-        VBox effectBlock = new VBox(8, sectionLabel("SFX"), effectControls);
+        VBox effectBlock = new VBox(8, sectionLabel(I18n.tr("options.sfx")), effectControls);
 
         trackName = new Text();
         trackName.setFont(Font.font("Monospace", FontWeight.BOLD, 14));
@@ -165,14 +177,14 @@ public final class OptionsOverlay {
 
         HBox trackRow = new HBox(12, prevTrack, trackName, nextTrack);
         trackRow.setAlignment(Pos.CENTER);
-        VBox trackBlock = new VBox(6, sectionLabel("TRACK"), trackRow);
+        VBox trackBlock = new VBox(6, sectionLabel(I18n.tr("options.track")), trackRow);
         trackBlock.setAlignment(Pos.CENTER);
 
-        Text folderHint = new Text("FOLDER: " + MusicLocations.displayPath());
+        Text folderHint = new Text(I18n.tr("options.folder", MusicLocations.displayPath()));
         folderHint.setFont(Font.font("Monospace", 12));
         folderHint.setFill(Color.rgb(140, 180, 210));
 
-        Button openFolder = styledButton("OPEN FOLDER");
+        Button openFolder = styledButton(I18n.tr("options.openFolder"));
         openFolder.setPrefWidth(220);
         openFolder.setOnAction(e -> {
             MusicLocations.revealUserLibrary();
@@ -183,17 +195,17 @@ public final class OptionsOverlay {
         VBox folderBlock = new VBox(8, folderHint, openFolder);
         folderBlock.setAlignment(Pos.CENTER);
 
-        Button back = styledButton("BACK");
+        Button back = styledButton(I18n.tr("options.back"));
         back.setPrefWidth(180);
         back.setOnAction(e -> onClose.run());
 
-        VBox content = new VBox(14);
+        VBox content = new VBox(10);
         content.setAlignment(Pos.CENTER);
         content.setPadding(new Insets(24, 36, 20, 36));
         content.setPrefWidth(panelW);
         content.setTranslateX(panelX);
         content.setTranslateY(panelY);
-        content.getChildren().addAll(title, musicRow, volumeBlock, effectBlock, trackBlock, folderBlock, back);
+        content.getChildren().addAll(title, languageBlock, musicRow, volumeBlock, effectBlock, trackBlock, folderBlock, back);
 
         root.getChildren().addAll(dimmer, panel, accent, content);
         MusicHelper.rescan();
@@ -226,6 +238,11 @@ public final class OptionsOverlay {
         refreshControls();
     }
 
+    private void toggleLanguage() {
+        OptionsStore.setLanguage("en".equals(OptionsStore.getLanguage()) ? "es" : "en");
+        refreshControls();
+    }
+
     private void cycleTrack(int delta) {
         MusicHelper.rescan();
         List<MusicHelper.Track> tracks = MusicHelper.tracks();
@@ -240,8 +257,11 @@ public final class OptionsOverlay {
 
     private void refreshControls() {
         boolean enabled = OptionsStore.isMusicEnabled();
-        musicToggle.setText(enabled ? "ON" : "OFF");
+        musicToggle.setText(enabled ? I18n.tr("options.on") : I18n.tr("options.off"));
         musicToggle.setStyle(enabled ? TOGGLE_ON : TOGGLE_OFF);
+
+        languageToggle.setText("en".equals(OptionsStore.getLanguage()) ? "EN" : "ES");
+        languageToggle.setStyle(TOGGLE_ON);
 
         volumeBar.setBarDisabled(!enabled);
         volumeValue.setOpacity(enabled ? 1.0 : 0.45);
@@ -294,7 +314,7 @@ public final class OptionsOverlay {
     }
 
     /**
-     * Fat click-and-drag bar: large hit target, live volume, persist on release.
+     * Barra gruesa de pulsar y arrastrar: zona de clic grande, volumen en directo y se guarda al soltar.
      */
     private static final class VolumeBar extends Group {
         private static final double TRACK_HEIGHT = 12;

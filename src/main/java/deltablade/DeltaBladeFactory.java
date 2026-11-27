@@ -51,9 +51,9 @@ public class DeltaBladeFactory implements EntityFactory {
     private static final int PICKUP_SIZE = 28;
 
     /**
-     * Load a texture from embedded bytes first (guaranteed to work).
-     * Falls back to a triangle polygon if name is missing from embed.
-     * NEVER returns a Rectangle - squares are the visual bug indicator.
+     * Carga primero la textura desde los bytes incrustados (funciona siempre).
+     * Si el nombre no está incrustado, usa como alternativa un polígono triangular.
+     * NUNCA devuelve un Rectangle: los cuadrados son la señal visual de un error.
      */
     private static Node sheetTile(String sheet, int index, int size, Color fallback) {
         Image tile = SpriteSheets.tile(sheet, index);
@@ -68,12 +68,12 @@ public class DeltaBladeFactory implements EntityFactory {
         return EmbeddedTextures.createFallbackShip(size, fallback);
     }
 
-    /** Echte Gegner-Schiffe (Reihe 3 im Sprite-Sheet, sauber 64x64) fuer den Boss. */
+    /** Naves enemigas reales (fila 3 de la hoja de sprites, 64x64 exactos) para el jefe. */
     static final int[] BOSS_SHIP_TILES = {21, 19, 20, 23, 22, 16};
 
     /**
-     * Boss-Bild: echtes Gegner-Schiff, erst pixelgenau auf das 3-fache vergroessert
-     * (scharfe Kanten), dann weich auf Zielgroesse gebracht. So wirkt es nicht klotzig.
+     * Imagen del jefe: nave enemiga real, primero ampliada x3 píxel a píxel
+     * (bordes nítidos) y después suavizada hasta el tamaño final. Así no queda tosca.
      */
     static Node bossView(int bossNo, int size) {
         int tile = BOSS_SHIP_TILES[Math.floorMod(bossNo - 1, BOSS_SHIP_TILES.length)];
@@ -230,7 +230,7 @@ public class DeltaBladeFactory implements EntityFactory {
                 view = sheetTile(SpriteSheets.SHIPS, tile, drawSize, Color.CRIMSON);
             }
         } else {
-            // Boss: vorhandenes Gegner-Bild, nur viel groesser. Jeder Boss sieht anders aus.
+            // Jefe: imagen de enemigo existente, pero mucho más grande. Cada jefe tiene un aspecto distinto.
             int bossNo = GameVars.bossNumber(level);
             if (data.hasKey("alienBoss")) {
                 int kind = data.get("alienBoss");
@@ -414,7 +414,7 @@ public class DeltaBladeFactory implements EntityFactory {
         glow.setTranslateX(PICKUP_SIZE / 2.0);
         glow.setTranslateY(PICKUP_SIZE / 2.0);
         Group group = new Group(glow, view);
-        // ~35% der Skulls rasen runter — schwerer zu vermeiden
+        // ~35 % de las calaveras bajan a toda velocidad: más difíciles de esquivar
         double fallSpeed = Math.random() < 0.35 ? 260 : 80;
         return FXGL.entityBuilder(data)
                 .type(EntityType.PICKUP)
@@ -1065,10 +1065,10 @@ public class DeltaBladeFactory implements EntityFactory {
     }
 
     /**
-     * Spawns an explosion effect at the given position.
-     * Data keys:
-     *   - "size": String - "hit" (small sparks), "ship" (medium), or "big" (boss, 2-row grid)
-     * The explosion is centered on the spawn position (x,y is center, not top-left).
+     * Crea un efecto de explosión en la posición indicada.
+     * Claves de datos:
+     *   - "size": String - "hit" (chispas pequeñas), "ship" (mediana) o "big" (jefe, rejilla de 2 filas)
+     * La explosión se centra en la posición de aparición (x,y es el centro, no la esquina superior izquierda).
      */
     @Spawns("explosion")
     public Entity newExplosion(SpawnData data) {

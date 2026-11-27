@@ -1,5 +1,6 @@
 package deltablade.minigames;
 
+import deltablade.I18n;
 import com.almasb.fxgl.entity.Entity;
 import deltablade.EntityType;
 import deltablade.GameVars;
@@ -55,7 +56,7 @@ public class MeteorStormGame implements Minigame {
         this.holdTime = 0;
         host.hidePlayer(false);
         buildHud();
-        host.displayBanner("METEOR STORM", Color.ORANGERED, 1.6);
+        host.displayBanner(I18n.tr("meteor.title"), Color.ORANGERED, 1.6);
     }
 
     @Override
@@ -84,7 +85,7 @@ public class MeteorStormGame implements Minigame {
             distanceFill.setTranslateY(hudBarBottom() - distanceFill.getHeight());
         }
         if (speedText != null) {
-            speedText.setText(host.holdingFire() ? "THRUST" : "GLIDE");
+            speedText.setText(host.holdingFire() ? I18n.tr("meteor.thrust") : I18n.tr("meteor.glide"));
             speedText.setFill(host.holdingFire() ? Color.ORANGE : Color.rgb(160, 180, 200));
         }
         updateHoldHud();
@@ -203,11 +204,11 @@ public class MeteorStormGame implements Minigame {
         double avg = thrustTime > 0 ? thrustSum / thrustTime : 0.9;
         int score = 600 + (int) (avg * 220);
         int money = 40 + (int) (avg * 28);
-        String banner = "STORM CLEAR  +" + score;
+        String banner = I18n.tr("meteor.clear", score);
         if (holdRatio() >= 0.95) {
             score += 350;
             money += 30;
-            banner = "BONUS  +" + score;
+            banner = I18n.tr("meteor.bonus", score);
         }
         inc(GameVars.METEOR_WINS, 1);
         host.finishMinigame(true, score, money, banner, Color.ORANGE);
@@ -217,7 +218,7 @@ public class MeteorStormGame implements Minigame {
         finished = true;
         clearStormLoot();
         int score = 80;
-        host.finishMinigame(false, score, 10, "CRASH  +" + score, Color.ORANGERED);
+        host.finishMinigame(false, score, 10, I18n.tr("meteor.crash", score), Color.ORANGERED);
     }
 
     private void buildHud() {
@@ -238,20 +239,20 @@ public class MeteorStormGame implements Minigame {
         distanceFill.setTranslateX(x + 2);
         distanceFill.setTranslateY(top + h - 4);
 
-        Text caption = new Text("DIST");
+        Text caption = new Text(I18n.tr("meteor.dist"));
         caption.setFont(Font.font("Monospace", FontWeight.BOLD, 9));
         caption.setFill(Color.rgb(255, 180, 80));
         caption.setTranslateX(x - 6);
         caption.setTranslateY(top - 6);
 
-        speedText = new Text("GLIDE");
+        speedText = new Text(I18n.tr("meteor.glide"));
         speedText.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
         speedText.setFill(Color.rgb(160, 180, 200));
         speedText.setEffect(new DropShadow(6, Color.BLACK));
         speedText.setTranslateX(host.playLeft() + 12);
         speedText.setTranslateY(host.playBottom() - 18);
 
-        holdText = new Text("HOLD  0%");
+        holdText = new Text(I18n.tr("meteor.hold", 0));
         holdText.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
         holdText.setFill(Color.rgb(160, 180, 200));
         holdText.setEffect(new DropShadow(6, Color.BLACK));
@@ -278,10 +279,10 @@ public class MeteorStormGame implements Minigame {
         double ratio = holdRatio();
         int pct = (int) Math.floor(ratio * 100 + 1e-6);
         if (ratio >= 0.95) {
-            holdText.setText("BONUS  " + pct + "%");
+            holdText.setText(I18n.tr("meteor.holdBonus", pct));
             holdText.setFill(Color.GOLD);
         } else {
-            holdText.setText("HOLD  " + pct + "%");
+            holdText.setText(I18n.tr("meteor.hold", pct));
             holdText.setFill(pct >= 80 ? Color.ORANGE : Color.rgb(160, 180, 200));
         }
     }

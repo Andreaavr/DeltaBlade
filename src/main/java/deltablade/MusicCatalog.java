@@ -17,9 +17,9 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 /**
- * Discovers selectable BGM from {@code assets/music/}.
- * Only files in that folder itself are catalog tracks; anything in a
- * subdirectory (e.g. {@code cues/}) is left for one-shots and overrides.
+ * Busca la música de fondo seleccionable en {@code assets/music/}.
+ * Solo los ficheros de esa carpeta son canciones del catálogo; lo que haya en una
+ * subcarpeta (por ejemplo {@code cues/}) se reserva para sonidos sueltos y sustituciones.
  */
 final class MusicCatalog {
 

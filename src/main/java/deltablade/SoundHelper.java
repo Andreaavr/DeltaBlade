@@ -23,9 +23,9 @@ import static com.almasb.fxgl.dsl.FXGL.getAudioPlayer;
 import static com.almasb.fxgl.dsl.FXGL.getSettings;
 
 /**
- * WAV effects play through JavaSound so they stay audible next to BGM.
- * JavaFX AudioClip (FXGL's default) is often silent on recent macOS/JDK builds
- * while MediaPlayer music still works. MP3 one-shots stay on FXGL.
+ * Los efectos WAV se reproducen con JavaSound para que se oigan junto a la música de fondo.
+ * AudioClip de JavaFX (el que usa FXGL por defecto) a menudo no suena en versiones recientes de macOS/JDK,
+ * aunque la música con MediaPlayer sí funciona. Los sonidos sueltos en MP3 siguen usando FXGL.
  */
 public final class SoundHelper {
 

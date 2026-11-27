@@ -1,5 +1,6 @@
 package deltablade.minigames;
 
+import deltablade.I18n;
 import deltablade.GameVars;
 import javafx.animation.ScaleTransition;
 import javafx.geometry.Pos;
@@ -105,7 +106,7 @@ public class CognitiveTestGame implements Minigame {
 
         timeLeft = 30 + (cols - 4) * 7;
         buildGrid();
-        host.displayBanner("COGNITIVE TEST", Color.CYAN, 1.6);
+        host.displayBanner(I18n.tr("cognitive.title"), Color.CYAN, 1.6);
     }
 
     @Override
@@ -139,7 +140,7 @@ public class CognitiveTestGame implements Minigame {
 
         timeLeft -= tpf;
         if (timerText != null) {
-            timerText.setText(String.format("TIME %04.1f", Math.max(0, timeLeft)));
+            timerText.setText(I18n.tr("minigame.time", String.format("%04.1f", Math.max(0, timeLeft))));
             timerText.setFill(timeLeft < 8 ? Color.ORANGERED : Color.CYAN);
         }
 
@@ -250,7 +251,7 @@ public class CognitiveTestGame implements Minigame {
             }
         }
 
-        timerText = new Text(String.format("TIME %04.1f", timeLeft));
+        timerText = new Text(I18n.tr("minigame.time", String.format("%04.1f", timeLeft)));
         timerText.setFont(Font.font("Monospace", FontWeight.BOLD, 16));
         timerText.setFill(Color.CYAN);
         timerText.setEffect(new DropShadow(10, Color.CYAN));
@@ -259,7 +260,7 @@ public class CognitiveTestGame implements Minigame {
         host.addUi(timerText);
         ui.add(timerText);
 
-        hintText = new Text("CLICK / FIRE = FLIP");
+        hintText = new Text(I18n.tr("cognitive.hint"));
         hintText.setFont(Font.font("Monospace", FontWeight.BOLD, 10));
         hintText.setFill(Color.rgb(140, 190, 210));
         hintText.setTranslateX(host.playRight() - 168);
@@ -310,7 +311,7 @@ public class CognitiveTestGame implements Minigame {
     private Group motifView(int motif, double w, double h) {
         Group g = new Group();
         if (motif < 0) {
-            Text free = new Text("FREE");
+            Text free = new Text(I18n.tr("cognitive.free"));
             free.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
             free.setFill(Color.GOLD);
             free.setTranslateX(w / 2 - 16);
@@ -458,10 +459,10 @@ public class CognitiveTestGame implements Minigame {
         awaitingCashout = true;
         cashoutTimer = 2.6;
         if (hintText != null) {
-            hintText.setText("B / RIGHT CLICK = TIME BONUS");
+            hintText.setText(I18n.tr("cognitive.bonusHint"));
             hintText.setFill(Color.GOLD);
         }
-        host.displayBanner("CLEAR  B = BONUS", Color.CYAN, 2.0);
+        host.displayBanner(I18n.tr("cognitive.clear"), Color.CYAN, 2.0);
     }
 
     private void cashOut() {
@@ -473,11 +474,11 @@ public class CognitiveTestGame implements Minigame {
         int score = 450 + leftover * 35 + geti(GameVars.COGNITIVE_WINS) * 60;
         int money = 35 + leftover * 3;
         inc(GameVars.COGNITIVE_WINS, 1);
-        host.finishMinigame(true, score, money, "COGNITIVE CLEAR  +" + score, Color.CYAN);
+        host.finishMinigame(true, score, money, I18n.tr("cognitive.win", score), Color.CYAN);
     }
 
     private void fail() {
         finished = true;
-        host.finishMinigame(false, 40, 5, "TEST FAIL  +40", Color.ORANGERED);
+        host.finishMinigame(false, 40, 5, I18n.tr("cognitive.fail", 40), Color.ORANGERED);
     }
 }

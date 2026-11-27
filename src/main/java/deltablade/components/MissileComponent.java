@@ -15,7 +15,7 @@ import javafx.scene.shape.Ellipse;
 
 public class MissileComponent extends Component {
 
-    /** Sprite nose sits this many degrees clockwise of "up"; rotate the art back so it flies nose-first. */
+    /** Grados en sentido horario del morro del sprite respecto a "arriba"; se gira para que vuele con el morro delante. */
     public static final double ART_OFFSET_DEG = -51;
 
     private static final double MAX_TPF = 1.0 / 30.0;

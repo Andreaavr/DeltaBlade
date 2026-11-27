@@ -23,13 +23,13 @@ public class WaveManager {
         KAMIKAZE,
         MONSTER,
         METEOR,
-        KREISEL,     // Gruppen kreisen erst um die Mitte
-        ZANGE,       // je zwei Gruppen gleichzeitig von links und rechts
-        WASSERFALL,  // viele kleine Gruppen in Schlangenlinien von oben
-        STURM        // Schiffe stuerzen sehr bald und oft herab
+        SPINNER,      // los grupos primero dan vueltas alrededor del centro
+        PINCER,       // dos grupos a la vez, uno por la izquierda y otro por la derecha
+        CASCADE,      // muchos grupos pequeños bajando en zigzag desde arriba
+        RUSH          // las naves se lanzan en picado muy pronto y a menudo
     }
 
-    /** Pro Spiel neu: sorgt fuer etwas Zufall in der Wellen-Reihenfolge. */
+    /** Nuevo en cada partida: añade algo de azar al orden de las oleadas. */
     private static long runSeed = System.nanoTime();
 
     public WaveManager() {
@@ -125,13 +125,13 @@ public class WaveManager {
             case KAMIKAZE -> setupKamikazeWave(level);
             case MONSTER -> setupMonsterWave(level);
             case METEOR -> setupMeteorWave(level);
-            case KREISEL -> setupFlightWave(level, FormationType.DIAMOND, 3);
-            case ZANGE -> setupFlightWave(level, FormationType.TWO_COLUMNS, 4);
-            case WASSERFALL -> {
+            case SPINNER -> setupFlightWave(level, FormationType.DIAMOND, 3);
+            case PINCER -> setupFlightWave(level, FormationType.TWO_COLUMNS, 4);
+            case CASCADE -> {
                 setupFlightWave(level, FormationType.STAGGERED, 5);
                 squadSpawnDelay = 1.4;
             }
-            case STURM -> setupFlightWave(level, FormationType.V_FORMATION, 3);
+            case RUSH -> setupFlightWave(level, FormationType.V_FORMATION, 3);
         }
 
         if (currentWaveType == WaveType.METEOR) {
@@ -152,15 +152,15 @@ public class WaveManager {
         if (level <= 2) {
             return level == 1 ? WaveType.FIGHTERS : WaveType.MIXED;
         }
-        // Weniger starre Reihenfolge: Auswahl aus einem Topf, der mit dem Level waechst.
+        // Orden menos rígido: se elige de una bolsa que crece con el nivel.
         List<WaveType> pool = new ArrayList<>(List.of(
-                WaveType.FIGHTERS, WaveType.MIXED, WaveType.PEARL, WaveType.KREISEL, WaveType.WASSERFALL));
+                WaveType.FIGHTERS, WaveType.MIXED, WaveType.PEARL, WaveType.SPINNER, WaveType.CASCADE));
         if (level >= 4) {
-            pool.add(WaveType.ZANGE);
+            pool.add(WaveType.PINCER);
             pool.add(WaveType.RANK);
         }
         if (level >= 6) {
-            pool.add(WaveType.STURM);
+            pool.add(WaveType.RUSH);
             pool.add(WaveType.BONUS);
             pool.add(WaveType.KAMIKAZE);
         }
@@ -174,7 +174,7 @@ public class WaveManager {
         return pick;
     }
 
-    /** Wie resolveWaveType, aber ohne den Vergleich mit dem Vorgaenger (verhindert lange Rekursion). */
+    /** Como resolveWaveType, pero sin comparar con la oleada anterior (evita una recursión larga). */
     private static WaveType resolveWaveTypeSimple(int level) {
         if (level <= 2) {
             return level == 1 ? WaveType.FIGHTERS : WaveType.MIXED;
@@ -183,13 +183,13 @@ public class WaveManager {
             return WaveType.MONSTER;
         }
         List<WaveType> pool = new ArrayList<>(List.of(
-                WaveType.FIGHTERS, WaveType.MIXED, WaveType.PEARL, WaveType.KREISEL, WaveType.WASSERFALL));
+                WaveType.FIGHTERS, WaveType.MIXED, WaveType.PEARL, WaveType.SPINNER, WaveType.CASCADE));
         if (level >= 4) {
-            pool.add(WaveType.ZANGE);
+            pool.add(WaveType.PINCER);
             pool.add(WaveType.RANK);
         }
         if (level >= 6) {
-            pool.add(WaveType.STURM);
+            pool.add(WaveType.RUSH);
             pool.add(WaveType.BONUS);
             pool.add(WaveType.KAMIKAZE);
         }
@@ -353,12 +353,12 @@ public class WaveManager {
         }
     }
 
-    /** variant, x, y, w, h, scale, cx, cy */
+    /** variante, x, y, ancho, alto, escala, cx, cy */
     private List<double[]> coverMeteorLayout() {
         double left = GameVars.RAIL_WIDTH + 18;
         double playW = getAppWidth() - 2.0 * GameVars.RAIL_WIDTH - 36;
         double playH = getAppHeight();
-        // variant, nx, ny, scale — cluster sits mid-field so ships can tuck behind
+        // variante, nx, ny, escala: el grupo se sitúa en mitad del campo para que las naves puedan esconderse detrás
         double[][] spec = {
                 {1, 0.18, 0.24, 0.92},
                 {0, 0.50, 0.20, 1.15},
@@ -522,7 +522,7 @@ public class WaveManager {
         stopped = true;
     }
 
-    // Gemeinsame Formations-Bewegung: Schwingen + Atmen.
+    // Movimiento común de la formación: balanceo + "respiración".
     private static double formationClock = 0;
 
     public static double formationSwayX() {
@@ -535,14 +535,14 @@ public class WaveManager {
 
     private double groupDiveTimer = 3.0;
 
-    /** Schritt 6: In Abstaenden stuerzen 1-3 benachbarte Schiffe zusammen herab. */
+    /** Paso 6: cada cierto tiempo, 1-3 naves vecinas se lanzan juntas en picado. */
     private void updateGroupDives(double tpf) {
         groupDiveTimer -= tpf;
         if (groupDiveTimer > 0) {
             return;
         }
         double gap = Math.max(1.3, 4.6 - currentLevel * 0.15);
-        if (currentWaveType == WaveType.STURM) {
+        if (currentWaveType == WaveType.RUSH) {
             gap = Math.max(0.8, gap * 0.45);
         }
         groupDiveTimer = gap * (0.8 + Math.random() * 0.4);
@@ -558,7 +558,7 @@ public class WaveManager {
             return;
         }
         int maxGroup = currentLevel < 3 ? 1 : currentLevel < 6 ? 2 : 3;
-        if (currentWaveType == WaveType.STURM) {
+        if (currentWaveType == WaveType.RUSH) {
             maxGroup = 3;
         }
         int size = 1 + (int) (Math.random() * maxGroup);
@@ -588,7 +588,7 @@ public class WaveManager {
 
         if (enemiesSpawned < totalEnemiesInWave) {
             squadSpawnTimer += tpf;
-            double delayNow = currentWaveType == WaveType.ZANGE && activeSquads.size() % 2 == 1
+            double delayNow = currentWaveType == WaveType.PINCER && activeSquads.size() % 2 == 1
                     ? 0.35 : squadSpawnDelay;
             if (squadSpawnTimer >= delayNow) {
                 squadSpawnTimer = 0;
@@ -716,13 +716,13 @@ public class WaveManager {
         return switch (currentWaveType) {
             case FIGHTERS, MIXED, BONUS, MONSTER -> mixedPath(squadIndex);
             case METEOR -> new EntryPath(getAppWidth() / 2.0, -50, EntryPath.Type.FROM_CENTER);
-            case KREISEL -> EntryPath.flight(squadIndex % 2 == 0 ? FlightPaths.Kind.KREIS : FlightPaths.Kind.SPIRALE,
+            case SPINNER -> EntryPath.flight(squadIndex % 2 == 0 ? FlightPaths.Kind.CIRCLE : FlightPaths.Kind.SPIRAL,
                     squadIndex % 2 == 1);
-            case ZANGE -> EntryPath.flight(FlightPaths.Kind.BOGEN, squadIndex % 2 == 1);
-            case WASSERFALL -> EntryPath.flight(squadIndex % 3 == 2 ? FlightPaths.Kind.WELLE : FlightPaths.Kind.S_KURVE,
+            case PINCER -> EntryPath.flight(FlightPaths.Kind.ARC, squadIndex % 2 == 1);
+            case CASCADE -> EntryPath.flight(squadIndex % 3 == 2 ? FlightPaths.Kind.WAVE : FlightPaths.Kind.S_CURVE,
                     squadIndex % 2 == 1);
-            case STURM -> {
-                FlightPaths.Kind[] k = {FlightPaths.Kind.HAKEN, FlightPaths.Kind.SCHLEIFE, FlightPaths.Kind.BOGEN};
+            case RUSH -> {
+                FlightPaths.Kind[] k = {FlightPaths.Kind.HOOK, FlightPaths.Kind.LOOP, FlightPaths.Kind.ARC};
                 yield EntryPath.flight(k[squadIndex % k.length], squadIndex % 2 == 1);
             }
             case PEARL -> pearlPath(squadIndex);
@@ -752,7 +752,7 @@ public class WaveManager {
     }
 
     private EntryPath mixedPath(int squadIndex) {
-        // Ab Level 2 (und jede 2. Gruppe in Level 1): Galaga-Flugwege.
+        // A partir del nivel 2 (y uno de cada dos grupos en el nivel 1): trayectorias al estilo Galaga.
         if (currentLevel >= 2 || squadIndex % 2 == 1) {
             FlightPaths.Kind[] kinds = FlightPaths.Kind.values();
             FlightPaths.Kind kind = kinds[Math.floorMod(currentLevel * 3 + squadIndex, kinds.length)];
@@ -900,7 +900,7 @@ public class WaveManager {
     private boolean alienBossSpawned;
     private int monsterTotal;
 
-    /** Monster wave: true once, when about two thirds of the monsters are down. */
+    /** Oleada de monstruos: se vuelve true una vez, cuando han caído unos dos tercios de los monstruos. */
     public boolean noteMonsterKillAndCheckBoss() {
         if (currentWaveType != WaveType.MONSTER || alienBossSpawned) {
             return false;
@@ -970,7 +970,7 @@ public class WaveManager {
         public final Type type;
         public final double pairGap;
         public final boolean beadString;
-        /** Optionaler Flugweg (Bogen, Schleife ...). null = alte einfache Anflugart. */
+        /** Trayectoria opcional (arco, rizo...). null = forma de entrada simple antigua. */
         public List<Point2D> flight;
         public String flightName;
 

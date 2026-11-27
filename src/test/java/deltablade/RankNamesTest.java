@@ -1,5 +1,7 @@
 package deltablade;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -10,13 +12,25 @@ import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Pruebas unitarias de {@link RankNames}.
+ * Las pruebas generales se hacen en inglés; las de "En español" comprueban la traducción.
  */
 @DisplayName("Nombres de rango del jugador")
 class RankNamesTest {
+
+    @BeforeEach
+    void usarIngles() {
+        I18n.setLanguage("en");
+    }
+
+    @AfterEach
+    void restaurarIdioma() {
+        I18n.setLanguage(OptionsStore.getLanguage());
+    }
 
     @Nested
     @DisplayName("Dado un rango válido")
@@ -58,7 +72,7 @@ class RankNamesTest {
             );
         }
     }
-    
+
     @Nested
     @DisplayName("Dado un rango por encima del último título")
     class RangoPorEncimaDelUltimo {
@@ -97,6 +111,45 @@ class RankNamesTest {
         void porEncimaDelUltimoSeUsaElTituloCompleto() {
             assertEquals(RankNames.title(24), RankNames.shortTitle(24),
                     "No hay abreviatura para los rangos extra");
+        }
+    }
+
+    @Nested
+    @DisplayName("Con el juego en español")
+    class EnEspanol {
+
+        @BeforeEach
+        void usarEspanol() {
+            I18n.setLanguage("es");
+        }
+
+        @Test
+        @DisplayName("Entonces el rango 0 es RECLUTA y el banner dice RANGO")
+        void losRangosSalenEnEspanol() {
+            assertAll("Rangos en español",
+                    () -> assertEquals("RECLUTA", RankNames.title(0), "Rango 0"),
+                    () -> assertEquals("RANGO  RECLUTA", RankNames.banner(0), "Banner"),
+                    () -> assertEquals("MAR. 3ª", RankNames.shortTitle(1), "Título corto del rango 1"),
+                    () -> assertEquals("MARISCAL ESTELAR II", RankNames.title(24), "Rango extra con número romano")
+            );
+        }
+
+        @ParameterizedTest(name = "Entonces el rango {0} tiene traducción")
+        @ValueSource(ints = {0, 5, 10, 15, 20, 23})
+        void todosLosRangosTienenTraduccion(int rango) {
+            assertAll("Rango " + rango,
+                    () -> assertFalse(RankNames.title(rango).startsWith("rank."), "Falta el título completo"),
+                    () -> assertFalse(RankNames.shortTitle(rango).startsWith("rank."), "Falta el título corto")
+            );
+        }
+    }
+
+    @Test
+    @DisplayName("Los títulos cortos no son más largos que los completos")
+    void losTitulosCortosNoSonMasLargos() {
+        for (int rango = 0; rango < RankNames.TITLE_COUNT; rango++) {
+            assertTrue(RankNames.shortTitle(rango).length() <= RankNames.title(rango).length(),
+                    "El título corto del rango " + rango + " es más largo que el completo");
         }
     }
 }

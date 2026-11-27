@@ -35,7 +35,7 @@ public class PlayerComponent extends Component {
     @Override
     public void onAdded() {
         double radius = SHIELD_SIZE / 2.0;
-        // No JavaFX Glow effect — opacity/scale pulse only (FPS).
+        // Sin efecto Glow de JavaFX: solo pulso de opacidad/escala (por rendimiento).
         Circle fill = new Circle(radius, Color.rgb(70, 210, 255, 0.22));
         shieldHalo = new Circle(radius + 6);
         shieldHalo.setFill(Color.rgb(60, 200, 255, 0.10));
@@ -225,7 +225,7 @@ public class PlayerComponent extends Component {
         double pulse = 0.78 + 0.22 * wave;
         double scale = 1.0 + 0.06 * wave;
         if (shieldTimer > 0 && shieldTimer <= 3 && !missileShield) {
-            // Last seconds: faster blink so expiry is obvious.
+            // Últimos segundos: parpadeo más rápido para que se note que se acaba.
             pulse = 0.45 + 0.55 * (0.5 + 0.5 * Math.sin(shieldTimer * 14));
             scale = 1.0 + 0.10 * (0.5 + 0.5 * Math.sin(shieldTimer * 14));
         }
@@ -240,7 +240,7 @@ public class PlayerComponent extends Component {
         }
     }
 
-    /** Brief bright flash when a hit is absorbed by the shield. */
+    /** Destello breve cuando el escudo absorbe un impacto. */
     public void pingShieldHit() {
         if (!isShielded() || shieldView == null) {
             return;

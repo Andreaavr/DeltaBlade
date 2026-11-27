@@ -4,7 +4,7 @@ import com.almasb.fxgl.entity.component.Component;
 import javafx.scene.Node;
 
 /**
- * Slow opacity pulse for the inner energy strip on a side rail.
+ * Pulso lento de opacidad para la franja de energía interior de una barra lateral.
  */
 public class RailPulseComponent extends Component {
 

@@ -24,7 +24,7 @@ import static com.almasb.fxgl.dsl.FXGL.getAppHeight;
 import static com.almasb.fxgl.dsl.FXGL.getAppWidth;
 
 /**
- * End-of-run bonus breakdown before hiscore entry.
+ * Desglose de los bonus al final de la partida, antes de introducir el récord.
  */
 public final class SettlementOverlay {
 
@@ -62,9 +62,9 @@ public final class SettlementOverlay {
                         + "-fx-background-radius: 10;"
                         + "-fx-border-radius: 10;");
 
-        Text title = mono("FINAL TALLY", 26, Color.CYAN);
+        Text title = mono(I18n.tr("settle.title"), 26, Color.CYAN);
         title.setEffect(new DropShadow(12, Color.rgb(40, 180, 255, 0.7)));
-        Text base = mono("SCORE  " + format(baseScore), 16, Color.LIGHTGRAY);
+        Text base = mono(I18n.tr("settle.score", format(baseScore)), 16, Color.LIGHTGRAY);
 
         panel.getChildren().addAll(title, base, spacer());
 
@@ -80,11 +80,11 @@ public final class SettlementOverlay {
             panel.getChildren().add(row);
         }
 
-        Text total = mono("TOTAL  " + format(baseScore + totalBonus), 18, Color.CYAN);
+        Text total = mono(I18n.tr("settle.total", format(baseScore + totalBonus)), 18, Color.CYAN);
         total.setOpacity(0);
         panel.getChildren().addAll(spacer(), total);
 
-        Text hint = mono("SPACE / ENTER  CONTINUE", 12, Color.rgb(160, 180, 200));
+        Text hint = mono(I18n.tr("settle.hint"), 12, Color.rgb(160, 180, 200));
         hint.setOpacity(0);
         panel.getChildren().add(hint);
 

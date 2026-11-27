@@ -7,7 +7,7 @@ import java.util.Locale;
 import java.util.prefs.Preferences;
 
 /**
- * Top-10 hiscores plus last used name (1–10 letters). Survives restarts via Preferences.
+ * Top 10 de récords más el último nombre usado (1-10 letras). Se conserva al reiniciar gracias a Preferences.
  */
 public final class HighScoreStore {
 
@@ -47,8 +47,8 @@ public final class HighScoreStore {
     }
 
     /**
-     * Inserts a new row, keeps the list sorted and capped.
-     * @return 0-based rank of the new entry, or -1 if it did not qualify
+     * Inserta una fila nueva y mantiene la lista ordenada y limitada.
+     * @return posición (empezando en 0) de la nueva entrada, o -1 si no entra en la tabla
      */
     public static int insert(String name, int score, int wave) {
         String clean = sanitizeNameOrDefault(name);
@@ -110,7 +110,7 @@ public final class HighScoreStore {
                         Integer.parseInt(parts[1]),
                         Math.max(1, Integer.parseInt(parts[2]))));
             } catch (NumberFormatException ignored) {
-                // skip corrupt row
+                // se salta la fila corrupta
             }
         }
         table.sort(Comparator

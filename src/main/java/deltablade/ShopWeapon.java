@@ -1,40 +1,24 @@
 package deltablade;
 
 /**
- * Shop-exclusive special weapons. Ordinal 0 = NONE (grade bullets).
- * Prices and unlock gates are tunable constants.
+ * Armas especiales exclusivas de la tienda. Ordinal 0 = NONE (balas según el grado).
+ * Los precios y las condiciones de desbloqueo son constantes ajustables.
  */
 public enum ShopWeapon {
-    NONE(0, "", "", "", ColorTag.CYAN),
-    NEEDLE_LASER(1200, "NEEDLE LASER", "BEAM",
-            "Thin laser. No ammo needed, overheats fast.",
-            ColorTag.CYAN),
-    TWIN_BEAM(2800, "TWIN BEAM", "TWIN BEAM",
-            "Two parallel beams. Clears formations.",
-            ColorTag.AQUA),
-    PLASMA_ORB(5000, "PLASMA ORB", "PLASMA",
-            "Heavy plasma orb with splash and pierce. Tough-killer.",
-            ColorTag.VIOLET),
-    ARC_LANCE(8000, "ARC LANCE", "CHAIN",
-            "Chain lightning: jumps between enemies, wipes squads.",
-            ColorTag.GOLD),
-    SWEEP_LASER(12000, "SWEEP LASER", "SWEEP",
-            "Sweeping wide beam. Boss and wave finisher.",
-            ColorTag.ORANGE);
+    NONE(0, ColorTag.CYAN),
+    NEEDLE_LASER(1200, ColorTag.CYAN),
+    TWIN_BEAM(2800, ColorTag.AQUA),
+    PLASMA_ORB(5000, ColorTag.VIOLET),
+    ARC_LANCE(8000, ColorTag.GOLD),
+    SWEEP_LASER(12000, ColorTag.ORANGE);
 
     public enum ColorTag { CYAN, AQUA, VIOLET, GOLD, ORANGE }
 
     private final int price;
-    private final String displayName;
-    private final String typeTag;
-    private final String description;
     private final ColorTag colorTag;
 
-    ShopWeapon(int price, String displayName, String typeTag, String description, ColorTag colorTag) {
+    ShopWeapon(int price, ColorTag colorTag) {
         this.price = price;
-        this.displayName = displayName;
-        this.typeTag = typeTag;
-        this.description = description;
         this.colorTag = colorTag;
     }
 
@@ -42,16 +26,35 @@ public enum ShopWeapon {
         return price;
     }
 
+    /**
+     * Nombre del arma en el idioma actual.
+     *
+     * @return el nombre traducido, o una cadena vacía para NONE
+     */
     public String displayName() {
-        return displayName;
+        return text("name");
     }
 
+    /**
+     * Etiqueta corta del tipo de arma en el idioma actual.
+     *
+     * @return la etiqueta traducida, o una cadena vacía para NONE
+     */
     public String typeTag() {
-        return typeTag;
+        return text("tag");
     }
 
+    /**
+     * Descripción del arma en el idioma actual.
+     *
+     * @return la descripción traducida, o una cadena vacía para NONE
+     */
     public String description() {
-        return description;
+        return text("desc");
+    }
+
+    private String text(String field) {
+        return this == NONE ? "" : I18n.tr("weapon." + name() + "." + field);
     }
 
     public ColorTag colorTag() {
@@ -81,10 +84,7 @@ public enum ShopWeapon {
     public String unlockHint() {
         return switch (this) {
             case NONE, NEEDLE_LASER -> "";
-            case TWIN_BEAM -> "RANK 3  OR  WAVE 8";
-            case PLASMA_ORB -> "RANK 6  +  METEOR  +  COGNITIVE";
-            case ARC_LANCE -> "RANK 10  +  15 COMBOS";
-            case SWEEP_LASER -> "RANK 15  +  BOSS  +  WAVE 20";
+            default -> text("hint");
         };
     }
 

@@ -34,9 +34,9 @@ public final class GameVars {
     public static final int MAX_WEAPON_GRADE = 4;
 
     public static final int RAIL_WIDTH = 64;
-    /** Lowest Y for sideways patrol. Below that only dives/kamikaze. */
+    /** Y más baja para la patrulla lateral. Por debajo solo hay picados y kamikazes. */
     public static final double FORMATION_MAX_Y_RATIO = 0.38;
-    /** FAST/TOUGH fire straight until this wave so the first pack stays readable. */
+    /** FAST/TOUGH disparan en línea recta hasta esta oleada, para que el primer grupo sea fácil de leer. */
     public static final int ANGLED_FIRE_MIN_LEVEL = 5;
     public static final int MONSTER_WAVE_MIN_LEVEL = 6;
     public static final int MONSTER_SPLIT_MIN_LEVEL = 8;
@@ -67,7 +67,7 @@ public final class GameVars {
     public static final int LEVEL_TIME_PICKUP = 1;
     public static final int LEVEL_TIME_DEATH_PENALTY = 5;
     public static final int LEVEL_TIME_MIN = 20;
-    /** After HURRY UP, wait this long before the UFO may appear. */
+    /** Después de HURRY UP, tiempo de espera antes de que pueda aparecer el ovni. */
     public static final double HURRY_UFO_DELAY = 4.0;
     public static final double RANK_MARKER_DROP_CHANCE = 0.2;
     public static final int RANK_COLOR_COUNT = 6;
@@ -92,11 +92,11 @@ public final class GameVars {
     public static final int BOSS_BASE_HEALTH = 10;
     public static final int BOSS_HEALTH_PER_CYCLE = 2;
     public static final int BOSS_SCORE = 1000;
-    /** Alle wie viele Level ein grosser Boss kommt. */
+    /** Cada cuántos niveles aparece un jefe grande. */
     public static final int BOSS_EVERY = 5;
-    /** Alle wie viele Level Warp + Shop kommen (wie frueher: 10, 20, 30 ...). */
+    /** Cada cuántos niveles llegan el salto y la tienda (como antes: 10, 20, 30...). */
     public static final int WARP_EVERY = 10;
-    /** Boss = normales Gegner-Bild, aber viel groesser. */
+    /** Jefe = imagen de enemigo normal, pero mucho más grande. */
     public static final int BOSS_DRAW_SIZE = 160;
     public static final int BOSS_HP_BASE = 25;
     public static final int BOSS_HP_PER_BOSS = 20;

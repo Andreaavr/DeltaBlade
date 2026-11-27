@@ -192,7 +192,7 @@ public class EnemyComponent extends Component {
         return isBoss;
     }
 
-    /** Alien boss of a monster wave: -1 = normal boss, else tile index on the alienz2 sheet. */
+    /** Jefe alienígena de una oleada de monstruos: -1 = jefe normal; si no, índice de la casilla en la hoja alienz2. */
     private int alienBoss = -1;
     private double alienAttackTimer = 2.0;
     private double alienSpecialTimer = 5.0;
@@ -210,19 +210,19 @@ public class EnemyComponent extends Component {
 
     public String bossLabel() {
         if (alienBoss < 0) {
-            return "BOSS " + bossNo;
+            return deltablade.I18n.tr("boss.numbered", bossNo);
         }
         return switch (alienBoss) {
-            case deltablade.SpriteSheets.ALIEN_CRAB -> "GIANT CRAB";
-            case deltablade.SpriteSheets.ALIEN_BRAIN -> "BRAIN OCTOPUS";
-            default -> "GIANT EYE";
+            case deltablade.SpriteSheets.ALIEN_CRAB -> deltablade.I18n.tr("boss.crab");
+            case deltablade.SpriteSheets.ALIEN_BRAIN -> deltablade.I18n.tr("boss.brain");
+            default -> deltablade.I18n.tr("boss.eye");
         };
     }
 
     /**
-     * Alien boss attacks.
-     * Crab: wide slow "web" fans. Brain: calls little monsters. Eye: aimed shots + beam.
-     * Below a quarter of health all of them get faster and add a bullet ring.
+     * Ataques de los jefes alienígenas.
+     * Cangrejo: abanicos de disparos lentos y anchos ("telaraña"). Cerebro: llama a monstruos pequeños. Ojo: disparos apuntados + rayo.
+     * Por debajo de un cuarto de la vida, todos se vuelven más rápidos y añaden un anillo de balas.
      */
     private void updateAlienBossAttack(double tpf) {
         if (beamWarmup > 0 || beamLeft > 0) {
@@ -399,7 +399,7 @@ public class EnemyComponent extends Component {
         moveEnteringStep(tpf, dx, dy, dist);
     }
 
-    /** Schritt 3: Schiff fliegt einen festen Flugweg ab, dann auf seinen Platz. */
+    /** Paso 3: la nave recorre una trayectoria fija y después va a su sitio. */
     private void updateFlight(double tpf) {
         double speed = Math.min(300, 200 + waveLevel * 4);
         double step = speed * tpf;
@@ -509,7 +509,7 @@ public class EnemyComponent extends Component {
             updateMeteorPeek(tpf);
         } else {
             baseY = Math.min(baseY, formationCeiling());
-            // Ganze Formation schwingt gemeinsam und "atmet" (Schritt 2).
+            // Toda la formación se balancea a la vez y "respira" (paso 2).
             double hoverY = Math.min(slotY() + Math.sin(hoverPhase) * 3, formationCeiling() + 6);
             double k = Math.min(1, tpf * 6);
             entity.setX(entity.getX() + (slotX() - entity.getX()) * k);
@@ -534,7 +534,7 @@ public class EnemyComponent extends Component {
             return;
         }
 
-        // Schiffe mit Rueckkehr stuerzen in Gruppen (gesteuert vom WaveManager).
+        // Las naves que vuelven a su sitio se lanzan en picado en grupo (lo controla WaveManager).
         if (formationHoldTime > minFormationTime && !meteorCover() && !canWrapDive()) {
             double diveChance = 0.001 * (1 + FXGL.geti("level") * 0.2);
             if (RANDOM.nextDouble() < diveChance) {
@@ -579,7 +579,7 @@ public class EnemyComponent extends Component {
         coverPeekEase = ease;
     }
 
-    /** True while sitting behind a cover meteor, not far enough out to be shot. */
+    /** True mientras está escondida detrás de un meteorito y no asoma lo suficiente para recibir disparos. */
     public boolean isTuckedBehindMeteor() {
         if (!meteorCover() || isUfo || scooped) {
             return false;
@@ -611,7 +611,7 @@ public class EnemyComponent extends Component {
         double vx;
         double vy;
         if (canWrapDive() && diveTime < 0.6) {
-            // Galaga-Bogen: erst kurz nach oben/aussen, dann runter.
+            // Arco al estilo Galaga: primero un poco hacia arriba/afuera y luego hacia abajo.
             double t = diveTime / 0.6;
             vx = diveSide * 150 * (1 - t);
             vy = -110 * (1 - t) + diveSpeed * t;
@@ -635,7 +635,7 @@ public class EnemyComponent extends Component {
 
         if (entity.getY() > FXGL.getAppHeight()) {
             if (canWrapDive()) {
-                // Unten raus, oben wieder rein, zurueck auf den Platz.
+                // Sale por abajo, vuelve a entrar por arriba y regresa a su sitio.
                 entity.setY(-entity.getHeight() - 10);
                 state = State.RETURNING;
                 return;
@@ -645,7 +645,7 @@ public class EnemyComponent extends Component {
         }
     }
 
-    /** Kann dieses Schiff jetzt bei einem Gruppen-Sturzflug mitmachen? */
+    /** ¿Puede esta nave unirse ahora a un picado en grupo? */
     public boolean canGroupDive() {
         return state == State.FORMATION && !scooped && pendingDive < 0
                 && formationHoldTime > minFormationTime && canWrapDive();
@@ -656,7 +656,7 @@ public class EnemyComponent extends Component {
         pendingSide = side;
     }
 
-    /** Wer darf unten raus und oben wieder rein? Kamikaze, Bonus, UFO, Boss nicht. */
+    /** ¿Quién puede salir por abajo y volver a entrar por arriba? Kamikaze, bonus, ovni y jefe no. */
     private boolean canWrapDive() {
         return !isKamikaze && !isBonusRunner && !isUfo && !isBoss && !diveOnAdd
                 && entryPath != null && !meteorCover();
@@ -683,7 +683,7 @@ public class EnemyComponent extends Component {
         faceToward(vx, vy, tpf);
     }
 
-    /** Formations-Platz (X). */
+    /** Posición en la formación (X). */
     private double slotX() {
         double w = entity.getWidth();
         double cx = FXGL.getAppWidth() / 2.0;
@@ -694,18 +694,18 @@ public class EnemyComponent extends Component {
         return Math.max(minX, Math.min(maxX, x));
     }
 
-    /** Formations-Platz (Y). */
+    /** Posición en la formación (Y). */
     private double slotY() {
         double top = 40;
         return top + (baseY - top) * (1 + (WaveManager.formationBreath() - 1) * 0.6);
     }
 
-    /** Schiff dreht sich sanft in Flugrichtung (Spitze voraus). */
+    /** La nave gira suavemente hacia la dirección de vuelo (con el morro por delante). */
     private void faceToward(double vx, double vy, double tpf) {
         if (Math.abs(vx) + Math.abs(vy) < 1) {
             return;
         }
-        // Gegner-Bilder zeigen mit der Spitze nach oben -> +90 Grad.
+        // Las imágenes de los enemigos apuntan hacia arriba -> +90 grados.
         double want = Math.toDegrees(Math.atan2(vy, vx)) + 90;
         double diff = ((want - heading) % 360 + 540) % 360 - 180;
         heading += diff * Math.min(1, tpf * 10);
@@ -804,10 +804,10 @@ public class EnemyComponent extends Component {
     }
 
     /**
-     * Boss-Angriffe.
-     * Phase 1 (volle Leben): Faecher aus 3-5 Schuessen.
-     * Phase 2 (ab halben Leben): dazu Helfer, die herabstuerzen.
-     * Phase 3 (unter einem Viertel): schneller, rot, Kugel-Kreis und Strahl.
+     * Ataques del jefe.
+     * Fase 1 (vida completa): abanico de 3-5 disparos.
+     * Fase 2 (desde la mitad de la vida): además, ayudantes que se lanzan en picado.
+     * Fase 3 (por debajo de un cuarto): más rápido, en rojo, con anillo de balas y rayo.
      */
     private void updateBossAttack(double tpf) {
         double ratio = health / (double) Math.max(1, maxHealth);
@@ -821,7 +821,7 @@ public class EnemyComponent extends Component {
             return;
         }
 
-        // Strahl laeuft gerade? Dann nur den.
+        // ¿Hay un rayo en marcha? Entonces solo ese.
         if (beamWarmup > 0 || beamLeft > 0) {
             updateBeam(tpf);
             return;
@@ -865,11 +865,11 @@ public class EnemyComponent extends Component {
     private void onBossPhaseChange(int phase) {
         var app = FXGL.<deltablade.DeltaBladeApp>getAppCast();
         if (phase == 2 && alienBoss >= 0) {
-            app.bossAnnounce(bossLabel() + " IS HURT!");
+            app.bossAnnounce(deltablade.I18n.tr("boss.hurt", bossLabel()));
         } else if (phase == 2) {
-            app.bossAnnounce("BOSS CALLS FOR HELP!");
+            app.bossAnnounce(deltablade.I18n.tr("boss.callsForHelp"));
         } else if (phase == 3) {
-            app.bossAnnounce("BOSS IS ENRAGED!");
+            app.bossAnnounce(deltablade.I18n.tr("boss.enraged"));
             javafx.scene.effect.Lighting red = new javafx.scene.effect.Lighting(
                     new javafx.scene.effect.Light.Distant(45, 50, javafx.scene.paint.Color.rgb(255, 90, 90)));
             entity.getViewComponent().getParent().setEffect(red);
@@ -877,7 +877,7 @@ public class EnemyComponent extends Component {
         }
     }
 
-    /** Kreis aus Kugeln in alle Richtungen. */
+    /** Anillo de balas en todas las direcciones. */
     private void bossRing(int count, double speed) {
         double cx = entity.getX() + entity.getWidth() / 2.0;
         double cy = entity.getY() + entity.getHeight() / 2.0;
@@ -889,11 +889,11 @@ public class EnemyComponent extends Component {
         deltablade.SoundHelper.play("enemy_shot.wav");
     }
 
-    /** Strahl: kurz zittern (Warnung), dann ein dichter Schuss-Strom gerade nach unten. */
+    /** Rayo: tiembla un momento (aviso) y después lanza un chorro denso de disparos hacia abajo. */
     private void updateBeam(double tpf) {
         if (beamWarmup > 0) {
             beamWarmup -= tpf;
-            // Warning shake on the picture only (smooth wobble), the boss itself does not move.
+            // El temblor de aviso es solo de la imagen (bamboleo suave); el jefe en sí no se mueve.
             double shake = Math.sin(beamWarmup * 60) * 3;
             shakeView(shake);
             if (beamWarmup <= 0) {

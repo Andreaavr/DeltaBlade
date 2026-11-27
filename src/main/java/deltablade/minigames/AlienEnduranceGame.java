@@ -1,5 +1,6 @@
 package deltablade.minigames;
 
+import deltablade.I18n;
 import com.almasb.fxgl.entity.Entity;
 import deltablade.FlightPaths;
 import deltablade.GameVars;
@@ -26,8 +27,8 @@ import static com.almasb.fxgl.dsl.FXGL.getAppWidth;
 import static com.almasb.fxgl.dsl.FXGL.geti;
 
 /**
- * Alien Endurance: survive as long as possible against colourful alien swarms.
- * Own life counter (the main game's lives are never touched).
+ * Alien Endurance: sobrevive el mayor tiempo posible contra enjambres de alienígenas de colores.
+ * Tiene su propio contador de vidas (nunca se tocan las vidas del juego principal).
  */
 public class AlienEnduranceGame implements Minigame {
 
@@ -41,9 +42,9 @@ public class AlienEnduranceGame implements Minigame {
     final Random rng = new Random();
     MinigameHost host;
     final Group layer = new Group();
-    /** Aliens, shots, bullets, hearts. */
+    /** Alienígenas, disparos, balas y corazones. */
     final Group world = new Group();
-    /** HUD, boss bar, popups, settlement: always above the world, no per-frame toFront. */
+    /** HUD, barra del jefe, mensajes emergentes y resultados: siempre encima del mundo, sin toFront en cada fotograma. */
     final Group top = new Group();
     private Text hudText;
 
@@ -75,14 +76,14 @@ public class AlienEnduranceGame implements Minigame {
         boolean boss;
         double hitFlash;
         FlightGroup group;
-        // boss data
+        // datos del jefe
         boolean big;
         double swayPhase, bobPhase;
         double bossT, attackCd, specialCd, helperCd, homeX;
         int phase;
     }
 
-    /** One flight group: bonus when every member is shot down and none escaped. */
+    /** Un grupo de vuelo: da bonus si se derriba a todos sus miembros y no escapa ninguno. */
     static final class FlightGroup {
         int size, killed, escaped, stage;
     }
@@ -100,7 +101,7 @@ public class AlienEnduranceGame implements Minigame {
             int bonus = g.size * 50 * (g.stage + 1);
             groupClears++;
             groupPts += bonus;
-            popup("GROUP +" + bonus, a.x, a.y);
+            popup(I18n.tr("alien.group", bonus), a.x, a.y);
         }
     }
 
@@ -129,7 +130,7 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    // ---------- live duration bonus (every 10 s, shown big; settlement sums the same curve) ----------
+    // ---------- bonus de duración en directo (cada 10 s, en grande; los resultados suman la misma curva) ----------
 
     private double nextDurationMark = 10;
     private Text durationText;
@@ -145,7 +146,7 @@ public class AlienEnduranceGame implements Minigame {
                 durationText.setStroke(Color.rgb(60, 20, 0));
                 durationText.setStrokeWidth(1.2);
             }
-            durationText.setText("DURATION BONUS +" + gain);
+            durationText.setText(I18n.tr("alien.durationBonus", gain));
             durationText.setX(getAppWidth() / 2.0 - durationText.getLayoutBounds().getWidth() / 2);
             durationText.setY(getAppHeight() * 0.42);
             top.getChildren().remove(durationText);
@@ -170,7 +171,7 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    /** Survival points rise steeply: 100 * ((1 + t/30)^3 - 1). 1:00=2600, 2:00=12400, 5:00=133000. */
+    /** Los puntos por supervivencia crecen rápido: 100 * ((1 + t/30)^3 - 1). 1:00=2600, 2:00=12400, 5:00=133000. */
     static int timePoints(double seconds) {
         double f = 1 + seconds / 30.0;
         return (int) Math.round(100 * (f * f * f - 1));
@@ -269,9 +270,9 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    // ---------- hooks for later steps ----------
+    // ---------- enganches para pasos posteriores ----------
 
-    // ---------- falling hearts (extra lives) ----------
+    // ---------- corazones que caen (vidas extra) ----------
 
     private static final class Heart {
         javafx.scene.Node node;
@@ -306,9 +307,9 @@ public class AlienEnduranceGame implements Minigame {
                 heartsCaught++;
                 if (lives < MAX_LIVES) {
                     lives++;
-                    host.displayBanner("EXTRA LIFE!", Color.HOTPINK, 1.0);
+                    host.displayBanner(I18n.tr("alien.extraLife"), Color.HOTPINK, 1.0);
                 } else {
-                    host.displayBanner("LIVES FULL  +500", Color.HOTPINK, 1.0);
+                    host.displayBanner(I18n.tr("alien.livesFull"), Color.HOTPINK, 1.0);
                 }
                 SoundHelper.play("extra_life.wav");
             }
@@ -341,7 +342,7 @@ public class AlienEnduranceGame implements Minigame {
         hearts.add(h);
     }
 
-    // ---------- settlement ----------
+    // ---------- resultados ----------
 
     static final int PTS_HEART = 500;
     static final int PTS_MINIBOSS = 3000;
@@ -428,14 +429,14 @@ public class AlienEnduranceGame implements Minigame {
         finalMoney = secs / 2 + kills * 2 + minibossKills * 150 + brainKills * 600;
 
         List<String[]> rows = new ArrayList<>();
-        rows.add(new String[] {"SURVIVED " + timeLabel(), "+" + timePts});
-        rows.add(new String[] {"ALIENS KILLED " + kills, "+" + killScore});
-        rows.add(new String[] {"GROUPS CLEARED " + groupClears, "+" + groupPts});
-        rows.add(new String[] {"GIANTS DOWN " + minibossKills, "+" + minibossKills * PTS_MINIBOSS});
-        rows.add(new String[] {"BRAIN OCTOPUS " + brainKills, "+" + brainKills * PTS_BRAIN});
-        rows.add(new String[] {"HEARTS CAUGHT " + heartsCaught, "+" + heartPts});
+        rows.add(new String[] {I18n.tr("alien.survived", timeLabel()), "+" + timePts});
+        rows.add(new String[] {I18n.tr("alien.killed", kills), "+" + killScore});
+        rows.add(new String[] {I18n.tr("alien.groupsCleared", groupClears), "+" + groupPts});
+        rows.add(new String[] {I18n.tr("alien.giantsDown", minibossKills), "+" + minibossKills * PTS_MINIBOSS});
+        rows.add(new String[] {I18n.tr("alien.brainKills", brainKills), "+" + brainKills * PTS_BRAIN});
+        rows.add(new String[] {I18n.tr("alien.hearts", heartsCaught), "+" + heartPts});
         if (newRecord) {
-            rows.add(new String[] {"NEW RECORD!", "+" + recordPts});
+            rows.add(new String[] {I18n.tr("alien.newRecord"), "+" + recordPts});
         }
         buildPanel(rows, Math.max(secs, record));
         SoundHelper.play(newRecord ? "bonus_perfect.wav" : "rank_wave.wav");
@@ -454,25 +455,25 @@ public class AlienEnduranceGame implements Minigame {
         bg.setStrokeWidth(2);
         panel = new Group(bg);
         Text title = label("KOBARMARU YASHI TEST", x + 20, y + 34, 20, Color.AQUAMARINE);
-        Text sub = label("GAME OVER - THE SWARM GOT YOU", x + 20, y + 56, 11, Color.rgb(255, 150, 150));
+        Text sub = label(I18n.tr("alien.gameOver"), x + 20, y + 56, 11, Color.rgb(255, 150, 150));
         panel.getChildren().addAll(title, sub);
         double ry = y + 90;
         for (String[] r : rows) {
-            Color c = r[0].startsWith("NEW RECORD") ? Color.GOLD : Color.WHITE;
+            Color c = r[0].equals(I18n.tr("alien.newRecord")) ? Color.GOLD : Color.WHITE;
             panel.getChildren().add(label(r[0], x + 20, ry, 13, c));
             Text v = label(r[1], x + w - 120, ry, 13, c);
             panel.getChildren().add(v);
             ry += 24;
         }
         ry += 8;
-        panel.getChildren().add(label("TOTAL", x + 20, ry, 15, Color.AQUAMARINE));
+        panel.getChildren().add(label(I18n.tr("alien.total"), x + 20, ry, 15, Color.AQUAMARINE));
         panel.getChildren().add(label("+" + finalScore, x + w - 120, ry, 15, Color.AQUAMARINE));
         ry += 22;
-        panel.getChildren().add(label("MONEY  +$" + finalMoney, x + 20, ry, 12, Color.GOLD));
+        panel.getChildren().add(label(I18n.tr("alien.money", finalMoney), x + 20, ry, 12, Color.GOLD));
         int bs = bestSecs;
-        panel.getChildren().add(label(String.format("BEST  %d:%02d", bs / 60, bs % 60), x + w - 120, ry, 12, Color.GOLD));
+        panel.getChildren().add(label(I18n.tr("alien.best", String.format("%d:%02d", bs / 60, bs % 60)), x + w - 120, ry, 12, Color.GOLD));
         ry += 22;
-        panel.getChildren().add(label("YOUR SHIP LIVES ARE SAFE   SPACE = CONTINUE", x + 20, ry, 10, Color.rgb(170, 200, 210)));
+        panel.getChildren().add(label(I18n.tr("alien.continueHint"), x + 20, ry, 10, Color.rgb(170, 200, 210)));
         top.getChildren().add(panel);
     }
 
@@ -484,7 +485,7 @@ public class AlienEnduranceGame implements Minigame {
         return t;
     }
 
-    // ---------- player ----------
+    // ---------- jugador ----------
 
     double playerX() {
         Entity p = host.player();
@@ -541,16 +542,16 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    // ---------- spawning ----------
+    // ---------- aparición de enemigos ----------
 
-    /** Danger level: rises by one every 30 seconds. */
+    /** Nivel de peligro: sube uno cada 30 segundos. */
     int stage() {
         return (int) (time / 30.0);
     }
 
     private int announcedStage;
 
-    /** Spawn pace multiplier (bosses slow the stream down). */
+    /** Multiplicador del ritmo de aparición (los jefes lo ralentizan). */
     double paceFactor() {
         return activeBoss != null ? 0.45 : 1.0;
     }
@@ -559,7 +560,7 @@ public class AlienEnduranceGame implements Minigame {
         int st = stage();
         if (st > announcedStage) {
             announcedStage = st;
-            host.displayBanner("DANGER " + (st + 1), Color.rgb(255, 120 + Math.max(0, 120 - st * 15), 80), 1.2);
+            host.displayBanner(I18n.tr("alien.danger", st + 1), Color.rgb(255, 120 + Math.max(0, 120 - st * 15), 80), 1.2);
         }
         spawnTimer -= tpf * paceFactor();
         if (spawnTimer > 0) {
@@ -574,28 +575,28 @@ public class AlienEnduranceGame implements Minigame {
         boolean mirror = rng.nextBoolean();
         spawnGroupOnPath(kind, randomPath(st, mirror), count, speed, mixed);
         if (st >= 5 && rng.nextDouble() < 0.5) {
-            // twin group from the other side
+            // grupo gemelo desde el otro lado
             spawnGroupOnPath(rng.nextInt(kindsUnlocked), randomPath(st, !mirror), Math.max(3, count - 3), speed, mixed);
         }
     }
 
     private List<Point2D> randomPath(int st, boolean mirror) {
-        List<Object> pool = new ArrayList<>(List.of(FlightPaths.Kind.BOGEN, FlightPaths.Kind.WELLE, FlightPaths.Kind.S_KURVE));
+        List<Object> pool = new ArrayList<>(List.of(FlightPaths.Kind.ARC, FlightPaths.Kind.WAVE, FlightPaths.Kind.S_CURVE));
         if (st >= 1) {
-            pool.add(FlightPaths.Cross.ZICKZACK);
-            pool.add(FlightPaths.Kind.SCHLEIFE);
+            pool.add(FlightPaths.Cross.ZIGZAG);
+            pool.add(FlightPaths.Kind.LOOP);
         }
         if (st >= 2) {
-            pool.add(FlightPaths.Kind.KREIS);
-            pool.add(FlightPaths.Cross.ACHT);
+            pool.add(FlightPaths.Kind.CIRCLE);
+            pool.add(FlightPaths.Cross.FIGURE_EIGHT);
         }
         if (st >= 3) {
-            pool.add(FlightPaths.Kind.SPIRALE);
-            pool.add(FlightPaths.Cross.SCHWARM);
+            pool.add(FlightPaths.Kind.SPIRAL);
+            pool.add(FlightPaths.Cross.SWARM);
         }
         if (st >= 4) {
-            pool.add(FlightPaths.Cross.REGEN);
-            pool.add(FlightPaths.Kind.HAKEN);
+            pool.add(FlightPaths.Cross.RAIN);
+            pool.add(FlightPaths.Kind.HOOK);
         }
         Object pick = pool.get(rng.nextInt(pool.size()));
         if (pick instanceof FlightPaths.Cross c) {
@@ -640,7 +641,7 @@ public class AlienEnduranceGame implements Minigame {
         return a;
     }
 
-    /** Squeeze every path point between the side rails so no alien flies over the sidebars. */
+    /** Ajusta cada punto de la trayectoria entre las barras laterales para que ningún alienígena vuele sobre ellas. */
     List<Point2D> insideField(List<Point2D> path, double half) {
         double min = host.playLeft() + half;
         double max = host.playRight() - half;
@@ -651,7 +652,7 @@ public class AlienEnduranceGame implements Minigame {
         return out;
     }
 
-    /** Path continues off the bottom/side so the group leaves the screen. */
+    /** La trayectoria sigue fuera por abajo o por un lado para que el grupo salga de la pantalla. */
     static List<Point2D> withExit(List<Point2D> path) {
         List<Point2D> out = new ArrayList<>(path);
         Point2D last = path.get(path.size() - 1);
@@ -662,7 +663,7 @@ public class AlienEnduranceGame implements Minigame {
         return out;
     }
 
-    // ---------- movement ----------
+    // ---------- movimiento ----------
 
     private void updateShots(double tpf) {
         Iterator<Shot> it = shots.iterator();
@@ -777,12 +778,17 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    // ---------- bosses ----------
+    // ---------- jefes ----------
 
     private static final int[] MINI_ROTATION = {
             SpriteSheets.ALIEN_JELLY, SpriteSheets.ALIEN_EYE, SpriteSheets.ALIEN_MOTH,
             SpriteSheets.ALIEN_CRAB, SpriteSheets.ALIEN_LEAF};
     private static final String[] ALIEN_NAMES = {"CRAB", "MOTH", "EYE", "JELLY", "LEAF", "BRAIN"};
+
+    /** Nombre traducido del alienígena gigante, por ejemplo "CANGREJO GIGANTE". */
+    private static String giantName(int kind) {
+        return I18n.tr("alien.giant", I18n.tr("alien.name." + ALIEN_NAMES[kind]));
+    }
 
     Alien activeBoss;
     private double nextBossAt = 60;
@@ -804,12 +810,12 @@ public class AlienEnduranceGame implements Minigame {
             int round = brainKills + 1;
             b = newAlien(SpriteSheets.ALIEN_BRAIN, 190, 200 + 80 * brainKills);
             b.big = true;
-            host.displayBanner("BRAIN OCTOPUS " + (round > 1 ? round : "") + "!", Color.MEDIUMORCHID, 2.0);
+            host.displayBanner(round > 1 ? I18n.tr("alien.brainRound", round) : I18n.tr("alien.brainAppears"), Color.MEDIUMORCHID, 2.0);
         } else {
             int kind = MINI_ROTATION[miniCount % MINI_ROTATION.length];
             miniCount++;
             b = newAlien(kind, 140, 28 + 12 * miniCount);
-            host.displayBanner("GIANT " + ALIEN_NAMES[kind] + "!", Color.ORANGE, 1.6);
+            host.displayBanner(I18n.tr("alien.giantAppears", giantName(kind)), Color.ORANGE, 1.6);
         }
         b.boss = true;
         b.view.setCache(true);
@@ -850,9 +856,9 @@ public class AlienEnduranceGame implements Minigame {
             if (want > a.phase) {
                 a.phase = want;
                 if (want == 1) {
-                    host.displayBanner("BRAIN CALLS FOR HELP!", Color.MEDIUMORCHID, 1.4);
+                    host.displayBanner(I18n.tr("alien.brainHelp"), Color.MEDIUMORCHID, 1.4);
                 } else {
-                    host.displayBanner("BRAIN GETS ANGRY!", Color.RED, 1.4);
+                    host.displayBanner(I18n.tr("alien.brainAngry"), Color.RED, 1.4);
                     a.view.setEffect(new javafx.scene.effect.Lighting(
                             new javafx.scene.effect.Light.Distant(45, 60, Color.rgb(255, 110, 110))));
                 }
@@ -889,7 +895,7 @@ public class AlienEnduranceGame implements Minigame {
                     ring(a.x, a.y, 10, 150, Color.LIMEGREEN);
                     a.attackCd = 3.0;
                 }
-                default -> { // brain
+                default -> { // cerebro
                     fan(a.x, bottom, a.phase >= 2 ? 7 : 5, 1.0, 170, Color.ORCHID);
                     aimedShot(a.x, bottom, 220, Color.VIOLET);
                     a.attackCd = a.phase >= 2 ? 1.6 : 2.2;
@@ -958,7 +964,7 @@ public class AlienEnduranceGame implements Minigame {
 
     private void updateBossBar(Alien a) {
         bossBarFill.setWidth(Math.max(0, (bossBarBg.getWidth() - 2) * a.hp / (double) a.maxHp));
-        bossBarText.setText(a.big ? "BRAIN OCTOPUS" : "GIANT " + ALIEN_NAMES[a.kind]);
+        bossBarText.setText(a.big ? I18n.tr("boss.brain") : giantName(a.kind));
     }
 
     void onBossKilled(Alien a) {
@@ -966,11 +972,11 @@ public class AlienEnduranceGame implements Minigame {
         showBossBar(false);
         if (a.big) {
             brainKills++;
-            host.displayBanner("BRAIN OCTOPUS DOWN!  +15000", Color.GOLD, 2.0);
+            host.displayBanner(I18n.tr("alien.brainDown"), Color.GOLD, 2.0);
             dropHeart(a.x, a.y);
         } else {
             minibossKills++;
-            host.displayBanner("GIANT " + ALIEN_NAMES[a.kind] + " DOWN!  +3000", Color.GOLD, 1.6);
+            host.displayBanner(I18n.tr("alien.giantDown", giantName(a.kind)), Color.GOLD, 1.6);
             if (rng.nextBoolean()) {
                 dropHeart(a.x, a.y);
             }
@@ -980,7 +986,7 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    /** @return true when the alien has run off the end of its path. */
+    /** @return true cuando el alienígena ha llegado al final de su trayectoria. */
     private boolean followPath(Alien a, double tpf) {
         double step = a.speed * tpf;
         while (step > 0 && a.idx < a.path.size()) {
@@ -1085,7 +1091,7 @@ public class AlienEnduranceGame implements Minigame {
         }
     }
 
-    // ---------- HUD ----------
+    // ---------- marcador (HUD) ----------
 
     String timeLabel() {
         int s = (int) time;
@@ -1100,7 +1106,7 @@ public class AlienEnduranceGame implements Minigame {
             hudSec = sec;
             hudLives = lives;
             hudKills = kills;
-            hudText.setText("TIME " + timeLabel() + "   LIVES " + "\u2665".repeat(Math.max(0, lives)) + "   KILLS " + kills);
+            hudText.setText(I18n.tr("alien.hud", timeLabel(), "\u2665".repeat(Math.max(0, lives)), kills));
         }
     }
 }
