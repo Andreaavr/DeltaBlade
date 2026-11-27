@@ -79,7 +79,7 @@ public final class EmbeddedTextures {
             }
         }
         if (errors.length() > 0) {
-            preloadError = "Fehler beim Laden: " + errors;
+            preloadError = I18n.tr("error.textures", errors);
             return preloadError;
         }
         preloadError = null;

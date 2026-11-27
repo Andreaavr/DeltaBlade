@@ -2422,15 +2422,15 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         int accuracyBonus = (int) Math.floor(hitRate * hitRate * GameVars.SETTLEMENT_ACCURACY_CAP);
 
         List<SettlementOverlay.Line> lines = new ArrayList<>();
-        lines.add(new SettlementOverlay.Line("RANK", geti(GameVars.RANK) * GameVars.SETTLEMENT_RANK));
-        lines.add(new SettlementOverlay.Line("ACCURACY", accuracyBonus));
-        lines.add(new SettlementOverlay.Line("COMBOS", geti(GameVars.SQUAD_COMBOS) * GameVars.SETTLEMENT_COMBO));
-        lines.add(new SettlementOverlay.Line("METEOR", geti(GameVars.METEOR_WINS) * GameVars.SETTLEMENT_METEOR));
-        lines.add(new SettlementOverlay.Line("COGNITIVE", geti(GameVars.COGNITIVE_WINS) * GameVars.SETTLEMENT_COGNITIVE));
-        lines.add(new SettlementOverlay.Line("MAZE", geti(GameVars.MAZE_WINS) * GameVars.SETTLEMENT_MAZE));
-        lines.add(new SettlementOverlay.Line("WAVES", Math.max(0, geti(GameVars.LEVEL) - 1) * GameVars.SETTLEMENT_WAVE));
-        lines.add(new SettlementOverlay.Line("CASH", Math.max(0, geti(GameVars.MONEY)) * GameVars.SETTLEMENT_CASH_MULT));
-        lines.add(new SettlementOverlay.Line("PERFECT", geti(GameVars.BONUS_PERFECT_CLEARS) * GameVars.SETTLEMENT_PERFECT));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.rank"), geti(GameVars.RANK) * GameVars.SETTLEMENT_RANK));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.accuracy"), accuracyBonus));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.combos"), geti(GameVars.SQUAD_COMBOS) * GameVars.SETTLEMENT_COMBO));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.meteor"), geti(GameVars.METEOR_WINS) * GameVars.SETTLEMENT_METEOR));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.cognitive"), geti(GameVars.COGNITIVE_WINS) * GameVars.SETTLEMENT_COGNITIVE));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.maze"), geti(GameVars.MAZE_WINS) * GameVars.SETTLEMENT_MAZE));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.waves"), Math.max(0, geti(GameVars.LEVEL) - 1) * GameVars.SETTLEMENT_WAVE));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.cash"), Math.max(0, geti(GameVars.MONEY)) * GameVars.SETTLEMENT_CASH_MULT));
+        lines.add(new SettlementOverlay.Line(I18n.tr("settle.perfect"), geti(GameVars.BONUS_PERFECT_CLEARS) * GameVars.SETTLEMENT_PERFECT));
         return lines;
     }
 
@@ -2515,7 +2515,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
 
     private void showHighScoreTable(Integer localHighlight, Integer globalHighlight, boolean fromTitle, boolean fetchRemote) {
         hideHighScoreOverlay();
-        String closeLabel = fromTitle ? "BACK" : "R = RESTART";
+        String closeLabel = fromTitle ? I18n.tr("hiscore.back") : I18n.tr("hiscore.restart");
         Runnable onClose = fromTitle ? this::hideHighScoreOverlay : null;
         highScoreOverlay = HighScoreOverlay.table(localHighlight, globalHighlight, closeLabel, onClose);
         highScoreRoot = highScoreOverlay.getRoot();

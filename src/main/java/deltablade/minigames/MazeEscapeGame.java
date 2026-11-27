@@ -1,5 +1,6 @@
 package deltablade.minigames;
 
+import deltablade.I18n;
 import com.almasb.fxgl.entity.Entity;
 import deltablade.EmbeddedTextures;
 import deltablade.GameVars;
@@ -252,7 +253,7 @@ public class MazeEscapeGame implements Minigame {
         placePlayerAtStart();
         syncPlayerShipView();
 
-        host.displayBanner("MAZE ESCAPE", Color.MEDIUMPURPLE, 1.4);
+        host.displayBanner(I18n.tr("maze.title"), Color.MEDIUMPURPLE, 1.4);
     }
 
     @Override
@@ -296,7 +297,7 @@ public class MazeEscapeGame implements Minigame {
                 if (readyText != null) {
                     readyText.setVisible(false);
                 }
-                host.displayBanner("GO!", Color.LIMEGREEN, 0.7);
+                host.displayBanner(I18n.tr("maze.go"), Color.LIMEGREEN, 0.7);
             }
             collectBonuses();
             checkExit();
@@ -318,7 +319,7 @@ public class MazeEscapeGame implements Minigame {
         maybeHurryUp();
         refreshHud();
         if (timeLeft <= 0) {
-            fail("TIME OUT");
+            fail(I18n.tr("maze.timeOut"));
         }
     }
 
@@ -328,7 +329,7 @@ public class MazeEscapeGame implements Minigame {
         }
         hurryWarned = true;
         SoundHelper.play("hurry_warning.wav");
-        host.displayBanner("HURRY UP", Color.ORANGERED, 1.2);
+        host.displayBanner(I18n.tr("banner.hurryUp"), Color.ORANGERED, 1.2);
     }
 
     @Override
@@ -360,7 +361,7 @@ public class MazeEscapeGame implements Minigame {
         if (shotsLoaded <= 0) {
             if (noShotBannerCd <= 0) {
                 noShotBannerCd = 0.85;
-                host.displayBanner("NO SHOT", Color.LIGHTGRAY, 0.7);
+                host.displayBanner(I18n.tr("maze.noShot"), Color.LIGHTGRAY, 0.7);
             }
             return;
         }
@@ -655,7 +656,7 @@ public class MazeEscapeGame implements Minigame {
         exitMarker.setTranslateX(WALL + exitCol * (CELL + WALL) + 2);
         exitMarker.setTranslateY(-2);
         mazeLayer.getChildren().add(exitMarker);
-        Text exitLabel = new Text("EXIT");
+        Text exitLabel = new Text(I18n.tr("maze.exit"));
         exitLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 9));
         exitLabel.setFill(Color.rgb(180, 255, 200));
         exitLabel.setTranslateX(WALL + exitCol * (CELL + WALL) + 4);
@@ -698,7 +699,7 @@ public class MazeEscapeGame implements Minigame {
         host.addUi(playerLayer);
         ui.add(playerLayer);
 
-        readyText = new Text("READY");
+        readyText = new Text(I18n.tr("maze.ready"));
         readyText.setFont(Font.font("Monospace", FontWeight.BOLD, 28));
         readyText.setFill(Color.GOLD);
         readyText.setEffect(new DropShadow(14, Color.BLACK));
@@ -788,7 +789,7 @@ public class MazeEscapeGame implements Minigame {
             return;
         }
         int secs = (int) Math.ceil(fireGraceLeft);
-        readyText.setText(secs > 0 ? "READY  " + secs : "GO!");
+        readyText.setText(secs > 0 ? I18n.tr("maze.readyCount", secs) : I18n.tr("maze.go"));
         readyText.setVisible(true);
     }
 
@@ -835,7 +836,7 @@ public class MazeEscapeGame implements Minigame {
 
     private void refreshHud() {
         if (hudTime != null) {
-            hudTime.setText(String.format("TIME %04.1f", Math.max(0, timeLeft)));
+            hudTime.setText(I18n.tr("minigame.time", String.format("%04.1f", Math.max(0, timeLeft))));
             if (timeLeft <= HURRY_THRESHOLD && fireGraceLeft <= 0) {
                 double pulse = 0.55 + 0.45 * (0.5 + 0.5 * Math.sin(hudPulse * 10));
                 hudTime.setFill(Color.ORANGERED);
@@ -849,11 +850,11 @@ public class MazeEscapeGame implements Minigame {
             hudMoney.setText("$" + moneyCollected);
         }
         if (hudShot != null) {
-            hudShot.setText(shotsLoaded > 0 ? "SHOT x" + shotsLoaded : "SHOT ---");
+            hudShot.setText(shotsLoaded > 0 ? I18n.tr("maze.shot", shotsLoaded) : I18n.tr("maze.noShotHud"));
             hudShot.setFill(shotsLoaded > 0 ? Color.ORANGE : Color.rgb(120, 120, 140));
         }
         if (hudShield != null) {
-            hudShield.setText(shieldUp() ? "SHIELD " + (int) Math.ceil(shieldTime) : "SHIELD ---");
+            hudShield.setText(shieldUp() ? I18n.tr("maze.shield", (int) Math.ceil(shieldTime)) : I18n.tr("maze.noShield"));
             hudShield.setFill(shieldUp() ? Color.AQUA : Color.rgb(120, 120, 140));
         }
     }
@@ -1345,7 +1346,7 @@ public class MazeEscapeGame implements Minigame {
                 }
                 case SHIELD -> {
                     shieldTime += SHIELD_SECONDS;
-                    host.displayBanner("SHIELD +" + (int) SHIELD_SECONDS, Color.AQUA, 0.8);
+                    host.displayBanner(I18n.tr("banner.shield", (int) SHIELD_SECONDS), Color.AQUA, 0.8);
                     SoundHelper.play("shield.wav");
                 }
                 case SHOT -> {
@@ -1390,7 +1391,7 @@ public class MazeEscapeGame implements Minigame {
                 shieldFlash = 0.35;
             } else {
                 host.spawnExplosion(px, py, "ship");
-                fail("HIT");
+                fail(I18n.tr("maze.hit"));
                 return;
             }
         }
@@ -1431,7 +1432,7 @@ public class MazeEscapeGame implements Minigame {
 
         RimShip best = pickRimTarget(px, py, fdx, fdy);
         if (best == null) {
-            host.displayBanner("NO TARGET", Color.LIGHTGRAY, 0.7);
+            host.displayBanner(I18n.tr("maze.noTarget"), Color.LIGHTGRAY, 0.7);
             return;
         }
 
@@ -1530,7 +1531,7 @@ public class MazeEscapeGame implements Minigame {
         ship.view.setOpacity(0.25);
         host.spawnExplosion(ship.x, ship.y, "hit");
         SoundHelper.play("explode_ship.wav");
-        host.displayBanner("TURRET DOWN", Color.ORANGE, 0.9);
+        host.displayBanner(I18n.tr("maze.turretDown"), Color.ORANGE, 0.9);
     }
 
     private void clearShotBolt() {
@@ -1570,7 +1571,7 @@ public class MazeEscapeGame implements Minigame {
             money += perfectMoney;
         }
         inc(GameVars.MAZE_WINS, 1);
-        beginSettlement(true, score, money, "MAZE CLEAR  +" + score, Color.MEDIUMPURPLE,
+        beginSettlement(true, score, money, I18n.tr("maze.clear", score), Color.MEDIUMPURPLE,
                 leftover, turrets, picked, timeScore, turretScore, bonusScore);
     }
 
@@ -1651,17 +1652,17 @@ public class MazeEscapeGame implements Minigame {
                         + "-fx-background-radius: 10;"
                         + "-fx-border-radius: 10;");
 
-        Text title = new Text(won ? "MAZE SETTLEMENT" : "MAZE RESULT");
+        Text title = new Text(won ? I18n.tr("maze.settlement") : I18n.tr("maze.result"));
         title.setFont(Font.font("Monospace", FontWeight.BOLD, 18));
         title.setFill(won ? Color.MEDIUMPURPLE.brighter() : Color.ORANGERED);
         title.setEffect(new DropShadow(10, Color.BLACK));
 
         panel.getChildren().add(title);
-        panel.getChildren().add(settleLine("TIME LEFT", leftover + "s", "+" + timeScore, Color.CYAN));
-        panel.getChildren().add(settleLine("TURRETS DOWN", String.valueOf(turrets), "+" + turretScore, Color.ORANGE));
-        panel.getChildren().add(settleLine("BONUSES", String.valueOf(picked), "+" + bonusScore, Color.GOLD));
+        panel.getChildren().add(settleLine(I18n.tr("maze.timeLeft"), leftover + "s", "+" + timeScore, Color.CYAN));
+        panel.getChildren().add(settleLine(I18n.tr("maze.turretsDown"), String.valueOf(turrets), "+" + turretScore, Color.ORANGE));
+        panel.getChildren().add(settleLine(I18n.tr("maze.bonuses"), String.valueOf(picked), "+" + bonusScore, Color.GOLD));
 
-        Text lootCaption = new Text("COLLECTED");
+        Text lootCaption = new Text(I18n.tr("maze.collected"));
         lootCaption.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
         lootCaption.setFill(Color.rgb(180, 190, 210));
         panel.getChildren().add(lootCaption);
@@ -1669,7 +1670,7 @@ public class MazeEscapeGame implements Minigame {
         HBox icons = new HBox(6);
         icons.setAlignment(Pos.CENTER_LEFT);
         if (collectedKinds.isEmpty()) {
-            Text none = new Text("(none)");
+            Text none = new Text(I18n.tr("maze.none"));
             none.setFont(Font.font("Monospace", FontWeight.BOLD, 11));
             none.setFill(Color.rgb(120, 130, 150));
             icons.getChildren().add(none);
@@ -1681,7 +1682,7 @@ public class MazeEscapeGame implements Minigame {
         panel.getChildren().add(icons);
 
         if (won && perfectRun) {
-            perfectText = new Text(String.format("PERFECT! ALL EXTRAS COLLECTED  +%d  $+%d", perfectScore, perfectMoney));
+            perfectText = new Text(I18n.tr("maze.perfect", perfectScore, perfectMoney));
             perfectText.setFont(Font.font("Monospace", FontWeight.BOLD, 13));
             perfectText.setFill(Color.GOLD);
             perfectText.setEffect(new javafx.scene.effect.Glow(0.9));
@@ -1689,12 +1690,12 @@ public class MazeEscapeGame implements Minigame {
             panelH += 24;
         }
 
-        Text totals = new Text(String.format("SCORE +%d   $ +%d", totalScore, totalMoney));
+        Text totals = new Text(I18n.tr("maze.totals", totalScore, totalMoney));
         totals.setFont(Font.font("Monospace", FontWeight.BOLD, 14));
         totals.setFill(Color.WHITE);
         panel.getChildren().add(totals);
 
-        Text hint = new Text("SPACE / B  CONTINUE");
+        Text hint = new Text(I18n.tr("maze.hint"));
         hint.setFont(Font.font("Monospace", FontWeight.BOLD, 10));
         hint.setFill(Color.rgb(150, 170, 190));
         panel.getChildren().add(hint);

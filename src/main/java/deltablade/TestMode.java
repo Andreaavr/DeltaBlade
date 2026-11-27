@@ -78,7 +78,7 @@ public final class TestMode {
         count = 0;
         Drop drop = dropFor(digit);
         if (drop == null) {
-            return Optional.of(new Drop(null, "TEST  " + digit + digit + digit + "  ?"));
+            return Optional.of(new Drop(null, I18n.tr("test.prefix", "" + digit + digit + digit + "  ?")));
         }
         return Optional.of(drop);
     }
@@ -92,7 +92,7 @@ public final class TestMode {
             moneySeq++;
             if (moneySeq >= MONEY_CODE.length) {
                 moneySeq = 0;
-                return Optional.of(new Drop("MONEY", "TEST  +$15000"));
+                return Optional.of(new Drop("MONEY", I18n.tr("test.prefix", "+$15000")));
             }
             return Optional.empty();
         }
@@ -106,9 +106,6 @@ public final class TestMode {
             {5, 0, 5}, {1, 4, 7}, {2, 5, 8}, {3, 6, 9}, {1, 5, 9}, {7, 8, 9}, {3, 5, 7}
     };
     private static final String[] WAVE_NAMES = {"BOSS", "KREISEL", "ZANGE", "WASSERFALL", "STURM", "ALIEN_ENDURANCE", "MONSTER_BOSS"};
-    private static final String[] WAVE_LABELS = {
-        "BOSS", "SPINNER", "PINCER", "CASCADE", "RUSH", "KOBARMARU YASHI TEST", "MONSTER + ALIEN BOSS"
-    };
     private static final int[] WAVE_SEQ = new int[WAVE_CODES.length];
     private static final long[] WAVE_SEQ_AT = new long[WAVE_CODES.length];
 
@@ -124,7 +121,7 @@ public final class TestMode {
                 WAVE_SEQ[i] = 0;
                 String n = WAVE_NAMES[i];
                 String spawnName = (n.startsWith("ALIEN") || n.startsWith("MONSTER_")) ? n : "WAVE:" + n;
-                return Optional.of(new Drop(spawnName, "TEST  " + WAVE_LABELS[i]));
+                return Optional.of(new Drop(spawnName, I18n.tr("test.prefix", I18n.tr("test.wave." + i))));
             }
             return Optional.empty();
         }
@@ -141,7 +138,7 @@ public final class TestMode {
             mazeSeq++;
             if (mazeSeq >= MAZE_CODE.length) {
                 mazeSeq = 0;
-                return Optional.of(new Drop("MAZE_ESCAPE", "TEST  MAZE ESCAPE"));
+                return Optional.of(new Drop("MAZE_ESCAPE", I18n.tr("test.prefix", I18n.tr("test.maze"))));
             }
             return Optional.empty();
         }
@@ -151,16 +148,16 @@ public final class TestMode {
 
     public static Drop dropFor(int index) {
         return switch (index) {
-            case 0 -> new Drop("missilePickup", "TEST DROP  MISSILE");
-            case 1 -> new Drop("METEOR_CHALLENGE", "TEST  METEOR CHALLENGE");
-            case 2 -> new Drop("cognitivePickup", "TEST DROP  COGNITIVE");
-            case 3 -> new Drop("shieldPickup", "TEST DROP  SHIELD");
-            case 4 -> new Drop("WARP", "TEST  WARP");
-            case 5 -> new Drop("UFO", "TEST  UFO");
-            case 6 -> new Drop("BONUS", "TEST  BONUS");
-            case 7 -> new Drop("PEARL", "TEST  ATTACK");
-            case 8 -> new Drop("SCOOP", "TEST  SCOOP");
-            case 9 -> new Drop("MONSTER", "TEST  SWARM");
+            case 0 -> new Drop("missilePickup", I18n.tr("test.drop", I18n.tr("test.missile")));
+            case 1 -> new Drop("METEOR_CHALLENGE", I18n.tr("test.prefix", I18n.tr("wave.meteor")));
+            case 2 -> new Drop("cognitivePickup", I18n.tr("test.drop", I18n.tr("test.cognitive")));
+            case 3 -> new Drop("shieldPickup", I18n.tr("test.drop", I18n.tr("test.shield")));
+            case 4 -> new Drop("WARP", I18n.tr("test.prefix", I18n.tr("banner.warp")));
+            case 5 -> new Drop("UFO", I18n.tr("test.prefix", I18n.tr("banner.ufo")));
+            case 6 -> new Drop("BONUS", I18n.tr("test.prefix", I18n.tr("test.bonus")));
+            case 7 -> new Drop("PEARL", I18n.tr("test.prefix", I18n.tr("test.attack")));
+            case 8 -> new Drop("SCOOP", I18n.tr("test.prefix", I18n.tr("banner.scoop")));
+            case 9 -> new Drop("MONSTER", I18n.tr("test.prefix", I18n.tr("test.swarm")));
             default -> null;
         };
     }

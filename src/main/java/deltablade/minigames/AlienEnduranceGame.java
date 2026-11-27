@@ -1,5 +1,6 @@
 package deltablade.minigames;
 
+import deltablade.I18n;
 import com.almasb.fxgl.entity.Entity;
 import deltablade.FlightPaths;
 import deltablade.GameVars;
@@ -100,7 +101,7 @@ public class AlienEnduranceGame implements Minigame {
             int bonus = g.size * 50 * (g.stage + 1);
             groupClears++;
             groupPts += bonus;
-            popup("GROUP +" + bonus, a.x, a.y);
+            popup(I18n.tr("alien.group", bonus), a.x, a.y);
         }
     }
 
@@ -145,7 +146,7 @@ public class AlienEnduranceGame implements Minigame {
                 durationText.setStroke(Color.rgb(60, 20, 0));
                 durationText.setStrokeWidth(1.2);
             }
-            durationText.setText("DURATION BONUS +" + gain);
+            durationText.setText(I18n.tr("alien.durationBonus", gain));
             durationText.setX(getAppWidth() / 2.0 - durationText.getLayoutBounds().getWidth() / 2);
             durationText.setY(getAppHeight() * 0.42);
             top.getChildren().remove(durationText);
@@ -306,9 +307,9 @@ public class AlienEnduranceGame implements Minigame {
                 heartsCaught++;
                 if (lives < MAX_LIVES) {
                     lives++;
-                    host.displayBanner("EXTRA LIFE!", Color.HOTPINK, 1.0);
+                    host.displayBanner(I18n.tr("alien.extraLife"), Color.HOTPINK, 1.0);
                 } else {
-                    host.displayBanner("LIVES FULL  +500", Color.HOTPINK, 1.0);
+                    host.displayBanner(I18n.tr("alien.livesFull"), Color.HOTPINK, 1.0);
                 }
                 SoundHelper.play("extra_life.wav");
             }
@@ -428,14 +429,14 @@ public class AlienEnduranceGame implements Minigame {
         finalMoney = secs / 2 + kills * 2 + minibossKills * 150 + brainKills * 600;
 
         List<String[]> rows = new ArrayList<>();
-        rows.add(new String[] {"SURVIVED " + timeLabel(), "+" + timePts});
-        rows.add(new String[] {"ALIENS KILLED " + kills, "+" + killScore});
-        rows.add(new String[] {"GROUPS CLEARED " + groupClears, "+" + groupPts});
-        rows.add(new String[] {"GIANTS DOWN " + minibossKills, "+" + minibossKills * PTS_MINIBOSS});
-        rows.add(new String[] {"BRAIN OCTOPUS " + brainKills, "+" + brainKills * PTS_BRAIN});
-        rows.add(new String[] {"HEARTS CAUGHT " + heartsCaught, "+" + heartPts});
+        rows.add(new String[] {I18n.tr("alien.survived", timeLabel()), "+" + timePts});
+        rows.add(new String[] {I18n.tr("alien.killed", kills), "+" + killScore});
+        rows.add(new String[] {I18n.tr("alien.groupsCleared", groupClears), "+" + groupPts});
+        rows.add(new String[] {I18n.tr("alien.giantsDown", minibossKills), "+" + minibossKills * PTS_MINIBOSS});
+        rows.add(new String[] {I18n.tr("alien.brainKills", brainKills), "+" + brainKills * PTS_BRAIN});
+        rows.add(new String[] {I18n.tr("alien.hearts", heartsCaught), "+" + heartPts});
         if (newRecord) {
-            rows.add(new String[] {"NEW RECORD!", "+" + recordPts});
+            rows.add(new String[] {I18n.tr("alien.newRecord"), "+" + recordPts});
         }
         buildPanel(rows, Math.max(secs, record));
         SoundHelper.play(newRecord ? "bonus_perfect.wav" : "rank_wave.wav");
@@ -454,25 +455,25 @@ public class AlienEnduranceGame implements Minigame {
         bg.setStrokeWidth(2);
         panel = new Group(bg);
         Text title = label("KOBARMARU YASHI TEST", x + 20, y + 34, 20, Color.AQUAMARINE);
-        Text sub = label("GAME OVER - THE SWARM GOT YOU", x + 20, y + 56, 11, Color.rgb(255, 150, 150));
+        Text sub = label(I18n.tr("alien.gameOver"), x + 20, y + 56, 11, Color.rgb(255, 150, 150));
         panel.getChildren().addAll(title, sub);
         double ry = y + 90;
         for (String[] r : rows) {
-            Color c = r[0].startsWith("NEW RECORD") ? Color.GOLD : Color.WHITE;
+            Color c = r[0].equals(I18n.tr("alien.newRecord")) ? Color.GOLD : Color.WHITE;
             panel.getChildren().add(label(r[0], x + 20, ry, 13, c));
             Text v = label(r[1], x + w - 120, ry, 13, c);
             panel.getChildren().add(v);
             ry += 24;
         }
         ry += 8;
-        panel.getChildren().add(label("TOTAL", x + 20, ry, 15, Color.AQUAMARINE));
+        panel.getChildren().add(label(I18n.tr("alien.total"), x + 20, ry, 15, Color.AQUAMARINE));
         panel.getChildren().add(label("+" + finalScore, x + w - 120, ry, 15, Color.AQUAMARINE));
         ry += 22;
-        panel.getChildren().add(label("MONEY  +$" + finalMoney, x + 20, ry, 12, Color.GOLD));
+        panel.getChildren().add(label(I18n.tr("alien.money", finalMoney), x + 20, ry, 12, Color.GOLD));
         int bs = bestSecs;
-        panel.getChildren().add(label(String.format("BEST  %d:%02d", bs / 60, bs % 60), x + w - 120, ry, 12, Color.GOLD));
+        panel.getChildren().add(label(I18n.tr("alien.best", String.format("%d:%02d", bs / 60, bs % 60)), x + w - 120, ry, 12, Color.GOLD));
         ry += 22;
-        panel.getChildren().add(label("YOUR SHIP LIVES ARE SAFE   SPACE = CONTINUE", x + 20, ry, 10, Color.rgb(170, 200, 210)));
+        panel.getChildren().add(label(I18n.tr("alien.continueHint"), x + 20, ry, 10, Color.rgb(170, 200, 210)));
         top.getChildren().add(panel);
     }
 
@@ -559,7 +560,7 @@ public class AlienEnduranceGame implements Minigame {
         int st = stage();
         if (st > announcedStage) {
             announcedStage = st;
-            host.displayBanner("DANGER " + (st + 1), Color.rgb(255, 120 + Math.max(0, 120 - st * 15), 80), 1.2);
+            host.displayBanner(I18n.tr("alien.danger", st + 1), Color.rgb(255, 120 + Math.max(0, 120 - st * 15), 80), 1.2);
         }
         spawnTimer -= tpf * paceFactor();
         if (spawnTimer > 0) {
@@ -784,6 +785,11 @@ public class AlienEnduranceGame implements Minigame {
             SpriteSheets.ALIEN_CRAB, SpriteSheets.ALIEN_LEAF};
     private static final String[] ALIEN_NAMES = {"CRAB", "MOTH", "EYE", "JELLY", "LEAF", "BRAIN"};
 
+    /** Nombre traducido del alienígena gigante, por ejemplo "CANGREJO GIGANTE". */
+    private static String giantName(int kind) {
+        return I18n.tr("alien.giant", I18n.tr("alien.name." + ALIEN_NAMES[kind]));
+    }
+
     Alien activeBoss;
     private double nextBossAt = 60;
     private int miniCount;
@@ -804,12 +810,12 @@ public class AlienEnduranceGame implements Minigame {
             int round = brainKills + 1;
             b = newAlien(SpriteSheets.ALIEN_BRAIN, 190, 200 + 80 * brainKills);
             b.big = true;
-            host.displayBanner("BRAIN OCTOPUS " + (round > 1 ? round : "") + "!", Color.MEDIUMORCHID, 2.0);
+            host.displayBanner(round > 1 ? I18n.tr("alien.brainRound", round) : I18n.tr("alien.brainAppears"), Color.MEDIUMORCHID, 2.0);
         } else {
             int kind = MINI_ROTATION[miniCount % MINI_ROTATION.length];
             miniCount++;
             b = newAlien(kind, 140, 28 + 12 * miniCount);
-            host.displayBanner("GIANT " + ALIEN_NAMES[kind] + "!", Color.ORANGE, 1.6);
+            host.displayBanner(I18n.tr("alien.giantAppears", giantName(kind)), Color.ORANGE, 1.6);
         }
         b.boss = true;
         b.view.setCache(true);
@@ -850,9 +856,9 @@ public class AlienEnduranceGame implements Minigame {
             if (want > a.phase) {
                 a.phase = want;
                 if (want == 1) {
-                    host.displayBanner("BRAIN CALLS FOR HELP!", Color.MEDIUMORCHID, 1.4);
+                    host.displayBanner(I18n.tr("alien.brainHelp"), Color.MEDIUMORCHID, 1.4);
                 } else {
-                    host.displayBanner("BRAIN GETS ANGRY!", Color.RED, 1.4);
+                    host.displayBanner(I18n.tr("alien.brainAngry"), Color.RED, 1.4);
                     a.view.setEffect(new javafx.scene.effect.Lighting(
                             new javafx.scene.effect.Light.Distant(45, 60, Color.rgb(255, 110, 110))));
                 }
@@ -958,7 +964,7 @@ public class AlienEnduranceGame implements Minigame {
 
     private void updateBossBar(Alien a) {
         bossBarFill.setWidth(Math.max(0, (bossBarBg.getWidth() - 2) * a.hp / (double) a.maxHp));
-        bossBarText.setText(a.big ? "BRAIN OCTOPUS" : "GIANT " + ALIEN_NAMES[a.kind]);
+        bossBarText.setText(a.big ? I18n.tr("boss.brain") : giantName(a.kind));
     }
 
     void onBossKilled(Alien a) {
@@ -966,11 +972,11 @@ public class AlienEnduranceGame implements Minigame {
         showBossBar(false);
         if (a.big) {
             brainKills++;
-            host.displayBanner("BRAIN OCTOPUS DOWN!  +15000", Color.GOLD, 2.0);
+            host.displayBanner(I18n.tr("alien.brainDown"), Color.GOLD, 2.0);
             dropHeart(a.x, a.y);
         } else {
             minibossKills++;
-            host.displayBanner("GIANT " + ALIEN_NAMES[a.kind] + " DOWN!  +3000", Color.GOLD, 1.6);
+            host.displayBanner(I18n.tr("alien.giantDown", giantName(a.kind)), Color.GOLD, 1.6);
             if (rng.nextBoolean()) {
                 dropHeart(a.x, a.y);
             }
@@ -1100,7 +1106,7 @@ public class AlienEnduranceGame implements Minigame {
             hudSec = sec;
             hudLives = lives;
             hudKills = kills;
-            hudText.setText("TIME " + timeLabel() + "   LIVES " + "\u2665".repeat(Math.max(0, lives)) + "   KILLS " + kills);
+            hudText.setText(I18n.tr("alien.hud", timeLabel(), "\u2665".repeat(Math.max(0, lives)), kills));
         }
     }
 }

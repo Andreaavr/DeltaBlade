@@ -21,16 +21,9 @@ import java.util.concurrent.TimeUnit;
  */
 final class MusicLocations {
 
-    private static final String README_NAME = "LIESMICH.txt";
-    private static final String README = """
-            DeltaBlade - your own music
-
-            Put MP3, WAV or M4A files into this folder.
-            Subfolders are ignored.
-
-            Then in the game: OPTIONS -> pick a TRACK with < >.
-            You can also open this folder there with "OPEN FOLDER".
-            """;
+    /** Fichero de instrucciones que se crea en la carpeta de música, en el idioma del juego. */
+    private static final String README_NAME = I18n.tr("music.readmeName");
+    private static final String README = I18n.tr("music.readmeText");
 
     private MusicLocations() {}
 
