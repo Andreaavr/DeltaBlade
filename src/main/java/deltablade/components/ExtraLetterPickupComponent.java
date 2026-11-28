@@ -10,7 +10,6 @@ public class ExtraLetterPickupComponent extends Component {
 
     private final char letter;
     private final int letterIndex;
-    private final Text letterText;
     private final Group flipWrapper;
     private double speed = 80;
     private double flipPhase = 0;
@@ -18,7 +17,6 @@ public class ExtraLetterPickupComponent extends Component {
     public ExtraLetterPickupComponent(char letter, int letterIndex, Text letterText) {
         this.letter = letter;
         this.letterIndex = letterIndex;
-        this.letterText = letterText;
         this.flipWrapper = letterText != null ? new Group(letterText) : null;
     }
 

@@ -6,7 +6,7 @@ import javafx.scene.paint.Color;
 
 public class RankMarkerComponent extends Component {
 
-    public static final Color[] COLORS = {
+    private static final Color[] COLORS = {
             Color.DEEPPINK,
             Color.DODGERBLUE,
             Color.LIMEGREEN,
@@ -19,7 +19,7 @@ public class RankMarkerComponent extends Component {
             "ROSA", "AZUL", "VERDE", "AMARILLO", "NARANJA", "ROJO"
     };
 
-    public static final String[] TEXTURES = {
+    private static final String[] TEXTURES = {
             "rank_pink.png",
             "rank_blue.png",
             "rank_green.png",
@@ -31,6 +31,21 @@ public class RankMarkerComponent extends Component {
     private final int colorIndex;
     private double speed = 70;
     private double pulsePhase = 0;
+
+    /** Número de colores de marcador disponibles. */
+    public static int colorCount() {
+        return COLORS.length;
+    }
+
+    /** Color del marcador con el índice indicado. */
+    public static Color colorAt(int index) {
+        return COLORS[index];
+    }
+
+    /** Textura del marcador con el índice indicado. */
+    public static String textureAt(int index) {
+        return TEXTURES[index];
+    }
 
     public RankMarkerComponent(int colorIndex) {
         this.colorIndex = Math.max(0, Math.min(COLORS.length - 1, colorIndex));

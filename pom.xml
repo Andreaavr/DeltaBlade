@@ -30,6 +30,13 @@
         <jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
         <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
         <checkstyle.version>10.21.4</checkstyle.version>
+        <maven-pmd-plugin.version>3.27.0</maven-pmd-plugin.version>
+        <spotbugs-maven-plugin.version>4.9.8.5</spotbugs-maven-plugin.version>
+        <dependency-check-maven.version>12.1.9</dependency-check-maven.version>
+        <!-- Clave de la API de NVD: se pasa por línea de comandos (-DnvdApiKey=...), nunca se sube al repositorio -->
+        <nvdApiKey></nvdApiKey>
+        <!-- Permite saltar OWASP Dependency-Check con -DdependencyCheck.skip=true (por ejemplo, en CI sin clave) -->
+        <dependencyCheck.skip>false</dependencyCheck.skip>
         <app.version>${project.version}</app.version>
         <jpackage.type>APP_IMAGE</jpackage.type>
         <jpackage.icon>${project.basedir}/packaging/icons/deltablade.png</jpackage.icon>
@@ -40,6 +47,20 @@
         <!-- Stabil halten: sonst erzeugt jpackage jede EXE als neues Windows-Produkt. -->
         <jpackage.win.upgrade.uuid>6D2C415E-841E-3F95-A418-FEEE40105FDA</jpackage.win.upgrade.uuid>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Fuerza una versión de Jackson sin las vulnerabilidades detectadas por OWASP Dependency-Check
+                 (FXGL 21.1 trae jackson-databind 2.14.2 como dependencia transitiva) -->
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>2.18.9</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -221,6 +242,87 @@
                 <executions>
                     <execution>
                         <id>checkstyle-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- verify: análisis estático de código con PMD -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>${maven-pmd-plugin.version}</version>
+                <configuration>
+                    <targetJdk>21</targetJdk>
+                    <linkXRef>false</linkXRef>
+                    <printFailingErrors>true</printFailingErrors>
+                    <!-- Falla con violaciones de prioridad 1 y 2; las de prioridad 3-5 se evalúan en docs/analisis-estatico.md -->
+                    <failOnViolation>true</failOnViolation>
+                    <failurePriority>2</failurePriority>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>pmd-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- verify: detección de errores en el bytecode con SpotBugs -->
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>${spotbugs-maven-plugin.version}</version>
+                <configuration>
+                    <effort>Max</effort>
+                    <threshold>Medium</threshold>
+                    <xmlOutput>true</xmlOutput>
+                    <htmlOutput>true</htmlOutput>
+                    <!-- Avisos evaluados y justificados en docs/analisis-estatico.md -->
+                    <excludeFilterFile>${project.basedir}/spotbugs-exclude.xml</excludeFilterFile>
+                    <failOnError>true</failOnError>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>spotbugs-check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- verify: vulnerabilidades conocidas en las dependencias con OWASP Dependency-Check -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>${dependency-check-maven.version}</version>
+                <configuration>
+                    <nvdApiKey>${nvdApiKey}</nvdApiKey>
+                    <skip>${dependencyCheck.skip}</skip>
+                    <formats>
+                        <format>HTML</format>
+                        <format>JSON</format>
+                    </formats>
+                    <!-- OSS Index exige credenciales de Sonatype y el analizador de .NET no aplica a este proyecto -->
+                    <ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>
+                    <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+                    <!-- Falsos positivos evaluados y justificados en docs/analisis-estatico.md -->
+                    <suppressionFiles>
+                        <suppressionFile>${project.basedir}/dependency-check-suppressions.xml</suppressionFile>
+                    </suppressionFiles>
+                    <!-- Falla si alguna dependencia tiene una vulnerabilidad de severidad alta o crítica (CVSS >= 7) -->
+                    <failBuildOnCVSS>7</failBuildOnCVSS>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>dependency-check</id>
                         <phase>verify</phase>
                         <goals>
                             <goal>check</goal>

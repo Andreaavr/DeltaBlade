@@ -280,7 +280,7 @@ public class AlienEnduranceGame implements Minigame {
     }
 
     private final List<Heart> hearts = new ArrayList<>();
-    private double heartTimer = 40 + new Random().nextDouble() * 20;
+    private double heartTimer = 40 + rng.nextDouble() * 20;
     int heartsCaught;
 
     void updateExtras(double tpf) {

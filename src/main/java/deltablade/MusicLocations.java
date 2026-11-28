@@ -90,6 +90,8 @@ final class MusicLocations {
         return expandUserDir(raw, System.getProperty("user.home", "."));
     }
 
+    // El return dentro del bucle es intencionado: se devuelve la primera línea XDG_MUSIC_DIR válida.
+    @SuppressWarnings("PMD.AvoidBranchingStatementAsLastInLoop")
     private static Path userDirsMusicDir(String home) {
         Path file = Path.of(home, ".config", "user-dirs.dirs");
         if (!Files.isRegularFile(file)) {
@@ -208,7 +210,8 @@ final class MusicLocations {
         String want = catalogKey(bundledName);
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
             for (Path path : stream) {
-                if (Files.isRegularFile(path) && catalogKey(path.getFileName().toString()).equals(want)) {
+                Path fileName = path.getFileName();
+                if (fileName != null && Files.isRegularFile(path) && catalogKey(fileName.toString()).equals(want)) {
                     return true;
                 }
             }
@@ -232,7 +235,8 @@ final class MusicLocations {
         }
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
             for (Path path : stream) {
-                if (Files.isRegularFile(path) && isCatalogAudio(path.getFileName().toString())) {
+                Path fileName = path.getFileName();
+                if (fileName != null && Files.isRegularFile(path) && isCatalogAudio(fileName.toString())) {
                     return true;
                 }
             }

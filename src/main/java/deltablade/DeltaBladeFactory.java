@@ -45,7 +45,6 @@ import javafx.scene.text.Text;
 public class DeltaBladeFactory implements EntityFactory {
 
     private static final int SHIP_SIZE = 48;
-    private static final int BOSS_SIZE = 80;
     private static final int BULLET_W = 12;
     private static final int BULLET_H = 20;
     private static final int PICKUP_SIZE = 28;
@@ -670,9 +669,9 @@ public class DeltaBladeFactory implements EntityFactory {
     @Spawns("rankMarker")
     public Entity newRankMarker(SpawnData data) {
         int colorIndex = data.hasKey("colorIndex") ? data.<Integer>get("colorIndex") : 0;
-        colorIndex = Math.max(0, Math.min(RankMarkerComponent.COLORS.length - 1, colorIndex));
-        Color color = RankMarkerComponent.COLORS[colorIndex];
-        Image img = EmbeddedTextures.getImage(RankMarkerComponent.TEXTURES[colorIndex], 256, 256);
+        colorIndex = Math.max(0, Math.min(RankMarkerComponent.colorCount() - 1, colorIndex));
+        Color color = RankMarkerComponent.colorAt(colorIndex);
+        Image img = EmbeddedTextures.getImage(RankMarkerComponent.textureAt(colorIndex), 256, 256);
         Node view;
         double size = 20;
         if (img != null && !img.isError()) {

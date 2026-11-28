@@ -321,7 +321,6 @@ public final class OptionsOverlay {
         private static final double THUMB_RADIUS = 11;
 
         private final double width;
-        private final double height;
         private final Rectangle fill;
         private final Circle thumb;
         private double value;
@@ -331,7 +330,6 @@ public final class OptionsOverlay {
 
         VolumeBar(double width, double height) {
             this.width = width;
-            this.height = height;
 
             Rectangle hit = new Rectangle(width, height);
             hit.setFill(Color.rgb(8, 16, 28, 0.35));

@@ -55,10 +55,8 @@ public class EnemyComponent extends Component {
     private double entryCurvePhase = 0;
     private int flightIndex = 0;
 
-    private double speedX;
     private double baseY;
     private double hoverPhase;
-    private double hoverAmplitude = 15;
     private double coverPeekWait;
     private double coverPeekT;
     private boolean coverPeeking;
@@ -116,9 +114,7 @@ public class EnemyComponent extends Component {
         this.type = type;
         this.waveLevel = Math.max(1, level);
         this.health = type.health;
-        double levelMultiplier = 1 + (level - 1) * 0.08;
         this.entrySpeed = 60 + level * 5;
-        this.speedX = type.speed * levelMultiplier * (RANDOM.nextBoolean() ? 1 : -1);
         this.hoverPhase = RANDOM.nextDouble() * Math.PI * 2;
         this.coverPeekWait = 0.7 + RANDOM.nextDouble() * 2.8;
         this.diveSpeed = 90 + level * 10;
@@ -129,7 +125,6 @@ public class EnemyComponent extends Component {
             this.bossNo = deltablade.GameVars.bossNumber(level);
             this.health = deltablade.GameVars.BOSS_HP_BASE + deltablade.GameVars.BOSS_HP_PER_BOSS * bossNo;
             this.maxHealth = this.health;
-            this.speedX = type.speed * (RANDOM.nextBoolean() ? 1 : -1);
         }
         if (type == EnemyType.UFO) {
             this.isUfo = true;

@@ -1633,7 +1633,6 @@ public class MazeEscapeGame implements Minigame {
 
         double w = host.playRight() - host.playLeft();
         double panelW = Math.min(440, w - 24);
-        double panelH = 250;
 
         Rectangle dim = new Rectangle(host.playRight() - host.playLeft() + 8,
                 host.playBottom() - host.playTop() + 8);
@@ -1687,7 +1686,6 @@ public class MazeEscapeGame implements Minigame {
             perfectText.setFill(Color.GOLD);
             perfectText.setEffect(new javafx.scene.effect.Glow(0.9));
             panel.getChildren().add(perfectText);
-            panelH += 24;
         }
 
         Text totals = new Text(I18n.tr("maze.totals", totalScore, totalMoney));

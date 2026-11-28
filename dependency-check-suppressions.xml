@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Falsos positivos de OWASP Dependency-Check evaluados en DeltaBlade.
+    La justificación de cada supresión está en docs/analisis-estatico.md.
+-->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+    <suppress>
+        <notes><![CDATA[
+        Falso positivo: jlayer (decodificador MP3 de JavaZOOM) se identifica por error con el CPE de
+        Zoom (cpe:/a:zoom:zoom), la aplicación de videoconferencias. Ninguna de esas CVE afecta a jlayer.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/javazoom/jlayer@.*$</packageUrl>
+        <cpe>cpe:/a:zoom:zoom</cpe>
+    </suppress>
+
+    <suppress>
+        <notes><![CDATA[
+        Falsos positivos en kotlin-stdlib y kotlin-stdlib-common (dependencias transitivas de FXGL):
+        - CVE-2026-53914 afecta a los metadatos de la caché de compilación de Kotlin (compilador/build),
+          no a la biblioteca estándar que se ejecuta con el juego.
+        - CVE-2020-29582 está corregida desde Kotlin 1.4.21; el proyecto usa kotlin-stdlib 1.8.10.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.jetbrains\.kotlin/kotlin\-stdlib(\-common)?@.*$</packageUrl>
+        <cve>CVE-2026-53914</cve>
+        <cve>CVE-2020-29582</cve>
+    </suppress>
+
+</suppressions>

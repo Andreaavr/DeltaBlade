@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Avisos de SpotBugs evaluados y aceptados en DeltaBlade.
+    La justificación de cada exclusión está en docs/analisis-estatico.md.
+-->
+<FindBugsFilter>
+
+    <!-- Herramientas de desarrollo (editor y generador de explosiones, utilidades de nombres):
+         no forman parte del juego ni se ejecutan al jugar. -->
+    <Match>
+        <Package name="deltablade.tools"/>
+    </Match>
+
+    <!-- Nodos de JavaFX, imágenes de FXGL y el MinigameHost se comparten a propósito entre clases:
+         son objetos del grafo de escena, no datos que haya que copiar. -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- Random con semilla fija por partida y oleada: se crea en cada llamada para que el tipo de
+         oleada sea reproducible dentro de la misma partida. -->
+    <Match>
+        <Class name="deltablade.WaveManager"/>
+        <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE"/>
+    </Match>
+
+    <!-- Los valores comprobados con "% 2 == 1" (nivel, fila, índice de escuadrón) nunca son negativos. -->
+    <Match>
+        <Class name="deltablade.WaveManager"/>
+        <Bug pattern="IM_BAD_CHECK_FOR_ODD"/>
+    </Match>
+
+    <!-- Solo existe un WaveManager por partida; la semilla y el reloj de formación son estado global de la partida. -->
+    <Match>
+        <Class name="deltablade.WaveManager"/>
+        <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
+    </Match>
+
+    <!-- Captura genérica intencionada: si falla el audio, la firma HMAC, la carga de una imagen o el comando
+         del sistema, el juego sigue funcionando con un valor por defecto en lugar de cerrarse. -->
+    <Match>
+        <Or>
+            <Class name="deltablade.HighScoreClient"/>
+            <Class name="deltablade.MusicLocations"/>
+            <Class name="deltablade.ShopImages"/>
+        </Or>
+        <Bug pattern="REC_CATCH_EXCEPTION"/>
+    </Match>
+    <Match>
+        <Or>
+            <Class name="deltablade.JavaSoundMusic"/>
+            <Class name="deltablade.SoundHelper"/>
+        </Or>
+        <Bug pattern="DE_MIGHT_IGNORE"/>
+    </Match>
+
+    <!-- Comprobación defensiva de null sobre un valor de FXGL anotado como @NotNull. -->
+    <Match>
+        <Class name="deltablade.SoundHelper"/>
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"/>
+    </Match>
+
+    <!-- Mejora de rendimiento despreciable (una llamada por enemigo u oleada). -->
+    <Match>
+        <Or>
+            <Class name="deltablade.DeltaBladeFactory"/>
+            <Class name="deltablade.WaveManager"/>
+        </Or>
+        <Bug pattern="DM_NEXTINT_VIA_NEXTDOUBLE"/>
+    </Match>
+
+</FindBugsFilter>
