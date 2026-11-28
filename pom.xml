@@ -33,6 +33,7 @@
         <maven-pmd-plugin.version>3.27.0</maven-pmd-plugin.version>
         <spotbugs-maven-plugin.version>4.9.8.5</spotbugs-maven-plugin.version>
         <dependency-check-maven.version>12.1.9</dependency-check-maven.version>
+        <maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
         <!-- Clave de la API de NVD: se pasa por línea de comandos (-DnvdApiKey=...), nunca se sube al repositorio -->
         <nvdApiKey></nvdApiKey>
         <!-- Permite saltar OWASP Dependency-Check con -DdependencyCheck.skip=true (por ejemplo, en CI sin clave) -->
@@ -326,6 +327,34 @@
                         <phase>verify</phase>
                         <goals>
                             <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- verify: genera la documentación HTML del código con Javadoc -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc-plugin.version}</version>
+                <configuration>
+                    <show>protected</show>
+                    <encoding>UTF-8</encoding>
+                    <docencoding>UTF-8</docencoding>
+                    <charset>UTF-8</charset>
+                    <doctitle>DeltaBlade ${project.version}</doctitle>
+                    <windowtitle>DeltaBlade ${project.version}</windowtitle>
+                    <!-- Comprueba la sintaxis de los comentarios; que no falte Javadoc lo comprueba Checkstyle -->
+                    <doclint>all,-missing</doclint>
+                    <failOnError>true</failOnError>
+                    <quiet>true</quiet>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>javadoc-html</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>javadoc-no-fork</goal>
                         </goals>
                     </execution>
                 </executions>

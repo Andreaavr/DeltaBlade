@@ -1478,6 +1478,11 @@ public class ExplosionEditor extends Application {
         alert.showAndWait();
     }
 
+    /**
+     * Abre el editor de explosiones.
+     *
+     * @param args argumentos de la línea de comandos
+     */
     public static void main(String[] args) {
         launch(args);
     }

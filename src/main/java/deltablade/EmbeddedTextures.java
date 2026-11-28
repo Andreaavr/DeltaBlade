@@ -88,14 +88,19 @@ public final class EmbeddedTextures {
     }
 
     /**
-     * Devuelve el error de precarga, si lo hubo durante preloadAll()
+     * Devuelve el error de precarga, si lo hubo durante {@code preloadAll()}.
+     *
+     * @return mensaje de error, o {@code null} si no hubo error
      */
     public static String getPreloadError() {
         return preloadError;
     }
 
     /**
-     * Comprueba si existe una textura con ese nombre entre los datos incrustados
+     * Comprueba si existe una textura con ese nombre entre los datos incrustados.
+     *
+     * @param name nombre del fichero de la textura
+     * @return {@code true} si la textura existe
      */
     public static boolean hasTexture(String name) {
         return TEXTURE_DATA.containsKey(name);
@@ -104,7 +109,10 @@ public final class EmbeddedTextures {
     /**
      * Obtiene una WritableImage al tamaño original del PNG a partir de los datos incrustados, con caché.
      * Decodifica solo con Inflater + PixelWriter, sin AWT ni ImageIO.
-     * Solo devuelve null si la textura no está entre los datos incrustados o si falla la decodificación.
+     *
+     * @param name nombre del fichero de la textura
+     * @return imagen decodificada, o {@code null} si la textura no está entre los datos incrustados
+     *         o si falla la decodificación
      */
     public static WritableImage getImageNative(String name) {
         String cacheKey = name + "_native";
@@ -144,9 +152,13 @@ public final class EmbeddedTextures {
     }
 
     /**
-     * Obtiene una Image a partir de los datos incrustados, con caché.
-     * Los parámetros w/h solo se usan para el tamaño del ImageView, no para la carga.
-     * Solo devuelve null si la textura no está entre los datos incrustados.
+     * Obtiene una imagen a partir de los datos incrustados, con caché.
+     * Los parámetros de tamaño solo se usan para el tamaño del ImageView, no para la carga.
+     *
+     * @param name nombre del fichero de la textura
+     * @param w ancho previsto, en píxeles
+     * @param h alto previsto, en píxeles
+     * @return imagen, o {@code null} si la textura no está entre los datos incrustados
      */
     public static WritableImage getImage(String name, int w, int h) {
         return getImageNative(name);
@@ -319,6 +331,10 @@ public final class EmbeddedTextures {
     /**
      * Crea como alternativa un polígono sencillo de nave en forma de triángulo.
      * NUNCA devuelve un cuadrado/rectángulo: esa es la señal visual de un error.
+     *
+     * @param size tamaño de la nave, en píxeles
+     * @param color color de relleno
+     * @return triángulo con forma de nave
      */
     public static Polygon createFallbackShip(int size, Color color) {
         double half = size / 2.0;

@@ -13,10 +13,20 @@ public final class AppVersion {
 
     private AppVersion() {}
 
+    /**
+     * Devuelve la versión del juego, leída de {@code version.properties}.
+     *
+     * @return versión, por ejemplo "1.0.8"
+     */
     public static String current() {
         return VALUE;
     }
 
+    /**
+     * Devuelve la versión del juego precedida de "v", para mostrarla en pantalla.
+     *
+     * @return etiqueta de versión, por ejemplo "v1.0.8"
+     */
     public static String label() {
         return "v" + VALUE;
     }

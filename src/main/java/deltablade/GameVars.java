@@ -1,5 +1,8 @@
 package deltablade;
 
+/**
+ * Nombres de las variables globales de FXGL y constantes de configuración de la partida.
+ */
 public final class GameVars {
     public static final String SCORE = "score";
     public static final String LIVES = "lives";
@@ -103,6 +106,12 @@ public final class GameVars {
     public static final int BOSS_KILL_SCORE = 5000;
     public static final int BOSS_KILL_MONEY = 300;
 
+    /**
+     * Devuelve el número de jefe que aparece en un nivel.
+     *
+     * @param level nivel de la oleada
+     * @return número de jefe (mínimo 1)
+     */
     public static int bossNumber(int level) {
         return Math.max(1, level / BOSS_EVERY);
     }

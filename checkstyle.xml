@@ -51,6 +51,20 @@
             <property name="allowSingleLineStatement" value="true"/>
         </module>
 
+        <!-- Javadoc obligatorio en clases, interfaces, constructores y métodos públicos o protegidos -->
+        <module name="MissingJavadocType">
+            <property name="scope" value="protected"/>
+        </module>
+        <module name="MissingJavadocMethod">
+            <property name="scope" value="protected"/>
+            <property name="tokens" value="METHOD_DEF, CTOR_DEF, ANNOTATION_FIELD_DEF, COMPACT_CTOR_DEF"/>
+        </module>
+        <!-- Los comentarios deben incluir @param, @return y @throws cuando corresponda -->
+        <module name="JavadocMethod">
+            <property name="accessModifiers" value="public, protected"/>
+            <property name="validateThrows" value="true"/>
+        </module>
+
         <!-- Buenas prácticas -->
         <module name="ModifierOrder"/>
         <module name="UpperEll"/>

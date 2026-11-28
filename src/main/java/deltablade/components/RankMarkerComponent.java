@@ -4,6 +4,9 @@ import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.component.Component;
 import javafx.scene.paint.Color;
 
+/**
+ * Componente FXGL de los marcadores de rango que se recogen para subir de rango; cada uno tiene un color.
+ */
 public class RankMarkerComponent extends Component {
 
     private static final Color[] COLORS = {
@@ -32,21 +35,40 @@ public class RankMarkerComponent extends Component {
     private double speed = 70;
     private double pulsePhase = 0;
 
-    /** Número de colores de marcador disponibles. */
+    /**
+     * Devuelve el número de colores de marcador disponibles.
+     *
+     * @return número de colores
+     */
     public static int colorCount() {
         return COLORS.length;
     }
 
-    /** Color del marcador con el índice indicado. */
+    /**
+     * Devuelve el color del marcador con el índice indicado.
+     *
+     * @param index índice del color
+     * @return color del marcador
+     */
     public static Color colorAt(int index) {
         return COLORS[index];
     }
 
-    /** Textura del marcador con el índice indicado. */
+    /**
+     * Devuelve la textura del marcador con el índice indicado.
+     *
+     * @param index índice del color
+     * @return nombre del fichero de la textura
+     */
     public static String textureAt(int index) {
         return TEXTURES[index];
     }
 
+    /**
+     * Crea un marcador de rango del color indicado.
+     *
+     * @param colorIndex índice del color (se ajusta al rango válido)
+     */
     public RankMarkerComponent(int colorIndex) {
         this.colorIndex = Math.max(0, Math.min(COLORS.length - 1, colorIndex));
     }
@@ -63,10 +85,20 @@ public class RankMarkerComponent extends Component {
         }
     }
 
+    /**
+     * Devuelve el índice del color de este marcador.
+     *
+     * @return índice del color
+     */
     public int getColorIndex() {
         return colorIndex;
     }
 
+    /**
+     * Devuelve el color de este marcador.
+     *
+     * @return color del marcador
+     */
     public Color getColor() {
         return COLORS[colorIndex];
     }

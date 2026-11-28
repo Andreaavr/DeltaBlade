@@ -63,12 +63,36 @@ public final class ShopOverlay {
                     + "-fx-border-width: 2;"
                     + "-fx-border-radius: 8;";
 
+    /**
+     * Datos de la partida que necesita la tienda para mostrar precios, desbloqueos y el equipo actual.
+     *
+     * @param money dinero disponible
+     * @param rank rango actual del jugador
+     * @param wave oleada más alta alcanzada
+     * @param meteorWins victorias en el minijuego de meteoritos
+     * @param cognitiveWins victorias en el test cognitivo
+     * @param squadCombos escuadrones destruidos antes de llegar a la formación
+     * @param bossKills jefes derrotados
+     * @param equipped arma equipada
+     * @param weaponGrade número de disparos simultáneos actual
+     * @param ammoCap límite actual de disparos en pantalla
+     * @param autofire {@code true} si ya tiene el disparo automático
+     */
     public record RunStats(int money, int rank, int wave, int meteorWins, int cognitiveWins,
                            int squadCombos, int bossKills, ShopWeapon equipped,
                            int weaponGrade, int ammoCap, boolean autofire) {}
 
+    /**
+     * Acción que intenta comprar un objeto de la tienda.
+     */
     @FunctionalInterface
     public interface BuyHandler {
+        /**
+         * Intenta comprar un objeto.
+         *
+         * @param item objeto que se quiere comprar
+         * @return {@code true} si la compra se ha realizado
+         */
         boolean tryBuy(ShopItem item);
     }
 
@@ -98,6 +122,13 @@ public final class ShopOverlay {
     private boolean autofire;
     private boolean closed;
 
+    /**
+     * Crea la pantalla de la tienda.
+     *
+     * @param stats datos de la partida
+     * @param onBuy acción que realiza cada compra
+     * @param onClose acción al cerrar la tienda; recibe el arma equipada
+     */
     public ShopOverlay(RunStats stats, BuyHandler onBuy, Consumer<ShopWeapon> onClose) {
         this.initialStats = stats;
         this.onBuy = onBuy;
@@ -221,10 +252,21 @@ public final class ShopOverlay {
         slide.play();
     }
 
+    /**
+     * Devuelve el nodo raíz de la tienda, para añadirlo a la escena.
+     *
+     * @return nodo raíz
+     */
     public Group getRoot() {
         return root;
     }
 
+    /**
+     * Procesa una tecla pulsada en la tienda (moverse, comprar o salir).
+     *
+     * @param e evento de teclado
+     * @return {@code true} si la tienda ha usado la tecla
+     */
     public boolean handleKey(KeyEvent e) {
         if (closed) {
             return true;

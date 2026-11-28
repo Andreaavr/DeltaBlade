@@ -11,8 +11,15 @@ import java.util.List;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
+/**
+ * Genera y controla las oleadas de enemigos: elige el tipo de oleada, crea los escuadrones,
+ * calcula las trayectorias de entrada, coordina los picados en grupo y reparte las bonificaciones.
+ */
 public class WaveManager {
 
+    /**
+     * Tipos de oleada que puede generar el juego.
+     */
     public enum WaveType {
         FIGHTERS,
         MIXED,
@@ -32,10 +39,16 @@ public class WaveManager {
     /** Nuevo en cada partida: añade algo de azar al orden de las oleadas. */
     private static long runSeed = System.nanoTime();
 
+    /**
+     * Crea un gestor de oleadas con una semilla nueva, para que el orden de las oleadas varíe en cada partida.
+     */
     public WaveManager() {
         runSeed = System.nanoTime();
     }
 
+    /**
+     * Formas que puede adoptar la formación de enemigos.
+     */
     public enum FormationType {
         ROW,
         V_FORMATION,
@@ -58,6 +71,9 @@ public class WaveManager {
     private boolean stopped = false;
     private int bonusPerfectStreak = 0;
 
+    /**
+     * Escuadrón de enemigos que entra junto; sirve para calcular las bonificaciones por grupo.
+     */
     public static class Squad {
         public final int id;
         public final List<Entity> enemies = new ArrayList<>();
@@ -67,38 +83,78 @@ public class WaveManager {
         public boolean settled = false;
         public boolean bonusResolved = false;
 
+        /**
+         * Crea un escuadrón vacío.
+         *
+         * @param id identificador del escuadrón
+         * @param size número de naves con que empieza
+         */
         public Squad(int id, int size) {
             this.id = id;
             this.originalSize = size;
         }
 
+        /**
+         * Añade una nave al escuadrón.
+         *
+         * @param enemy entidad de la nave
+         */
         public void addEnemy(Entity enemy) {
             enemies.add(enemy);
         }
 
+        /**
+         * Registra que una nave del escuadrón ha sido destruida.
+         *
+         * @param wasEntering {@code true} si la nave aún estaba entrando en la formación
+         */
         public void onEnemyDestroyed(boolean wasEntering) {
             if (wasEntering && !settled) {
                 destroyedWhileEntering++;
             }
         }
 
+        /**
+         * Indica si ya no queda ninguna nave activa del escuadrón.
+         *
+         * @return {@code true} si todo el escuadrón ha sido destruido
+         */
         public boolean isFullyDestroyed() {
             return enemies.stream().noneMatch(Entity::isActive);
         }
 
+        /**
+         * Indica si el escuadrón entero fue destruido antes de llegar a la formación, lo que da bonificación.
+         *
+         * @return {@code true} si se ha ganado la bonificación de combo
+         */
         public boolean earnedComboBonus() {
             return destroyedWhileEntering == originalSize && !settled;
         }
 
+        /**
+         * Marca que el escuadrón ya ha llegado a la formación.
+         */
         public void markSettled() {
             settled = true;
         }
     }
 
+    /**
+     * Empieza la oleada del nivel indicado, eligiendo el tipo de oleada automáticamente.
+     *
+     * @param level nivel de la oleada
+     */
     public void startWave(int level) {
         startWave(level, resolveWaveType(level));
     }
 
+    /**
+     * Empieza la oleada del nivel indicado con un tipo de oleada concreto.
+     *
+     * @param level nivel de la oleada
+     * @param forcedType tipo de oleada que se quiere generar
+     */
     public void startWave(int level, WaveType forcedType) {
         this.currentLevel = level;
         this.activeSquads.clear();
@@ -142,6 +198,12 @@ public class WaveManager {
         set(GameVars.EXTRA_LETTER_SPAWNED_THIS_WAVE, 0);
     }
 
+    /**
+     * Decide qué tipo de oleada corresponde a un nivel (jefe, monstruos, bonificación...).
+     *
+     * @param level nivel de la oleada
+     * @return tipo de oleada para ese nivel
+     */
     public static WaveType resolveWaveType(int level) {
         if (level > 0 && level % GameVars.BOSS_EVERY == 0) {
             return WaveType.BOSS;
@@ -518,6 +580,9 @@ public class WaveManager {
         return Math.min(y, formationMaxY());
     }
 
+    /**
+     * Detiene la generación de enemigos de la oleada actual.
+     */
     public void stop() {
         stopped = true;
     }
@@ -525,10 +590,20 @@ public class WaveManager {
     // Movimiento común de la formación: balanceo + "respiración".
     private static double formationClock = 0;
 
+    /**
+     * Devuelve el desplazamiento horizontal actual del vaivén de la formación.
+     *
+     * @return desplazamiento en píxeles
+     */
     public static double formationSwayX() {
         return Math.sin(formationClock * 0.9) * 30;
     }
 
+    /**
+     * Devuelve el factor de escala actual de la "respiración" de la formación.
+     *
+     * @return factor de escala (alrededor de 1.0)
+     */
     public static double formationBreath() {
         return 1.0 + 0.06 * Math.sin(formationClock * 1.4);
     }
@@ -570,6 +645,11 @@ public class WaveManager {
         }
     }
 
+    /**
+     * Avanza la oleada un fotograma: genera escuadrones y coordina los picados en grupo.
+     *
+     * @param tpf tiempo transcurrido desde el fotograma anterior, en segundos
+     */
     public void update(double tpf) {
         formationClock += tpf;
         if (stopped) {
@@ -831,6 +911,9 @@ public class WaveManager {
         return EnemyComponent.EnemyType.BASIC;
     }
 
+    /**
+     * Comprueba y concede las bonificaciones por destruir grupos completos, según el tipo de oleada.
+     */
     public void checkKillBonuses() {
         if (currentWaveType == WaveType.BONUS) {
             checkBonusPerfects();
@@ -839,6 +922,9 @@ public class WaveManager {
         }
     }
 
+    /**
+     * Concede la bonificación de combo a los escuadrones destruidos por completo mientras entraban.
+     */
     public void checkSquadBonuses() {
         for (Squad squad : activeSquads) {
             if (squad.isFullyDestroyed() && squad.earnedComboBonus()) {
@@ -851,6 +937,9 @@ public class WaveManager {
         }
     }
 
+    /**
+     * Concede las bonificaciones de las oleadas de bonificación cuando se derriban todas las naves de un grupo.
+     */
     public void checkBonusPerfects() {
         for (Squad squad : activeSquads) {
             if (squad.bonusResolved) {
@@ -900,7 +989,12 @@ public class WaveManager {
     private boolean alienBossSpawned;
     private int monsterTotal;
 
-    /** Oleada de monstruos: se vuelve true una vez, cuando han caído unos dos tercios de los monstruos. */
+    /**
+     * Registra la baja de un monstruo y decide si debe aparecer el jefe alienígena.
+     * Solo devuelve {@code true} una vez por oleada, cuando han caído unos dos tercios de los monstruos.
+     *
+     * @return {@code true} si hay que hacer aparecer el jefe alienígena
+     */
     public boolean noteMonsterKillAndCheckBoss() {
         if (currentWaveType != WaveType.MONSTER || alienBossSpawned) {
             return false;
@@ -913,49 +1007,99 @@ public class WaveManager {
         return false;
     }
 
+    /**
+     * Marca que el jefe alienígena de esta oleada ya ha aparecido.
+     */
     public void markAlienBossSpawned() {
         alienBossSpawned = true;
     }
 
+    /**
+     * Indica si en esta oleada de monstruos ya ha aparecido el jefe alienígena.
+     *
+     * @return {@code true} si el jefe alienígena está en juego en esta oleada
+     */
     public boolean alienBossThisWave() {
         return currentWaveType == WaveType.MONSTER && alienBossSpawned;
     }
 
+    /**
+     * Devuelve la trayectoria de entrada de un jefe: desde arriba, en el centro de la pantalla.
+     *
+     * @return trayectoria de entrada del jefe
+     */
     public static EntryPath bossEntry() {
         return new EntryPath(getAppWidth() / 2.0, -80, EntryPath.Type.FROM_TOP_SPLIT);
     }
 
+    /**
+     * Registra que una nave de un escuadrón ha sido destruida.
+     *
+     * @param squadId identificador del escuadrón
+     * @param wasEntering {@code true} si la nave aún estaba entrando en la formación
+     */
     public void onEnemyDestroyed(int squadId, boolean wasEntering) {
         if (squadId >= 0 && squadId < activeSquads.size()) {
             activeSquads.get(squadId).onEnemyDestroyed(wasEntering);
         }
     }
 
+    /**
+     * Registra que una nave de un escuadrón ha escapado sin ser destruida.
+     *
+     * @param squadId identificador del escuadrón
+     */
     public void onEnemyEscaped(int squadId) {
         if (squadId >= 0 && squadId < activeSquads.size()) {
             activeSquads.get(squadId).escaped++;
         }
     }
 
+    /**
+     * Marca que un escuadrón ya ha llegado a la formación.
+     *
+     * @param squadId identificador del escuadrón
+     */
     public void markSquadSettled(int squadId) {
         if (squadId >= 0 && squadId < activeSquads.size()) {
             activeSquads.get(squadId).markSettled();
         }
     }
 
+    /**
+     * Indica si todavía quedan enemigos por aparecer en la oleada.
+     *
+     * @return {@code true} si quedan enemigos por generar
+     */
     public boolean hasPendingSpawns() {
         return !stopped && enemiesSpawned < totalEnemiesInWave;
     }
 
+    /**
+     * Indica si la oleada ha terminado: han aparecido todos los enemigos y no queda ninguno.
+     *
+     * @return {@code true} si la oleada está completa
+     */
     public boolean isWaveComplete() {
         return !stopped && enemiesSpawned >= totalEnemiesInWave && geti(GameVars.ENEMIES_REMAINING) <= 0;
     }
 
+    /**
+     * Devuelve el tipo de la oleada actual.
+     *
+     * @return tipo de oleada actual
+     */
     public WaveType getCurrentWaveType() {
         return currentWaveType;
     }
 
+    /**
+     * Trayectoria con la que un enemigo entra en la pantalla hasta su hueco en la formación.
+     */
     public static class EntryPath {
+        /**
+         * Formas básicas de entrada.
+         */
         public enum Type {
             FROM_LEFT_CURVE,
             FROM_RIGHT_CURVE,
@@ -973,6 +1117,13 @@ public class WaveManager {
         /** Trayectoria opcional (arco, rizo...). null = forma de entrada simple antigua. */
         public List<Point2D> flight;
 
+        /**
+         * Crea una trayectoria de entrada a partir de una de las trayectorias de vuelo predefinidas.
+         *
+         * @param kind tipo de trayectoria de vuelo
+         * @param mirror {@code true} para reflejarla horizontalmente
+         * @return trayectoria de entrada
+         */
         public static EntryPath flight(FlightPaths.Kind kind, boolean mirror) {
             List<Point2D> pts = FlightPaths.build(kind, mirror);
             Point2D first = pts.get(0);
@@ -981,14 +1132,38 @@ public class WaveManager {
             return p;
         }
 
+        /**
+         * Crea una trayectoria de entrada simple.
+         *
+         * @param startX coordenada X de partida
+         * @param startY coordenada Y de partida
+         * @param type forma de la entrada
+         */
         public EntryPath(double startX, double startY, Type type) {
             this(startX, startY, type, 0, false);
         }
 
+        /**
+         * Crea una trayectoria de entrada para naves que entran por parejas.
+         *
+         * @param startX coordenada X de partida
+         * @param startY coordenada Y de partida
+         * @param type forma de la entrada
+         * @param pairGap separación horizontal entre las naves de cada pareja
+         */
         public EntryPath(double startX, double startY, Type type, double pairGap) {
             this(startX, startY, type, pairGap, false);
         }
 
+        /**
+         * Crea una trayectoria de entrada completa.
+         *
+         * @param startX coordenada X de partida
+         * @param startY coordenada Y de partida
+         * @param type forma de la entrada
+         * @param pairGap separación horizontal entre las naves de cada pareja
+         * @param beadString {@code true} si las naves entran en fila, como cuentas de un collar
+         */
         public EntryPath(double startX, double startY, Type type, double pairGap, boolean beadString) {
             this.startX = startX;
             this.startY = startY;

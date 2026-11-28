@@ -6,8 +6,15 @@ import deltablade.WaveManager;
 
 import java.util.Random;
 
+/**
+ * Componente FXGL que controla a una nave enemiga: entrada en formación, picados,
+ * disparos, vida y comportamientos especiales (jefes, ovnis, kamikazes y monstruos).
+ */
 public class EnemyComponent extends Component {
 
+    /**
+     * Tipos de enemigo con su vida, puntuación, velocidad y frecuencia de disparo base.
+     */
     public enum EnemyType {
         BASIC(1, 100, 55, 0.015),
         FAST(1, 150, 80, 0.02),
@@ -29,6 +36,9 @@ public class EnemyComponent extends Component {
         }
     }
 
+    /**
+     * Estados de la máquina de estados que sigue cada enemigo.
+     */
     public enum State {
         ENTERING,
         FORMATION,
@@ -110,6 +120,12 @@ public class EnemyComponent extends Component {
 
     private static final Random RANDOM = new Random();
 
+    /**
+     * Crea el componente de un enemigo del tipo y nivel indicados.
+     *
+     * @param type tipo de enemigo
+     * @param level nivel de la oleada (mínimo 1); aumenta la velocidad de entrada
+     */
     public EnemyComponent(EnemyType type, int level) {
         this.type = type;
         this.waveLevel = Math.max(1, level);
@@ -137,18 +153,38 @@ public class EnemyComponent extends Component {
         }
     }
 
+    /**
+     * Indica qué sprite de la hoja de enemigos usa esta nave.
+     *
+     * @param spriteIndex índice del sprite
+     */
     public void setSpriteIndex(int spriteIndex) {
         this.spriteIndex = spriteIndex;
     }
 
+    /**
+     * Devuelve el índice del sprite de la hoja de enemigos que usa esta nave.
+     *
+     * @return índice del sprite
+     */
     public int getSpriteIndex() {
         return spriteIndex;
     }
 
+    /**
+     * Indica si este enemigo puede dividirse en dos al recibir un impacto.
+     *
+     * @param canSplit {@code true} si puede dividirse
+     */
     public void setCanSplit(boolean canSplit) {
         this.canSplit = canSplit;
     }
 
+    /**
+     * Hace que el enemigo empiece a picar inmediatamente hacia la posición indicada.
+     *
+     * @param targetX coordenada X hacia la que pica
+     */
     public void beginDiveNow(double targetX) {
         this.canSplit = false;
         this.hasSplit = true;
@@ -157,10 +193,20 @@ public class EnemyComponent extends Component {
         this.state = State.DIVING;
     }
 
+    /**
+     * Indica si este enemigo es un monstruo.
+     *
+     * @return {@code true} si es un monstruo
+     */
     public boolean isMonster() {
         return isMonster;
     }
 
+    /**
+     * Marca el enemigo como kamikaze; los kamikazes pican un 30 % más rápido.
+     *
+     * @param kamikaze {@code true} para convertirlo en kamikaze
+     */
     public void setKamikaze(boolean kamikaze) {
         this.isKamikaze = kamikaze;
         if (kamikaze) {
@@ -168,6 +214,11 @@ public class EnemyComponent extends Component {
         }
     }
 
+    /**
+     * Marca el enemigo como corredor de bonificación, que sale de la formación casi de inmediato.
+     *
+     * @param bonusRunner {@code true} para convertirlo en corredor de bonificación
+     */
     public void setBonusRunner(boolean bonusRunner) {
         this.isBonusRunner = bonusRunner;
         if (bonusRunner) {
@@ -175,14 +226,29 @@ public class EnemyComponent extends Component {
         }
     }
 
+    /**
+     * Indica si este enemigo es un corredor de bonificación.
+     *
+     * @return {@code true} si es un corredor de bonificación
+     */
     public boolean isBonusRunner() {
         return isBonusRunner;
     }
 
+    /**
+     * Indica si este enemigo es un ovni.
+     *
+     * @return {@code true} si es un ovni
+     */
     public boolean isUfo() {
         return isUfo;
     }
 
+    /**
+     * Indica si este enemigo es un jefe.
+     *
+     * @return {@code true} si es un jefe
+     */
     public boolean isBoss() {
         return isBoss;
     }
@@ -193,16 +259,32 @@ public class EnemyComponent extends Component {
     private double alienSpecialTimer = 5.0;
     private double alienHelperTimer = 4.0;
 
+    /**
+     * Convierte al jefe en un jefe alienígena de una oleada de monstruos.
+     *
+     * @param kind índice del alienígena en la hoja de sprites
+     * @param cycle ciclo de jefes alienígenas; aumenta la vida del jefe
+     */
     public void setAlienBoss(int kind, int cycle) {
         this.alienBoss = kind;
         this.health = 40 + 20 * Math.max(1, cycle);
         this.maxHealth = this.health;
     }
 
+    /**
+     * Indica si este jefe es un jefe alienígena.
+     *
+     * @return {@code true} si es un jefe alienígena
+     */
     public boolean isAlienBoss() {
         return alienBoss >= 0;
     }
 
+    /**
+     * Devuelve el nombre del jefe que se muestra sobre su barra de vida.
+     *
+     * @return nombre traducido del jefe
+     */
     public String bossLabel() {
         if (alienBoss < 0) {
             return deltablade.I18n.tr("boss.numbered", bossNo);
@@ -266,10 +348,23 @@ public class EnemyComponent extends Component {
         }
     }
 
+    /**
+     * Cambia la velocidad con la que el enemigo recorre su trayectoria de entrada.
+     *
+     * @param speed velocidad de entrada en píxeles por segundo
+     */
     public void setEntrySpeed(double speed) {
         this.entrySpeed = speed;
     }
 
+    /**
+     * Configura la entrada del enemigo en la formación.
+     *
+     * @param targetX coordenada X de su hueco en la formación
+     * @param targetY coordenada Y de su hueco en la formación
+     * @param path trayectoria de entrada
+     * @param squadId identificador del escuadrón al que pertenece
+     */
     public void setEntryData(double targetX, double targetY, WaveManager.EntryPath path, int squadId) {
         this.targetX = targetX;
         this.targetY = formationHoldY(targetY);
@@ -574,7 +669,11 @@ public class EnemyComponent extends Component {
         coverPeekEase = ease;
     }
 
-    /** True mientras está escondida detrás de un meteorito y no asoma lo suficiente para recibir disparos. */
+    /**
+     * Indica si la nave está escondida detrás de un meteorito y no asoma lo suficiente para recibir disparos.
+     *
+     * @return {@code true} mientras está escondida
+     */
     public boolean isTuckedBehindMeteor() {
         if (!meteorCover() || isUfo || scooped) {
             return false;
@@ -640,12 +739,22 @@ public class EnemyComponent extends Component {
         }
     }
 
-    /** ¿Puede esta nave unirse ahora a un picado en grupo? */
+    /**
+     * Indica si esta nave puede unirse ahora a un picado en grupo.
+     *
+     * @return {@code true} si está en formación y lista para picar
+     */
     public boolean canGroupDive() {
         return state == State.FORMATION && !scooped && pendingDive < 0
                 && formationHoldTime > minFormationTime && canWrapDive();
     }
 
+    /**
+     * Programa un picado en grupo para esta nave.
+     *
+     * @param delay segundos de espera antes de picar
+     * @param side lado hacia el que pica (-1 izquierda, 1 derecha, 0 sin preferencia)
+     */
     public void scheduleGroupDive(double delay, int side) {
         pendingDive = Math.max(0, delay);
         pendingSide = side;
@@ -914,6 +1023,11 @@ public class EnemyComponent extends Component {
         }
     }
 
+    /**
+     * Indica si el enemigo está cargando o disparando su rayo.
+     *
+     * @return {@code true} mientras el rayo está activo
+     */
     public boolean isBeaming() {
         return beamWarmup > 0 || beamLeft > 0;
     }
@@ -929,14 +1043,29 @@ public class EnemyComponent extends Component {
         deltablade.SoundHelper.play("enemy_shot.wav");
     }
 
+    /**
+     * Devuelve la vida que le queda al enemigo.
+     *
+     * @return vida actual
+     */
     public int getHealth() {
         return health;
     }
 
+    /**
+     * Devuelve la vida máxima del enemigo.
+     *
+     * @return vida máxima
+     */
     public int getMaxHealth() {
         return maxHealth;
     }
 
+    /**
+     * Devuelve el número de jefe (1 para el primer jefe, 2 para el segundo...).
+     *
+     * @return número de jefe
+     */
     public int getBossNumber() {
         return bossNo;
     }
@@ -969,18 +1098,39 @@ public class EnemyComponent extends Component {
         }
     }
 
+    /**
+     * Indica si la nave ha sido capturada por el rayo tractor del jugador.
+     *
+     * @return {@code true} si está capturada
+     */
     public boolean isScooped() {
         return scooped;
     }
 
+    /**
+     * Indica si la nave capturada ya está acoplada junto al jugador.
+     *
+     * @return {@code true} si está acoplada
+     */
     public boolean isDocked() {
         return docked;
     }
 
+    /**
+     * Devuelve el hueco de acoplamiento que ocupa junto al jugador.
+     *
+     * @return índice del hueco, o -1 si no está acoplada
+     */
     public int getDockSlot() {
         return dockSlot;
     }
 
+    /**
+     * Empieza a capturar la nave para acoplarla en el hueco indicado.
+     *
+     * @param slot hueco de acoplamiento junto al jugador
+     * @return {@code true} si la captura empieza; {@code false} si no se puede capturar
+     */
     public boolean beginScoop(int slot) {
         if (scooped || docked || isBoss || slot < 0) {
             return false;
@@ -992,6 +1142,9 @@ public class EnemyComponent extends Component {
         return true;
     }
 
+    /**
+     * Acopla la nave capturada junto al jugador.
+     */
     public void dock() {
         docked = true;
         scooped = true;
@@ -1049,18 +1202,36 @@ public class EnemyComponent extends Component {
         }
     }
 
+    /**
+     * Resta un punto de vida al enemigo.
+     */
     public void hit() {
         hit(1);
     }
 
+    /**
+     * Resta vida al enemigo.
+     *
+     * @param amount cantidad de vida que se resta (mínimo 1)
+     */
     public void hit(int amount) {
         health -= Math.max(1, amount);
     }
 
+    /**
+     * Indica si el enemigo se ha quedado sin vida.
+     *
+     * @return {@code true} si está muerto
+     */
     public boolean isDead() {
         return health <= 0;
     }
 
+    /**
+     * Devuelve los puntos que da derribar a este enemigo.
+     *
+     * @return puntuación por derribarlo
+     */
     public int getScoreValue() {
         if (isBoss) {
             return deltablade.GameVars.BOSS_KILL_SCORE * bossNo;
@@ -1068,18 +1239,38 @@ public class EnemyComponent extends Component {
         return type.scoreValue;
     }
 
+    /**
+     * Devuelve el tipo de enemigo.
+     *
+     * @return tipo de enemigo
+     */
     public EnemyType getType() {
         return type;
     }
 
+    /**
+     * Devuelve el estado actual del enemigo.
+     *
+     * @return estado actual
+     */
     public State getState() {
         return state;
     }
 
+    /**
+     * Indica si el enemigo todavía está entrando en la formación.
+     *
+     * @return {@code true} mientras entra
+     */
     public boolean isEntering() {
         return state == State.ENTERING;
     }
 
+    /**
+     * Indica si chocar con este enemigo no hace daño al jugador (por ejemplo, naves capturadas o que entran desde abajo).
+     *
+     * @return {@code true} si el contacto es inofensivo
+     */
     public boolean isHarmlessOnContact() {
         if (scooped) {
             return true;
@@ -1113,6 +1304,11 @@ public class EnemyComponent extends Component {
         }
     }
 
+    /**
+     * Devuelve el identificador del escuadrón al que pertenece el enemigo.
+     *
+     * @return identificador del escuadrón, o -1 si no pertenece a ninguno
+     */
     public int getSquadId() {
         return squadId;
     }

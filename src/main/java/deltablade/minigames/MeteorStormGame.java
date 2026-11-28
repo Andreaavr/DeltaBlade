@@ -24,6 +24,9 @@ import static com.almasb.fxgl.dsl.FXGL.getGameWorld;
 import static com.almasb.fxgl.dsl.FXGL.inc;
 import static com.almasb.fxgl.dsl.FXGL.spawn;
 
+/**
+ * Minijuego de la tormenta de meteoritos: avanzar una distancia esquivando rocas; mantener el disparo acelera la nave.
+ */
 public class MeteorStormGame implements Minigame {
 
     private static final double GOAL_DISTANCE = 640;

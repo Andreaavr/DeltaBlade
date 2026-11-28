@@ -16,6 +16,9 @@ import javafx.scene.image.ImageView;
  */
 public class PlayerAnimationComponent extends Component {
 
+    /**
+     * Animaciones posibles de la nave del jugador.
+     */
     public enum AnimationState {
         IDLE,
         BANKING_LEFT,
@@ -45,10 +48,25 @@ public class PlayerAnimationComponent extends Component {
     private Image currentSheet;
     private boolean scooping;
 
+    /**
+     * Crea las animaciones de la nave sin la animación del rayo.
+     *
+     * @param thrusterSheet hoja de sprites del propulsor en reposo
+     * @param bankSheet hoja de sprites del giro lateral
+     * @param bowwaveSheet hoja de sprites de la onda de proa al disparar
+     */
     public PlayerAnimationComponent(Image thrusterSheet, Image bankSheet, Image bowwaveSheet) {
         this(thrusterSheet, bankSheet, bowwaveSheet, null);
     }
 
+    /**
+     * Crea las animaciones de la nave.
+     *
+     * @param thrusterSheet hoja de sprites del propulsor en reposo
+     * @param bankSheet hoja de sprites del giro lateral
+     * @param bowwaveSheet hoja de sprites de la onda de proa al disparar
+     * @param beamSheet hoja de sprites del rayo tractor, o {@code null} si no hay
+     */
     public PlayerAnimationComponent(Image thrusterSheet, Image bankSheet, Image bowwaveSheet, Image beamSheet) {
         this.thrusterSheet = thrusterSheet;
         this.bankSheet = bankSheet;
@@ -65,10 +83,20 @@ public class PlayerAnimationComponent extends Component {
         applyRange(AnimationState.IDLE);
     }
 
+    /**
+     * Devuelve la vista en la que se dibuja la animación.
+     *
+     * @return vista de la animación
+     */
     public ImageView getView() {
         return imageView;
     }
 
+    /**
+     * Activa o desactiva la animación del rayo tractor.
+     *
+     * @param scooping {@code true} mientras el rayo tractor está activo
+     */
     public void setScooping(boolean scooping) {
         if (this.scooping == scooping) {
             return;
@@ -85,6 +113,11 @@ public class PlayerAnimationComponent extends Component {
         imageView.setViewport(new Rectangle2D(currentFrame * FRAME_WIDTH, 0, FRAME_WIDTH, FRAME_HEIGHT));
     }
 
+    /**
+     * Cambia la animación de la nave.
+     *
+     * @param newState nueva animación
+     */
     public void setState(AnimationState newState) {
         if (currentState == newState) {
             return;
@@ -101,6 +134,11 @@ public class PlayerAnimationComponent extends Component {
         imageView.setViewport(new Rectangle2D(currentFrame * FRAME_WIDTH, 0, FRAME_WIDTH, FRAME_HEIGHT));
     }
 
+    /**
+     * Devuelve la animación actual de la nave.
+     *
+     * @return animación actual
+     */
     public AnimationState getState() {
         return currentState;
     }
@@ -158,10 +196,20 @@ public class PlayerAnimationComponent extends Component {
         }
     }
 
+    /**
+     * Devuelve el ancho de cada fotograma de la animación.
+     *
+     * @return ancho en píxeles
+     */
     public int getFrameWidth() {
         return FRAME_WIDTH;
     }
 
+    /**
+     * Devuelve el alto de cada fotograma de la animación.
+     *
+     * @return alto en píxeles
+     */
     public int getFrameHeight() {
         return FRAME_HEIGHT;
     }

@@ -52,6 +52,9 @@ public final class SoundHelper {
 
     private SoundHelper() {}
 
+    /**
+     * Carga de antemano los sonidos más usados para que no haya retrasos la primera vez que suenan.
+     */
     public static void warmup() {
         for (String name : WARMUP_SOUNDS) {
             preload(name, name.equals("shot.wav") || name.equals("enemy_shot.wav") ? 4 : 1);
@@ -59,10 +62,21 @@ public final class SoundHelper {
         applyMasterVolume();
     }
 
+    /**
+     * Carga un sonido de antemano con una sola voz.
+     *
+     * @param name nombre del fichero de sonido
+     */
     public static void preload(String name) {
         preload(name, 1);
     }
 
+    /**
+     * Carga un sonido de antemano con varias voces, para poder reproducirlo varias veces a la vez.
+     *
+     * @param name nombre del fichero de sonido
+     * @param voicesToOpen número de voces que se abren
+     */
     public static void preload(String name, int voicesToOpen) {
         if (name == null || name.isEmpty()) {
             return;
@@ -79,6 +93,9 @@ public final class SoundHelper {
         }
     }
 
+    /**
+     * Aplica el volumen de efectos guardado en las opciones.
+     */
     public static void applyMasterVolume() {
         try {
             getSettings().setGlobalSoundVolume(masterVolume());
@@ -93,12 +110,23 @@ public final class SoundHelper {
         }
     }
 
+    /**
+     * Reproduce un sonido con un volumen concreto, para probar el volumen en el menú de opciones.
+     *
+     * @param name nombre del fichero de sonido
+     * @param volume volumen entre 0.0 y 1.0
+     */
     public static void playPreview(String name, double volume) {
         previewVolume = Math.max(0.0, Math.min(1.0, volume));
         play(name);
         previewVolume = -1;
     }
 
+    /**
+     * Reproduce un efecto de sonido. Si el sonido no existe, se registra el aviso una sola vez.
+     *
+     * @param name nombre del fichero de sonido
+     */
     public static void play(String name) {
         if (name == null || name.isEmpty()) {
             return;
@@ -113,6 +141,11 @@ public final class SoundHelper {
         playFxgl(name);
     }
 
+    /**
+     * Detiene todas las voces de un sonido que estén sonando.
+     *
+     * @param name nombre del fichero de sonido
+     */
     public static void stop(String name) {
         if (name == null || name.isEmpty()) {
             return;
@@ -141,6 +174,12 @@ public final class SoundHelper {
         }
     }
 
+    /**
+     * Indica si existe un sonido con ese nombre.
+     *
+     * @param name nombre del fichero de sonido
+     * @return {@code true} si el sonido existe
+     */
     public static boolean exists(String name) {
         if (name == null || name.isEmpty()) {
             return false;

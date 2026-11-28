@@ -12,6 +12,12 @@ public final class NameDist {
 
     private NameDist() {}
 
+    /**
+     * Renombra los paquetes generados por jpackage.
+     *
+     * @param args versión del juego (por defecto "1.0.0") y carpeta de salida (por defecto "target/dist")
+     * @throws Exception si falla la lectura o el renombrado de los ficheros
+     */
     public static void main(String[] args) throws Exception {
         String version = args.length > 0 ? args[0] : "1.0.0";
         Path dist = Path.of(args.length > 1 ? args[1] : "target/dist");

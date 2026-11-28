@@ -33,11 +33,30 @@ public final class HighScoreClient {
     private static volatile List<HighScoreStore.Entry> cache;
     private static final AtomicBoolean SUBMITTING = new AtomicBoolean(false);
 
+    /**
+     * Resultado de enviar un récord al servidor.
+     *
+     * @param ok {@code true} si el servidor aceptó el récord
+     * @param rank posición en la tabla global, o -1 si no se conoce
+     * @param entries tabla global de récords
+     */
     public record SubmitResult(boolean ok, int rank, List<HighScoreStore.Entry> entries) {
+        /**
+         * Crea el resultado guardando una copia inmutable de la tabla.
+         *
+         * @param ok {@code true} si el servidor aceptó el récord
+         * @param rank posición en la tabla global, o -1 si no se conoce
+         * @param entries tabla global de récords; {@code null} equivale a una tabla vacía
+         */
         public SubmitResult {
             entries = entries == null ? List.of() : List.copyOf(entries);
         }
 
+        /**
+         * Crea un resultado fallido con la última tabla global conocida.
+         *
+         * @return resultado fallido
+         */
         public static SubmitResult fail() {
             return new SubmitResult(false, -1, cachedEntries());
         }
@@ -45,15 +64,30 @@ public final class HighScoreClient {
 
     private HighScoreClient() {}
 
+    /**
+     * Indica si ya se ha descargado alguna vez la tabla global.
+     *
+     * @return {@code true} si hay una tabla en caché
+     */
     public static boolean hasCache() {
         return cache != null;
     }
 
+    /**
+     * Devuelve la última tabla global descargada.
+     *
+     * @return entradas de la tabla, o una lista vacía si aún no se ha descargado
+     */
     public static List<HighScoreStore.Entry> cachedEntries() {
         List<HighScoreStore.Entry> snapshot = cache;
         return snapshot == null ? List.of() : snapshot;
     }
 
+    /**
+     * Descarga la tabla global de récords en segundo plano.
+     *
+     * @param onDone acción que recibe la tabla en el hilo de JavaFX
+     */
     public static void fetch(Consumer<List<HighScoreStore.Entry>> onDone) {
         HttpRequest request = HttpRequest.newBuilder(URI.create(ENDPOINT))
                 .timeout(TIMEOUT)
@@ -78,6 +112,14 @@ public final class HighScoreClient {
                 });
     }
 
+    /**
+     * Envía un récord al servidor en segundo plano. Si ya hay un envío en curso, falla enseguida.
+     *
+     * @param name nombre del jugador
+     * @param score puntuación conseguida
+     * @param wave oleada alcanzada
+     * @param onDone acción que recibe el resultado en el hilo de JavaFX
+     */
     public static void submit(String name, int score, int wave, Consumer<SubmitResult> onDone) {
         if (!SUBMITTING.compareAndSet(false, true)) {
             complete(onDone, SubmitResult.fail());

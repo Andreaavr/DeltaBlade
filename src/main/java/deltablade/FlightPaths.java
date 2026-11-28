@@ -14,6 +14,9 @@ import static com.almasb.fxgl.dsl.FXGL.getAppWidth;
  */
 public final class FlightPaths {
 
+    /**
+     * Trayectorias de vuelo con las que los enemigos entran en la formación.
+     */
     public enum Kind {
         ARC,          // gran arco desde un lateral
         LOOP,         // baja desde arriba, hace un rizo y vuelve a subir
@@ -26,6 +29,13 @@ public final class FlightPaths {
 
     private FlightPaths() {}
 
+    /**
+     * Construye los puntos de una trayectoria de entrada.
+     *
+     * @param kind tipo de trayectoria
+     * @param mirror {@code true} para reflejarla horizontalmente
+     * @return puntos de la trayectoria en coordenadas de pantalla
+     */
     public static List<Point2D> build(Kind kind, boolean mirror) {
         double w = getAppWidth();
         double h = getAppHeight();
@@ -95,6 +105,14 @@ public final class FlightPaths {
         RAIN          // lluvia en diagonal muy inclinada
     }
 
+    /**
+     * Construye los puntos de una trayectoria de cruce de pantalla para el minijuego Kobarmaru Yashi.
+     *
+     * @param kind tipo de cruce
+     * @param mirror {@code true} para reflejarlo horizontalmente
+     * @param seed valor entre 0 y 1 que varía la posición y la forma del cruce
+     * @return puntos de la trayectoria en coordenadas de pantalla
+     */
     public static List<Point2D> crossing(Cross kind, boolean mirror, double seed) {
         double w = getAppWidth();
         double h = getAppHeight();

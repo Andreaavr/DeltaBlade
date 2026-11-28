@@ -23,34 +23,74 @@ public final class OptionsStore {
 
     private OptionsStore() {}
 
+    /**
+     * Indica si la música está activada.
+     *
+     * @return {@code true} si la música está activada (por defecto sí)
+     */
     public static boolean isMusicEnabled() {
         return PREFS.getBoolean(KEY_MUSIC_ENABLED, true);
     }
 
+    /**
+     * Activa o desactiva la música.
+     *
+     * @param enabled {@code true} para activarla
+     */
     public static void setMusicEnabled(boolean enabled) {
         PREFS.putBoolean(KEY_MUSIC_ENABLED, enabled);
     }
 
+    /**
+     * Devuelve el volumen guardado de la música.
+     *
+     * @return volumen entre 0.0 y 1.0
+     */
     public static double getMusicVolume() {
         return clamp01(PREFS.getDouble(KEY_MUSIC_VOLUME, DEFAULT_MUSIC_VOLUME));
     }
 
+    /**
+     * Guarda el volumen de la música.
+     *
+     * @param volume volumen entre 0.0 y 1.0 (los valores fuera de rango se ajustan)
+     */
     public static void setMusicVolume(double volume) {
         PREFS.putDouble(KEY_MUSIC_VOLUME, clamp01(volume));
     }
 
+    /**
+     * Devuelve el volumen guardado de los efectos de sonido.
+     *
+     * @return volumen entre 0.0 y 1.0
+     */
     public static double getEffectVolume() {
         return clamp01(PREFS.getDouble(KEY_EFFECT_VOLUME, DEFAULT_EFFECT_VOLUME));
     }
 
+    /**
+     * Guarda el volumen de los efectos de sonido.
+     *
+     * @param volume volumen entre 0.0 y 1.0 (los valores fuera de rango se ajustan)
+     */
     public static void setEffectVolume(double volume) {
         PREFS.putDouble(KEY_EFFECT_VOLUME, clamp01(volume));
     }
 
+    /**
+     * Devuelve el identificador de la pista de música elegida.
+     *
+     * @return identificador de la pista, o una cadena vacía si no se ha elegido ninguna
+     */
     public static String getSelectedTrackId() {
         return PREFS.get(KEY_MUSIC_TRACK, "");
     }
 
+    /**
+     * Guarda la pista de música elegida. Los identificadores vacíos se ignoran.
+     *
+     * @param trackId identificador de la pista
+     */
     public static void setSelectedTrackId(String trackId) {
         if (trackId == null || trackId.isBlank()) {
             return;
@@ -77,10 +117,20 @@ public final class OptionsStore {
         PREFS.put(KEY_LANGUAGE, "en".equals(language) ? "en" : "es");
     }
 
+    /**
+     * Devuelve el récord de supervivencia del minijuego Kobarmaru Yashi.
+     *
+     * @return récord en segundos
+     */
     public static int getAlienRecordSeconds() {
         return PREFS.getInt("alienEnduranceRecord", 0);
     }
 
+    /**
+     * Guarda el récord de supervivencia del minijuego Kobarmaru Yashi.
+     *
+     * @param seconds récord en segundos (los negativos se guardan como 0)
+     */
     public static void setAlienRecordSeconds(int seconds) {
         PREFS.putInt("alienEnduranceRecord", Math.max(0, seconds));
     }

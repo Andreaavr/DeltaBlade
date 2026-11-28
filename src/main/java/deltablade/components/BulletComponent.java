@@ -5,6 +5,9 @@ import com.almasb.fxgl.entity.component.Component;
 import deltablade.EntityType;
 import deltablade.GameVars;
 
+/**
+ * Componente FXGL de un disparo (del jugador o enemigo): movimiento, seguimiento al jugador y salida de pantalla.
+ */
 public class BulletComponent extends Component {
 
     private double speedX;
@@ -25,14 +28,35 @@ public class BulletComponent extends Component {
     /** Deja de dirigirse en el último tramo, por encima del jugador. */
     private static final double HOMING_CUTOFF_Y_RATIO = 0.84;
 
+    /**
+     * Crea un disparo vertical.
+     *
+     * @param speedY velocidad vertical en píxeles por segundo
+     * @param isPlayerBullet {@code true} si lo dispara el jugador
+     */
     public BulletComponent(double speedY, boolean isPlayerBullet) {
         this(0, speedY, isPlayerBullet, false);
     }
 
+    /**
+     * Crea un disparo en cualquier dirección.
+     *
+     * @param speedX velocidad horizontal en píxeles por segundo
+     * @param speedY velocidad vertical en píxeles por segundo
+     * @param isPlayerBullet {@code true} si lo dispara el jugador
+     */
     public BulletComponent(double speedX, double speedY, boolean isPlayerBullet) {
         this(speedX, speedY, isPlayerBullet, false);
     }
 
+    /**
+     * Crea un disparo que puede seguir al jugador.
+     *
+     * @param speedX velocidad horizontal en píxeles por segundo
+     * @param speedY velocidad vertical en píxeles por segundo
+     * @param isPlayerBullet {@code true} si lo dispara el jugador
+     * @param homing {@code true} si persigue al jugador
+     */
     public BulletComponent(double speedX, double speedY, boolean isPlayerBullet, boolean homing) {
         this.speedX = speedX;
         this.speedY = speedY;
@@ -44,6 +68,11 @@ public class BulletComponent extends Component {
         this.homingLeft = homing ? HOMING_DURATION : 0;
     }
 
+    /**
+     * Cambia el aspecto del disparo enemigo.
+     *
+     * @param shotKind tipo de disparo (por ejemplo "bolt", "blob", "drip" o "flame"); {@code null} equivale a "bolt"
+     */
     public void setShotKind(String shotKind) {
         this.shotKind = shotKind != null ? shotKind : "bolt";
     }
@@ -116,10 +145,18 @@ public class BulletComponent extends Component {
         }
     }
 
+    /**
+     * Indica si el disparo es del jugador.
+     *
+     * @return {@code true} si lo disparó el jugador
+     */
     public boolean isPlayerBullet() {
         return isPlayerBullet;
     }
 
+    /**
+     * Registra que el disparo ha impactado y, si es del jugador, libera su hueco de munición.
+     */
     public void onHit() {
         if (isPlayerBullet) {
             int active = FXGL.geti(GameVars.ACTIVE_BULLETS);
