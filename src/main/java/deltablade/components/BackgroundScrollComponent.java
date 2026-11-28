@@ -17,10 +17,23 @@ public class BackgroundScrollComponent extends Component {
     private final double tileHeight;
     private final double scrollSpeed;
 
+    /**
+     * Ajusta el efecto de salto al hiperespacio, que acelera el desplazamiento del fondo.
+     *
+     * @param intensity intensidad entre 0 y 1 (los valores fuera de rango se ajustan)
+     */
     public static void setWarp(double intensity) {
         warp = Math.max(0, Math.min(1, intensity));
     }
 
+    /**
+     * Crea el desplazamiento continuo del fondo con dos imágenes que se alternan.
+     *
+     * @param tileA primera imagen del fondo
+     * @param tileB segunda imagen del fondo
+     * @param tileHeight alto de cada imagen, en píxeles
+     * @param scrollSpeed velocidad de desplazamiento en píxeles por segundo
+     */
     public BackgroundScrollComponent(ImageView tileA, ImageView tileB, double tileHeight, double scrollSpeed) {
         this.tileA = tileA;
         this.tileB = tileB;

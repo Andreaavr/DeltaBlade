@@ -64,6 +64,11 @@ import java.util.Random;
 
 import static com.almasb.fxgl.dsl.FXGL.*;
 
+/**
+ * Aplicación principal de DeltaBlade, un matamarcianos arcade hecho con FXGL.
+ * Configura la ventana, la entrada y la interfaz, y coordina las oleadas, las colisiones,
+ * la tienda, los récords y los minijuegos.
+ */
 public class DeltaBladeApp extends GameApplication implements MinigameHost {
 
     private Entity player;
@@ -996,6 +1001,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
     }
 
+    /**
+     * Anuncia que se ha derribado un grupo completo en una oleada de bonificación.
+     *
+     * @param bonus puntos de bonificación conseguidos
+     */
     public void showBonusPerfect(int bonus) {
         boolean roundClear = bonus >= GameVars.BONUS_ROUND_PERFECT_SCORE;
         showBanner(I18n.tr("banner.perfect"), Color.GOLD, roundClear ? 2.2 : 1.6);
@@ -1003,6 +1013,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         SoundHelper.play("bonus_perfect.wav");
     }
 
+    /**
+     * Anuncia que se ha destruido un escuadrón completo antes de que llegara a la formación.
+     *
+     * @param bonus puntos de bonificación conseguidos
+     */
     public void showSquadCombo(int bonus) {
         showBanner(I18n.tr("banner.squadCombo"), Color.ORANGE, 1.8);
         showScorePopup(bonus, Color.ORANGE, 36);
@@ -1134,6 +1149,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         SoundHelper.play("missile_launch.wav");
     }
 
+    /**
+     * Hace estallar un misil del jugador, dañando a los enemigos cercanos.
+     *
+     * @param missile entidad del misil
+     */
     public void detonatePlayerMissile(Entity missile) {
         if (missile == null || !missile.isActive()) {
             return;
@@ -1481,10 +1501,23 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         fadeOut.play();
     }
 
+    /**
+     * Crea un disparo enemigo recto hacia abajo.
+     *
+     * @param x coordenada X de salida
+     * @param y coordenada Y de salida
+     */
     public void spawnEnemyBullet(double x, double y) {
         spawnEnemyBullet(x, y, 0, 250, false);
     }
 
+    /**
+     * Crea el disparo propio de cada tipo de enemigo (recto, en ángulo, teledirigido...).
+     *
+     * @param type tipo del enemigo que dispara
+     * @param x coordenada X de salida
+     * @param y coordenada Y de salida
+     */
     public void spawnEnemyShot(EnemyComponent.EnemyType type, double x, double y) {
         switch (type) {
             case FAST, TOUGH -> {
@@ -1551,12 +1584,22 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
                 .put("kind", kind));
     }
 
+    /**
+     * Muestra un aviso del jefe en pantalla con su sonido.
+     *
+     * @param text texto del aviso
+     */
     public void bossAnnounce(String text) {
         showBanner(text, Color.ORANGERED, 1.4);
         SoundHelper.play("explode_ship.wav");
     }
 
-    /** Jefe en fase 2+: pequeños ayudantes se lanzan sobre el jugador. */
+    /**
+     * Hace que pequeños ayudantes salgan del jefe y se lancen sobre el jugador (jefe en fase 2 o superior).
+     *
+     * @param boss entidad del jefe
+     * @param count número de ayudantes
+     */
     public void spawnBossHelpers(Entity boss, int count) {
         if (boss == null || !boss.isActive() || player == null) {
             return;
@@ -1612,7 +1655,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         SoundHelper.play("ufo_appear.wav");
     }
 
-    /** El pulpo cerebro llama a monstruos pequeños que se lanzan en picado sobre el jugador. */
+    /**
+     * Hace que el pulpo cerebro llame a monstruos pequeños que se lanzan en picado sobre el jugador.
+     *
+     * @param boss entidad del jefe
+     * @param count número de monstruos
+     */
     public void spawnAlienBossHelpers(Entity boss, int count) {
         if (boss == null || !boss.isActive() || player == null) {
             return;
@@ -1635,7 +1683,13 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
     }
 
-    /** Disparo del jefe apuntado al jugador. */
+    /**
+     * Crea un disparo del jefe apuntado al jugador.
+     *
+     * @param x coordenada X de salida
+     * @param y coordenada Y de salida
+     * @param speed velocidad del disparo en píxeles por segundo
+     */
     public void spawnAimedBossBullet(double x, double y, double speed) {
         if (player == null) {
             spawnEnemyBullet(x, y, 0, speed, false);
@@ -1647,7 +1701,14 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         spawnEnemyBullet(x, y, dx / d * speed, dy / d * speed, false);
     }
 
-    /** Disparo del jefe en cualquier dirección. */
+    /**
+     * Crea un disparo del jefe en cualquier dirección.
+     *
+     * @param x coordenada X de salida
+     * @param y coordenada Y de salida
+     * @param vx velocidad horizontal en píxeles por segundo
+     * @param vy velocidad vertical en píxeles por segundo
+     */
     public void spawnBossBullet(double x, double y, double vx, double vy) {
         spawnEnemyBullet(x, y, vx, vy, false);
     }
@@ -1706,6 +1767,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         bossBar.toFront();
     }
 
+    /**
+     * Divide un monstruo en dos monstruos pequeños que se lanzan en picado.
+     *
+     * @param parent entidad del monstruo que se divide
+     * @param parentEc componente del monstruo que se divide
+     */
     public void splitMonster(Entity parent, EnemyComponent parentEc) {
         if (parent == null || !parent.isActive() || parentEc == null) {
             return;
@@ -1735,10 +1802,20 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         child.setScaleY(0.62);
     }
 
+    /**
+     * Registra que una nave de un escuadrón ha llegado a su hueco en la formación.
+     *
+     * @param squadId identificador del escuadrón
+     */
     public void onSquadMemberSettled(int squadId) {
         waveManager.markSquadSettled(squadId);
     }
 
+    /**
+     * Registra que un enemigo ha salido de la pantalla sin ser destruido.
+     *
+     * @param squadId identificador del escuadrón del enemigo
+     */
     public void onEnemyLeftScreen(int squadId) {
         waveManager.onEnemyEscaped(squadId);
         inc(GameVars.ENEMIES_REMAINING, -1);
@@ -2366,6 +2443,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         return false;
     }
 
+    /**
+     * Indica si el combate está detenido (fin de partida o pantalla de título).
+     *
+     * @return {@code true} si no hay combate en curso
+     */
     public boolean isCombatStopped() {
         return gameOver || showingTitleScreen;
     }
@@ -3575,6 +3657,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         };
     }
 
+    /**
+     * Indica si la oleada actual es el desafío de meteoritos.
+     *
+     * @return {@code true} si es una oleada de meteoritos
+     */
     public boolean isMeteorChallenge() {
         return waveManager != null && waveManager.getCurrentWaveType() == WaveManager.WaveType.METEOR;
     }
@@ -3747,6 +3834,12 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
     }
 
+    /**
+     * Completa la captura de una nave enemiga con el rayo tractor: suma sus puntos y la acopla al jugador.
+     *
+     * @param enemy entidad capturada
+     * @param ec componente del enemigo capturado
+     */
     public void completeScoop(Entity enemy, EnemyComponent ec) {
         if (enemy == null || !enemy.isActive() || ec == null) {
             return;
@@ -4758,6 +4851,11 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         }
     }
 
+    /**
+     * Punto de entrada del juego.
+     *
+     * @param args argumentos de la línea de comandos
+     */
     public static void main(String[] args) {
         launch(args);
     }

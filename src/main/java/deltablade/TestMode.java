@@ -13,6 +13,12 @@ import java.util.Optional;
  */
 public final class TestMode {
 
+    /**
+     * Elemento que hace aparecer un código de depuración.
+     *
+     * @param spawnName nombre de la entidad u oleada que se genera
+     * @param banner mensaje que se muestra al activarlo
+     */
     public record Drop(String spawnName, String banner) {}
 
     private static final long TIMEOUT_MS = 900;
@@ -31,6 +37,12 @@ public final class TestMode {
 
     private TestMode() {}
 
+    /**
+     * Procesa una tecla pulsada y comprueba si completa algún código de depuración.
+     *
+     * @param code tecla pulsada
+     * @return el elemento que hay que generar, o vacío si aún no se ha completado ningún código
+     */
     public static Optional<Drop> feed(KeyCode code) {
         Integer digit = toDigit(code);
         if (digit == null) {
@@ -101,7 +113,7 @@ public final class TestMode {
     }
 
 
-    /** Códigos de prueba de oleadas: secuencia de dígitos -> tipo de oleada. */
+    /** Códigos de prueba de oleadas: secuencia de dígitos → tipo de oleada. */
     private static final int[][] WAVE_CODES = {
             {5, 0, 5}, {1, 4, 7}, {2, 5, 8}, {3, 6, 9}, {1, 5, 9}, {7, 8, 9}, {3, 5, 7}
     };
@@ -146,6 +158,12 @@ public final class TestMode {
         return Optional.empty();
     }
 
+    /**
+     * Devuelve el elemento que corresponde a un código de tres dígitos iguales.
+     *
+     * @param index dígito repetido (0 a 9)
+     * @return elemento que hay que generar
+     */
     public static Drop dropFor(int index) {
         return switch (index) {
             case 0 -> new Drop("missilePickup", I18n.tr("test.drop", I18n.tr("test.missile")));

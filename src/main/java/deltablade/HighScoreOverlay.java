@@ -39,8 +39,19 @@ public final class HighScoreOverlay {
     private static final double ROTATE_SECONDS = 3.5;
     private static final double SPACE_LOCK_SECONDS = 3.0;
 
+    /**
+     * Acción que se ejecuta cuando el jugador guarda su nombre en la tabla de récords.
+     */
     @FunctionalInterface
     public interface SavedHandler {
+        /**
+         * Recibe los datos del récord guardado.
+         *
+         * @param name nombre introducido por el jugador
+         * @param score puntuación conseguida
+         * @param wave oleada alcanzada
+         * @param localRank posición en la tabla local de récords
+         */
         void accept(String name, int score, int wave, int localRank);
     }
 
@@ -89,11 +100,28 @@ public final class HighScoreOverlay {
     private Text headingText;
     private Text[] rowTexts;
 
+    /**
+     * Crea la pantalla que solo muestra las tablas de récords local y global.
+     *
+     * @param localHighlight posición de la tabla local que se resalta, o {@code null}
+     * @param globalHighlight posición de la tabla global que se resalta, o {@code null}
+     * @param closeLabel texto de la opción para cerrar
+     * @param onClose acción al cerrar la pantalla
+     * @return pantalla de récords
+     */
     public static HighScoreOverlay table(Integer localHighlight, Integer globalHighlight,
                                          String closeLabel, Runnable onClose) {
         return new HighScoreOverlay(false, 0, 0, localHighlight, globalHighlight, closeLabel, null, onClose);
     }
 
+    /**
+     * Crea la pantalla para introducir el nombre tras conseguir un récord.
+     *
+     * @param score puntuación conseguida
+     * @param wave oleada alcanzada
+     * @param onSaved acción que se ejecuta al guardar el nombre
+     * @return pantalla de introducción de nombre
+     */
     public static HighScoreOverlay nameEntry(int score, int wave, SavedHandler onSaved) {
         return new HighScoreOverlay(true, score, wave, null, null, null, onSaved, null);
     }
@@ -182,14 +210,30 @@ public final class HighScoreOverlay {
         root.getChildren().addAll(dimmer, panel, accent, content);
     }
 
+    /**
+     * Devuelve el nodo raíz de la pantalla, para añadirlo a la escena.
+     *
+     * @return nodo raíz
+     */
     public Group getRoot() {
         return root;
     }
 
+    /**
+     * Indica si la pantalla está esperando a que el jugador escriba su nombre.
+     *
+     * @return {@code true} mientras se introduce el nombre
+     */
     public boolean isNameEntry() {
         return nameEntry && !finished;
     }
 
+    /**
+     * Procesa una tecla pulsada en la pantalla de récords.
+     *
+     * @param event evento de teclado
+     * @return {@code true} si la pantalla ha usado la tecla
+     */
     public boolean handleKey(KeyEvent event) {
         if (finished) {
             return false;
@@ -277,6 +321,9 @@ public final class HighScoreOverlay {
         return false;
     }
 
+    /**
+     * Detiene las animaciones de la pantalla y libera sus recursos.
+     */
     public void dispose() {
         if (blink != null) {
             blink.stop();
@@ -298,10 +345,21 @@ public final class HighScoreOverlay {
         spaceArm.play();
     }
 
+    /**
+     * Muestra la tabla global de récords recibida del servidor.
+     *
+     * @param entries entradas de la tabla global
+     */
     public void setGlobalEntries(List<HighScoreStore.Entry> entries) {
         setGlobalEntries(entries, null);
     }
 
+    /**
+     * Muestra la tabla global de récords recibida del servidor y resalta una posición.
+     *
+     * @param entries entradas de la tabla global
+     * @param highlight posición que se resalta, o {@code null} para mantener la actual
+     */
     public void setGlobalEntries(List<HighScoreStore.Entry> entries, Integer highlight) {
         this.globalEntries = entries == null ? null : List.copyOf(entries);
         if (highlight != null) {

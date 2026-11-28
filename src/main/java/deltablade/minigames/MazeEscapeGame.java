@@ -71,7 +71,7 @@ public class MazeEscapeGame implements Minigame {
     private static final double FIRE_GRACE = 2.0;
     /** Mostrar HURRY UP una vez cuando el tiempo baja de este valor (segundos). */
     private static final double HURRY_THRESHOLD = 9.0;
-    /** Multiplicador de recarga del borde con prisa (< 1 = más rápido). */
+    /** Multiplicador de recarga del borde con prisa (menor que 1 = más rápido). */
     private static final double HURRY_FIRE_SCALE = 0.78;
     private static final int PLAYER_ICON = 34;
     private static final int EXTRA_LINKS = 10;

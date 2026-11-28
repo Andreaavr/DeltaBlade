@@ -8,6 +8,9 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.PixelReader;
 
+/**
+ * Componente FXGL de los meteoritos tras los que se esconden los enemigos; tienen vida y bloquean los disparos.
+ */
 public class CoverMeteorComponent extends Component {
 
     private final double spin;
@@ -17,6 +20,14 @@ public class CoverMeteorComponent extends Component {
     private int health = GameVars.METEOR_HITS;
     private double hitFlash;
 
+    /**
+     * Crea un meteorito de cobertura.
+     *
+     * @param spin velocidad de giro en grados por segundo
+     * @param image imagen del meteorito
+     * @param displayW ancho con el que se muestra, en píxeles
+     * @param displayH alto con el que se muestra, en píxeles
+     */
     public CoverMeteorComponent(double spin, Image image, double displayW, double displayH) {
         this.spin = spin;
         this.image = image;
@@ -33,6 +44,11 @@ public class CoverMeteorComponent extends Component {
         }
     }
 
+    /**
+     * Registra un impacto en el meteorito y lo hace parpadear.
+     *
+     * @return {@code true} si el meteorito se ha quedado sin vida
+     */
     public boolean hit() {
         health--;
         hitFlash = 0.14;
@@ -40,11 +56,22 @@ public class CoverMeteorComponent extends Component {
         return health <= 0;
     }
 
+    /**
+     * Devuelve la vida que le queda al meteorito.
+     *
+     * @return vida actual
+     */
     public int getHealth() {
         return health;
     }
 
-    /** True si la parte visible de esta roca está sobre ese punto del mundo (sprite girado). */
+    /**
+     * Indica si la parte visible de esta roca está sobre ese punto del mundo, teniendo en cuenta el giro del sprite.
+     *
+     * @param worldX coordenada X del punto
+     * @param worldY coordenada Y del punto
+     * @return {@code true} si la roca cubre ese punto
+     */
     public boolean coversPoint(double worldX, double worldY) {
         if (entity == null) {
             return false;
@@ -76,6 +103,12 @@ public class CoverMeteorComponent extends Component {
         return reader.getColor(ix, iy).getOpacity() >= 0.35;
     }
 
+    /**
+     * Indica si el meteorito tapa un disparo, comprobando su centro y su punta.
+     *
+     * @param shot entidad del disparo
+     * @return {@code true} si el meteorito tapa el disparo
+     */
     public boolean coversShot(Entity shot) {
         if (shot == null || !shot.isActive()) {
             return false;

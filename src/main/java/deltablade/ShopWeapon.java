@@ -12,6 +12,9 @@ public enum ShopWeapon {
     ARC_LANCE(8000, ColorTag.GOLD),
     SWEEP_LASER(12000, ColorTag.ORANGE);
 
+    /**
+     * Color con el que se muestra cada arma en la tienda.
+     */
     public enum ColorTag { CYAN, AQUA, VIOLET, GOLD, ORANGE }
 
     private final int price;
@@ -22,6 +25,11 @@ public enum ShopWeapon {
         this.colorTag = colorTag;
     }
 
+    /**
+     * Devuelve el precio del arma.
+     *
+     * @return precio en dólares del juego
+     */
     public int price() {
         return price;
     }
@@ -57,10 +65,21 @@ public enum ShopWeapon {
         return this == NONE ? "" : I18n.tr("weapon." + name() + "." + field);
     }
 
+    /**
+     * Devuelve el color con el que se muestra el arma en la tienda.
+     *
+     * @return color del arma
+     */
     public ColorTag colorTag() {
         return colorTag;
     }
 
+    /**
+     * Busca un arma por su identificador numérico.
+     *
+     * @param id identificador del arma (su posición en el enumerado)
+     * @return arma correspondiente, o {@link #NONE} si el identificador no es válido
+     */
     public static ShopWeapon fromId(int id) {
         ShopWeapon[] values = values();
         if (id < 0 || id >= values.length) {
@@ -69,6 +88,17 @@ public enum ShopWeapon {
         return values[id];
     }
 
+    /**
+     * Indica si el arma está desbloqueada según el progreso del jugador.
+     *
+     * @param rank rango actual del jugador
+     * @param wave oleada más alta alcanzada
+     * @param meteorWins victorias en el minijuego de meteoritos
+     * @param cognitiveWins victorias en el test cognitivo
+     * @param squadCombos escuadrones destruidos antes de llegar a la formación
+     * @param bossKills jefes derrotados
+     * @return {@code true} si el arma se puede comprar
+     */
     public boolean isUnlocked(int rank, int wave, int meteorWins, int cognitiveWins,
                               int squadCombos, int bossKills) {
         return switch (this) {
@@ -81,6 +111,11 @@ public enum ShopWeapon {
         };
     }
 
+    /**
+     * Devuelve la pista que explica cómo desbloquear el arma.
+     *
+     * @return texto de la pista, o una cadena vacía si está disponible desde el principio
+     */
     public String unlockHint() {
         return switch (this) {
             case NONE, NEEDLE_LASER -> "";
@@ -88,6 +123,11 @@ public enum ShopWeapon {
         };
     }
 
+    /**
+     * Devuelve las armas que se venden en la tienda, de la más cara a la más barata.
+     *
+     * @return armas de la tienda
+     */
     public static ShopWeapon[] shopItems() {
         return new ShopWeapon[] {
                 SWEEP_LASER, ARC_LANCE, PLASMA_ORB, TWIN_BEAM, NEEDLE_LASER

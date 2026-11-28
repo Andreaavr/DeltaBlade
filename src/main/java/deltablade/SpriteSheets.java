@@ -7,6 +7,9 @@ import javafx.scene.image.WritableImage;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Recorta y guarda en caché las casillas de las hojas de sprites de naves y alienígenas.
+ */
 public final class SpriteSheets {
 
     public static final String SHIPS = "fightersxy.png";
@@ -23,6 +26,13 @@ public final class SpriteSheets {
 
     private SpriteSheets() {}
 
+    /**
+     * Devuelve una casilla de una hoja de sprites de 8 columnas.
+     *
+     * @param sheet nombre del fichero de la hoja de sprites
+     * @param index índice de la casilla (de izquierda a derecha y de arriba abajo)
+     * @return imagen de la casilla, o {@code null} si la hoja no se puede cargar
+     */
     public static Image tile(String sheet, int index) {
         String key = sheet + "#" + index;
         Image cached = TILES.get(key);
@@ -41,10 +51,23 @@ public final class SpriteSheets {
         return tile;
     }
 
+    /**
+     * Devuelve la casilla de nave enemiga básica que corresponde a una variante.
+     *
+     * @param variant número de variante
+     * @return índice de la casilla en la hoja de naves
+     */
     public static int shipTileFor(int variant) {
         return shipTileFor(deltablade.components.EnemyComponent.EnemyType.BASIC, variant);
     }
 
+    /**
+     * Devuelve la casilla de nave que corresponde a un tipo de enemigo y una variante.
+     *
+     * @param type tipo de enemigo
+     * @param variant número de variante
+     * @return índice de la casilla en la hoja de naves
+     */
     public static int shipTileFor(deltablade.components.EnemyComponent.EnemyType type, int variant) {
         int[] tiles = switch (type) {
             case FAST -> new int[] {16, 17, 21, 22};
@@ -54,11 +77,24 @@ public final class SpriteSheets {
         return tiles[Math.floorMod(variant, tiles.length)];
     }
 
+    /**
+     * Devuelve la casilla de monstruo que corresponde a una variante.
+     *
+     * @param variant número de variante
+     * @return índice de la casilla en la hoja de monstruos
+     */
     public static int monsterTileFor(int variant) {
         return Math.floorMod(variant, MONSTER_TILES);
     }
 
-    /** Casilla de alienígena ampliada nítida (vecino más cercano) por un factor entero; se muestra con setSmooth(true). */
+    /**
+     * Devuelve una casilla de alienígena ampliada con nitidez (vecino más cercano) por un factor entero.
+     * Se muestra con {@code setSmooth(true)}.
+     *
+     * @param index índice de la casilla en la hoja de alienígenas
+     * @param factor factor de ampliación
+     * @return imagen ampliada
+     */
     public static Image alienCrisp(int index, int factor) {
         String key = "crisp#" + index + "#" + factor;
         Image cached = TILES.get(key);
@@ -74,7 +110,13 @@ public final class SpriteSheets {
         return big;
     }
 
-    /** ImageView de un alienígena de la hoja nueva al tamaño indicado, con ampliación limpia. */
+    /**
+     * Crea una vista de un alienígena de la hoja nueva al tamaño indicado, con ampliación limpia.
+     *
+     * @param index índice de la casilla en la hoja de alienígenas
+     * @param size tamaño en píxeles con el que se muestra
+     * @return vista del alienígena
+     */
     public static javafx.scene.image.ImageView alienView(int index, double size) {
         int factor = Math.max(1, (int) Math.ceil(size / CELL));
         Image img = alienCrisp(index, factor);

@@ -11,6 +11,11 @@ public class RailPulseComponent extends Component {
     private final Node energy;
     private double time;
 
+    /**
+     * Crea el pulso de energía de un raíl lateral.
+     *
+     * @param energy nodo que brilla con el pulso
+     */
     public RailPulseComponent(Node energy) {
         this.energy = energy;
     }

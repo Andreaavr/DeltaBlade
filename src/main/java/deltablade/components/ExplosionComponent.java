@@ -51,6 +51,8 @@ public class ExplosionComponent extends Component {
 
     /**
      * Devuelve el ImageView que se usa como vista de la entidad.
+     *
+     * @return vista de la explosión
      */
     public ImageView getView() {
         return imageView;
@@ -58,6 +60,9 @@ public class ExplosionComponent extends Component {
 
     /**
      * Fija el tamaño con el que se muestra la explosión, independientemente del tamaño del fotograma.
+     *
+     * @param width ancho en píxeles
+     * @param height alto en píxeles
      */
     public void setDisplaySize(int width, int height) {
         this.imageView.setFitWidth(width);

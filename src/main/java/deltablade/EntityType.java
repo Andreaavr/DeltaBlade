@@ -1,5 +1,8 @@
 package deltablade;
 
+/**
+ * Tipos de entidad del juego, usados por FXGL para las colisiones.
+ */
 public enum EntityType {
     PLAYER,
     ENEMY,

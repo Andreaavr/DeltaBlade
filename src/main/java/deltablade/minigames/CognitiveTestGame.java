@@ -28,6 +28,9 @@ import java.util.List;
 import static com.almasb.fxgl.dsl.FXGL.geti;
 import static com.almasb.fxgl.dsl.FXGL.inc;
 
+/**
+ * Minijuego del test cognitivo: encontrar las parejas de cartas iguales antes de que se acabe el tiempo.
+ */
 public class CognitiveTestGame implements Minigame {
 
     private static final String[] MOTIFS = {

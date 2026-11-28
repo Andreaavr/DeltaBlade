@@ -3,8 +3,14 @@ package deltablade.components;
 import com.almasb.fxgl.dsl.FXGL;
 import com.almasb.fxgl.entity.component.Component;
 
+/**
+ * Componente FXGL de los objetos que caen y el jugador puede recoger.
+ */
 public class PickupComponent extends Component {
 
+    /**
+     * Tipos de objeto que se pueden recoger.
+     */
     public enum PickupType {
         WEAPON_UPGRADE,
         EXTRA_AMMO,
@@ -25,10 +31,21 @@ public class PickupComponent extends Component {
     private double speed = 80;
     private double pulsePhase = 0;
 
+    /**
+     * Crea un objeto que cae a la velocidad por defecto.
+     *
+     * @param type tipo de objeto
+     */
     public PickupComponent(PickupType type) {
         this(type, 80);
     }
 
+    /**
+     * Crea un objeto que cae a la velocidad indicada.
+     *
+     * @param type tipo de objeto
+     * @param speed velocidad de caída en píxeles por segundo
+     */
     public PickupComponent(PickupType type, double speed) {
         this.type = type;
         this.speed = speed;
@@ -59,6 +76,11 @@ public class PickupComponent extends Component {
         }
     }
 
+    /**
+     * Devuelve el tipo de objeto.
+     *
+     * @return tipo de objeto
+     */
     public PickupType getType() {
         return type;
     }

@@ -16,6 +16,14 @@ import static com.almasb.fxgl.dsl.FXGL.getSettings;
  */
 public final class MusicHelper {
 
+    /**
+     * Pista de música disponible en el juego.
+     *
+     * @param id identificador único de la pista
+     * @param fileName nombre del fichero de audio
+     * @param displayName nombre que se muestra en el menú de opciones
+     * @param sourceUrl dirección de la que procede la pista, si se conoce
+     */
     public record Track(String id, String fileName, String displayName, String sourceUrl) {}
 
     private static List<Track> catalog;
@@ -26,22 +34,47 @@ public final class MusicHelper {
 
     private MusicHelper() {}
 
+    /**
+     * Devuelve las pistas de música disponibles.
+     *
+     * @return lista de pistas
+     */
     public static List<Track> tracks() {
         return catalog();
     }
 
+    /**
+     * Vuelve a buscar las pistas de música en las carpetas de música.
+     */
     public static void rescan() {
         catalog = MusicCatalog.scan();
     }
 
+    /**
+     * Busca una pista por su identificador.
+     *
+     * @param id identificador de la pista
+     * @return la pista encontrada, o la primera disponible si no existe
+     */
     public static Track find(String id) {
         return MusicCatalog.lookup(catalog(), id).track();
     }
 
+    /**
+     * Devuelve la pista que está sonando o, si no suena ninguna, la elegida en las opciones.
+     *
+     * @return pista actual
+     */
     public static Track currentTrack() {
         return find(currentTrackId != null ? currentTrackId : OptionsStore.getSelectedTrackId());
     }
 
+    /**
+     * Devuelve la posición de una pista en la lista de pistas disponibles.
+     *
+     * @param id identificador de la pista
+     * @return índice de la pista, o 0 si no se encuentra
+     */
     public static int indexOf(String id) {
         return Math.max(0, MusicCatalog.lookup(catalog(), id).index());
     }
@@ -63,6 +96,11 @@ public final class MusicHelper {
         play(track);
     }
 
+    /**
+     * Cambia el volumen de la música.
+     *
+     * @param volume volumen entre 0.0 y 1.0 (los valores fuera de rango se ajustan)
+     */
     public static void setVolume(double volume) {
         double clamped = Math.max(0.0, Math.min(1.0, volume));
         try {
@@ -75,6 +113,11 @@ public final class MusicHelper {
         JavaSoundMusic.setVolume(clamped);
     }
 
+    /**
+     * Reproduce una pista concreta en lugar de la elegida en las opciones, por ejemplo durante un minijuego.
+     *
+     * @param fileName nombre del fichero de música
+     */
     public static void playOverride(String fileName) {
         setVolume(OptionsStore.getMusicVolume());
         if (!OptionsStore.isMusicEnabled()) {
@@ -93,6 +136,11 @@ public final class MusicHelper {
         playUrl(resource.toExternalForm(), "override:" + fileName);
     }
 
+    /**
+     * Reproduce una pista en bucle. Si ya está sonando, solo actualiza el volumen.
+     *
+     * @param track pista que se reproduce; si es {@code null} no hace nada
+     */
     public static void play(Track track) {
         if (track == null) {
             return;
@@ -113,6 +161,9 @@ public final class MusicHelper {
         playUrl(url, track.id());
     }
 
+    /**
+     * Detiene la música que esté sonando.
+     */
     public static void stop() {
         JavaSoundMusic.stop();
         try {
@@ -131,6 +182,11 @@ public final class MusicHelper {
         playing = false;
     }
 
+    /**
+     * Indica si hay música sonando.
+     *
+     * @return {@code true} si suena alguna pista
+     */
     public static boolean isPlaying() {
         return playing || JavaSoundMusic.isPlaying();
     }

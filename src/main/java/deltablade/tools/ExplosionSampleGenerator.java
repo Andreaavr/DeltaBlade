@@ -59,6 +59,11 @@ public class ExplosionSampleGenerator {
     private boolean debrisEnabled;
     private boolean flashEnabled;
 
+    /**
+     * Genera las hojas de sprites de explosión de ejemplo en la carpeta de texturas.
+     *
+     * @param args argumentos de la línea de comandos (no se usan)
+     */
     public static void main(String[] args) {
         ExplosionSampleGenerator gen = new ExplosionSampleGenerator();
 

@@ -17,8 +17,14 @@ public enum ShopItem {
     EXTRA_TIME(250, Kind.CONSUMABLE, null, 0, ColorTag.LIME),
     EXTRA_AMMO(200, Kind.CONSUMABLE, null, 0, ColorTag.CYAN);
 
+    /**
+     * Tipos de objeto de la tienda.
+     */
     public enum Kind { WEAPON, CONSUMABLE, GRADE, AUTOFIRE }
 
+    /**
+     * Color con el que se muestra cada objeto en la tienda.
+     */
     public enum ColorTag { CYAN, AQUA, VIOLET, GOLD, ORANGE, PINK, LIME }
 
     private final int price;
@@ -35,6 +41,11 @@ public enum ShopItem {
         this.colorTag = colorTag;
     }
 
+    /**
+     * Devuelve el precio del objeto.
+     *
+     * @return precio en dólares del juego
+     */
     public int price() {
         return price;
     }
@@ -66,27 +77,62 @@ public enum ShopItem {
         return weapon != null ? weapon.description() : I18n.tr("item." + name() + ".desc");
     }
 
+    /**
+     * Devuelve el tipo de objeto.
+     *
+     * @return tipo de objeto
+     */
     public Kind kind() {
         return kind;
     }
 
+    /**
+     * Devuelve el arma que se compra con este objeto.
+     *
+     * @return arma asociada, o {@code null} si el objeto no es un arma
+     */
     public ShopWeapon weapon() {
         return weapon;
     }
 
+    /**
+     * Devuelve el número de disparos simultáneos que consigue este objeto.
+     *
+     * @return número de disparos objetivo, o 0 si el objeto no mejora los disparos
+     */
     public int targetGrade() {
         return targetGrade;
     }
 
+    /**
+     * Devuelve el color con el que se muestra el objeto en la tienda.
+     *
+     * @return color del objeto
+     */
     public ColorTag colorTag() {
         return colorTag;
     }
 
-    /** Orden del catálogo: primero los más caros. */
+    /**
+     * Devuelve el catálogo de la tienda, con los objetos más caros primero.
+     *
+     * @return objetos de la tienda en orden de catálogo
+     */
     public static ShopItem[] catalog() {
         return values();
     }
 
+    /**
+     * Indica si el objeto está desbloqueado. Solo las armas tienen condiciones; el resto está siempre disponible.
+     *
+     * @param rank rango actual del jugador
+     * @param wave oleada más alta alcanzada
+     * @param meteorWins victorias en el minijuego de meteoritos
+     * @param cognitiveWins victorias en el test cognitivo
+     * @param squadCombos escuadrones destruidos antes de llegar a la formación
+     * @param bossKills jefes derrotados
+     * @return {@code true} si el objeto se puede comprar
+     */
     public boolean isUnlocked(int rank, int wave, int meteorWins, int cognitiveWins,
                               int squadCombos, int bossKills) {
         if (kind != Kind.WEAPON || weapon == null) {
@@ -95,6 +141,11 @@ public enum ShopItem {
         return weapon.isUnlocked(rank, wave, meteorWins, cognitiveWins, squadCombos, bossKills);
     }
 
+    /**
+     * Devuelve la pista que explica cómo desbloquear el objeto.
+     *
+     * @return texto de la pista, o una cadena vacía si no necesita desbloquearse
+     */
     public String unlockHint() {
         if (kind != Kind.WEAPON || weapon == null) {
             return "";

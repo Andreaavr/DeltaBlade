@@ -28,6 +28,12 @@ import static com.almasb.fxgl.dsl.FXGL.getAppWidth;
  */
 public final class SettlementOverlay {
 
+    /**
+     * Línea del desglose de bonificaciones.
+     *
+     * @param label texto de la línea
+     * @param amount puntos que suma
+     */
     public record Line(String label, int amount) {}
 
     private final Group root = new Group();
@@ -36,6 +42,13 @@ public final class SettlementOverlay {
     private final int totalBonus;
     private boolean finished;
 
+    /**
+     * Crea la pantalla de desglose de bonificaciones.
+     *
+     * @param baseScore puntuación antes de sumar las bonificaciones
+     * @param lines líneas de bonificación que se muestran
+     * @param onFinished acción al cerrar; recibe la puntuación final
+     */
     public SettlementOverlay(int baseScore, List<Line> lines, IntConsumer onFinished) {
         this.baseScore = baseScore;
         this.onFinished = onFinished;
@@ -117,10 +130,20 @@ public final class SettlementOverlay {
         reveal.play();
     }
 
+    /**
+     * Devuelve el nodo raíz de la pantalla, para añadirlo a la escena.
+     *
+     * @return nodo raíz
+     */
     public Group getRoot() {
         return root;
     }
 
+    /**
+     * Confirma la pantalla y entrega la puntuación final.
+     *
+     * @return {@code true} siempre, porque la tecla de confirmación se ha usado
+     */
     public boolean handleConfirm() {
         if (finished) {
             return true;

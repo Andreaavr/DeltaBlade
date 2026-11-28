@@ -24,10 +24,24 @@ public class StarComponent extends Component {
     private final double twinkleSpeed;
     private final double twinkleAmount;
 
+    /**
+     * Ajusta el efecto de salto al hiperespacio, que acelera las estrellas.
+     *
+     * @param intensity intensidad entre 0 y 1 (los valores fuera de rango se ajustan)
+     */
     public static void setWarp(double intensity) {
         warp = Math.max(0, Math.min(1, intensity));
     }
 
+    /**
+     * Crea una estrella del fondo que se desplaza y parpadea.
+     *
+     * @param circle círculo que representa la estrella
+     * @param scrollSpeed velocidad de desplazamiento en píxeles por segundo
+     * @param baseOpacity opacidad base
+     * @param twinkleSpeed velocidad del parpadeo
+     * @param twinkleAmount intensidad del parpadeo
+     */
     public StarComponent(Circle circle, double scrollSpeed, double baseOpacity, double twinkleSpeed, double twinkleAmount) {
         this.circle = circle;
         this.scrollSpeed = scrollSpeed;

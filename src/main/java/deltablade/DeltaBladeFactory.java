@@ -42,6 +42,10 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
+/**
+ * Fábrica de entidades de FXGL para DeltaBlade: crea el jugador, los enemigos, los disparos,
+ * los objetos que se recogen, los efectos visuales y los elementos del fondo.
+ */
 public class DeltaBladeFactory implements EntityFactory {
 
     private static final int SHIP_SIZE = 48;
@@ -121,6 +125,12 @@ public class DeltaBladeFactory implements EntityFactory {
         return EmbeddedTextures.createFallbackShip(w, fallback);
     }
 
+    /**
+     * Crea la nave del jugador con sus animaciones y su hitbox.
+     *
+     * @param data datos de aparición: posición
+     * @return entidad creada
+     */
     @Spawns("player")
     public Entity newPlayer(SpawnData data) {
         Image thrusterSheet = EmbeddedTextures.getImage("player_blue_thruster.png", 384, 48);
@@ -151,6 +161,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea una nave enemiga.
+     *
+     * @param data datos de aparición: posición (claves "enemyType" y "level")
+     * @return entidad creada
+     */
     @Spawns("enemy")
     public Entity newEnemy(SpawnData data) {
         EnemyComponent.EnemyType type = data.get("enemyType");
@@ -294,6 +310,12 @@ public class DeltaBladeFactory implements EntityFactory {
         return builder.build();
     }
 
+    /**
+     * Crea un disparo del jugador.
+     *
+     * @param data datos de aparición: posición (claves opcionales "speedX" y "speedY")
+     * @return entidad creada
+     */
     @Spawns("playerBullet")
     public Entity newPlayerBullet(SpawnData data) {
         double speedX = data.hasKey("speedX") ? data.<Double>get("speedX") : 0.0;
@@ -308,6 +330,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea un disparo enemigo.
+     *
+     * @param data datos de aparición: posición (claves opcionales "speedX", "speedY", "homing" y "kind")
+     * @return entidad creada
+     */
     @Spawns("enemyBullet")
     public Entity newEnemyBullet(SpawnData data) {
         double speedX = data.hasKey("speedX") ? data.<Double>get("speedX") : 0.0;
@@ -384,6 +412,12 @@ public class DeltaBladeFactory implements EntityFactory {
         return new Group(trail, sprite);
     }
 
+    /**
+     * Crea el objeto que mejora el arma.
+     *
+     * @param data datos de aparición: posición
+     * @return entidad creada
+     */
     @Spawns("weaponPickup")
     public Entity newWeaponPickup(SpawnData data) {
         return FXGL.entityBuilder(data)
@@ -395,6 +429,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea el objeto que añade munición.
+     *
+     * @param data datos de aparición: posición
+     * @return entidad creada
+     */
     @Spawns("ammoPickup")
     public Entity newAmmoPickup(SpawnData data) {
         return FXGL.entityBuilder(data)
@@ -406,6 +446,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea la calavera, un objeto negativo que perjudica al jugador.
+     *
+     * @param data datos de aparición: posición
+     * @return entidad creada
+     */
     @Spawns("skullPickup")
     public Entity newSkullPickup(SpawnData data) {
         Node view = safeTexture("skull.png", PICKUP_SIZE, PICKUP_SIZE, Color.DARKRED);
@@ -424,6 +470,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea el orbe que abre el minijuego de la lluvia de meteoritos.
+     *
+     * @param data datos de aparición: posición
+     * @return entidad creada
+     */
     @Spawns("meteorPickup")
     public Entity newMeteorPickup(SpawnData data) {
         return FXGL.entityBuilder(data)
@@ -435,6 +487,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea el orbe que abre el minijuego del test cognitivo.
+     *
+     * @param data datos de aparición: posición
+     * @return entidad creada
+     */
     @Spawns("cognitivePickup")
     public Entity newCognitivePickup(SpawnData data) {
         return FXGL.entityBuilder(data)
@@ -446,6 +504,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea el orbe que abre el minijuego del laberinto.
+     *
+     * @param data datos de aparición: posición
+     * @return entidad creada
+     */
     @Spawns("mazePickup")
     public Entity newMazePickup(SpawnData data) {
         return FXGL.entityBuilder(data)
@@ -458,6 +522,12 @@ public class DeltaBladeFactory implements EntityFactory {
     }
 
 
+    /**
+     * Crea el orbe que abre el minijuego Kobarmaru Yashi.
+     *
+     * @param data datos de aparición: posición
+     * @return entidad creada
+     */
     @Spawns("alienPickup")
     public Entity newAlienPickup(SpawnData data) {
         return FXGL.entityBuilder(data)
@@ -469,6 +539,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea un orbe de plasma disparado por el jugador.
+     *
+     * @param data datos de aparición: posición (claves opcionales "speedX", "speedY", "pierce" y "coreDamage")
+     * @return entidad creada
+     */
     @Spawns("plasmaOrb")
     public Entity newPlasmaOrb(SpawnData data) {
         double speedX = data.hasKey("speedX") ? data.<Double>get("speedX") : 0.0;
@@ -502,6 +578,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea una roca de la lluvia de meteoritos.
+     *
+     * @param data datos de aparición: posición (claves opcionales "size", "baseSpeed", "driftX" y "spin")
+     * @return entidad creada
+     */
     @Spawns("meteorRock")
     public Entity newMeteorRock(SpawnData data) {
         double size = data.hasKey("size") ? data.<Double>get("size") : 36.0;
@@ -550,6 +632,12 @@ public class DeltaBladeFactory implements EntityFactory {
         return meteor;
     }
 
+    /**
+     * Crea un meteorito tras el que se esconden los enemigos.
+     *
+     * @param data datos de aparición: posición (claves opcionales "variant", "scale" y "spin")
+     * @return entidad creada
+     */
     @Spawns("coverMeteor")
     public Entity newCoverMeteor(SpawnData data) {
         int variant = data.hasKey("variant") ? data.<Integer>get("variant") : 1;
@@ -655,6 +743,12 @@ public class DeltaBladeFactory implements EntityFactory {
         return new Group(glow, text);
     }
 
+    /**
+     * Crea el objeto que añade tiempo.
+     *
+     * @param data datos de aparición: posición
+     * @return entidad creada
+     */
     @Spawns("timePickup")
     public Entity newTimePickup(SpawnData data) {
         return FXGL.entityBuilder(data)
@@ -666,6 +760,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea un marcador de rango.
+     *
+     * @param data datos de aparición: posición (clave opcional "colorIndex")
+     * @return entidad creada
+     */
     @Spawns("rankMarker")
     public Entity newRankMarker(SpawnData data) {
         int colorIndex = data.hasKey("colorIndex") ? data.<Integer>get("colorIndex") : 0;
@@ -702,6 +802,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea el objeto del rayo tractor, que permite capturar naves enemigas.
+     *
+     * @param data datos de aparición: posición
+     * @return entidad creada
+     */
     @Spawns("scoopPickup")
     public Entity newScoopPickup(SpawnData data) {
         return FXGL.entityBuilder(data)
@@ -713,6 +819,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea el objeto que da misiles.
+     *
+     * @param data datos de aparición: posición
+     * @return entidad creada
+     */
     @Spawns("missilePickup")
     public Entity newMissilePickup(SpawnData data) {
         return FXGL.entityBuilder(data)
@@ -725,6 +837,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea un misil del jugador.
+     *
+     * @param data datos de aparición: posición
+     * @return entidad creada
+     */
     @Spawns("playerMissile")
     public Entity newPlayerMissile(SpawnData data) {
         Image img = EmbeddedTextures.getImage("player_missile.png", 256, 256);
@@ -757,6 +875,12 @@ public class DeltaBladeFactory implements EntityFactory {
         return missile;
     }
 
+    /**
+     * Crea el objeto del escudo.
+     *
+     * @param data datos de aparición: posición
+     * @return entidad creada
+     */
     @Spawns("shieldPickup")
     public Entity newShieldPickup(SpawnData data) {
         return FXGL.entityBuilder(data)
@@ -777,6 +901,12 @@ public class DeltaBladeFactory implements EntityFactory {
         return new Group(glow, icon);
     }
 
+    /**
+     * Crea el objeto del disparo automático.
+     *
+     * @param data datos de aparición: posición
+     * @return entidad creada
+     */
     @Spawns("autofirePickup")
     public Entity newAutofirePickup(SpawnData data) {
         return FXGL.entityBuilder(data)
@@ -788,6 +918,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea el orbe de una letra de la palabra EXTRA.
+     *
+     * @param data datos de aparición: posición (claves "letter" y "letterIndex")
+     * @return entidad creada
+     */
     @Spawns("extraLetterOrb")
     public Entity newExtraLetterOrb(SpawnData data) {
         char letter = data.get("letter");
@@ -835,6 +971,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea uno de los raíles laterales del área de juego.
+     *
+     * @param data datos de aparición: posición (claves "height" e "isLeft")
+     * @return entidad creada
+     */
     @Spawns("sideRail")
     public Entity newSideRail(SpawnData data) {
         int width = GameVars.RAIL_WIDTH;
@@ -926,6 +1068,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea una estrella fija del fondo.
+     *
+     * @param data datos de aparición: posición (claves "size" y "opacity")
+     * @return entidad creada
+     */
     @Spawns("star")
     public Entity newStar(SpawnData data) {
         double size = data.get("size");
@@ -941,6 +1089,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea una estrella del fondo que se desplaza.
+     *
+     * @param data datos de aparición: posición (claves "size", "opacity", "scrollSpeed" y opcional "isNear")
+     * @return entidad creada
+     */
     @Spawns("scrollingStar")
     public Entity newScrollingStar(SpawnData data) {
         double size = data.get("size");
@@ -975,6 +1129,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea una nebulosa del fondo.
+     *
+     * @param data datos de aparición: posición (claves "radius", "color" y "opacity")
+     * @return entidad creada
+     */
     @Spawns("nebula")
     public Entity newNebula(SpawnData data) {
         double radius = data.get("radius");
@@ -998,6 +1158,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea un planeta lejano del fondo.
+     *
+     * @param data datos de aparición: posición (clave "radius")
+     * @return entidad creada
+     */
     @Spawns("distantPlanet")
     public Entity newDistantPlanet(SpawnData data) {
         double radius = data.get("radius");
@@ -1020,6 +1186,12 @@ public class DeltaBladeFactory implements EntityFactory {
                 .build();
     }
 
+    /**
+     * Crea la imagen de fondo del área de juego.
+     *
+     * @param data datos de aparición: posición (claves "width" y "height")
+     * @return entidad creada
+     */
     @Spawns("background")
     public Entity newBackground(SpawnData data) {
         int width = data.get("width");
@@ -1065,9 +1237,11 @@ public class DeltaBladeFactory implements EntityFactory {
 
     /**
      * Crea un efecto de explosión en la posición indicada.
-     * Claves de datos:
-     *   - "size": String - "hit" (chispas pequeñas), "ship" (mediana) o "big" (jefe, rejilla de 2 filas)
      * La explosión se centra en la posición de aparición (x,y es el centro, no la esquina superior izquierda).
+     *
+     * @param data datos de aparición: posición y clave opcional "size", que puede ser "hit" (chispas pequeñas),
+     *             "ship" (mediana, por defecto) o "big" (jefe, rejilla de 2 filas)
+     * @return entidad creada
      */
     @Spawns("explosion")
     public Entity newExplosion(SpawnData data) {
@@ -1210,6 +1384,12 @@ public class DeltaBladeFactory implements EntityFactory {
         return entity;
     }
 
+    /**
+     * Crea una moneda.
+     *
+     * @param data datos de aparición: posición (clave opcional "coinType": "white", "green", "blue" o "violet")
+     * @return entidad creada
+     */
     @Spawns("coin")
     public Entity newCoin(SpawnData data) {
         String coinTypeStr = data.hasKey("coinType") ? data.<String>get("coinType") : "white";

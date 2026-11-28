@@ -15,6 +15,13 @@ public final class HighScoreStore {
     public static final int NAME_LENGTH = 10;
     public static final String DEFAULT_NAME = "AAA";
 
+    /**
+     * Fila de la tabla de récords.
+     *
+     * @param name nombre del jugador
+     * @param score puntuación conseguida
+     * @param wave oleada alcanzada
+     */
     public record Entry(String name, int score, int wave) {}
 
     private static final Preferences PREFS = Preferences.userNodeForPackage(HighScoreStore.class);
@@ -23,22 +30,50 @@ public final class HighScoreStore {
 
     private HighScoreStore() {}
 
+    /**
+     * Devuelve la tabla local de récords, ordenada de mayor a menor puntuación.
+     *
+     * @return entradas de la tabla
+     */
     public static List<Entry> entries() {
         return parse(PREFS.get(KEY_TABLE, ""));
     }
 
+    /**
+     * Devuelve el último nombre que usó el jugador, para proponerlo de nuevo.
+     *
+     * @return último nombre usado, o el nombre por defecto
+     */
     public static String lastName() {
         return sanitizeNameOrDefault(PREFS.get(KEY_LAST_NAME, DEFAULT_NAME));
     }
 
+    /**
+     * Guarda el último nombre que usó el jugador.
+     *
+     * @param name nombre del jugador; se limpia antes de guardarlo
+     */
     public static void setLastName(String name) {
         PREFS.put(KEY_LAST_NAME, sanitizeNameOrDefault(name));
     }
 
+    /**
+     * Indica si una puntuación entra en la tabla local de récords.
+     *
+     * @param score puntuación conseguida
+     * @return {@code true} si entra en la tabla
+     */
     public static boolean qualifies(int score) {
         return qualifies(score, entries());
     }
 
+    /**
+     * Indica si una puntuación entra en una tabla de récords concreta.
+     *
+     * @param score puntuación conseguida
+     * @param table tabla de récords; si es {@code null} o no está llena, cualquier puntuación entra
+     * @return {@code true} si entra en la tabla
+     */
     public static boolean qualifies(int score, List<Entry> table) {
         if (table == null || table.size() < MAX_ENTRIES) {
             return true;
@@ -48,6 +83,10 @@ public final class HighScoreStore {
 
     /**
      * Inserta una fila nueva y mantiene la lista ordenada y limitada.
+     *
+     * @param name nombre del jugador; se limpia antes de guardarlo
+     * @param score puntuación conseguida (los negativos se guardan como 0)
+     * @param wave oleada alcanzada (mínimo 1)
      * @return posición (empezando en 0) de la nueva entrada, o -1 si no entra en la tabla
      */
     public static int insert(String name, int score, int wave) {
@@ -73,6 +112,13 @@ public final class HighScoreStore {
         return rank;
     }
 
+    /**
+     * Limpia un nombre para la tabla de récords: lo pasa a mayúsculas y deja solo letras de la A a la Z
+     * y espacios, hasta el máximo permitido.
+     *
+     * @param raw nombre tal como lo escribió el jugador
+     * @return nombre limpio, que puede quedar vacío
+     */
     public static String sanitizeName(String raw) {
         StringBuilder letters = new StringBuilder();
         if (raw != null) {
@@ -89,6 +135,12 @@ public final class HighScoreStore {
         return letters.toString();
     }
 
+    /**
+     * Limpia un nombre para la tabla de récords y usa el nombre por defecto si queda vacío.
+     *
+     * @param raw nombre tal como lo escribió el jugador
+     * @return nombre limpio, nunca vacío
+     */
     public static String sanitizeNameOrDefault(String raw) {
         String clean = sanitizeName(raw);
         return clean.isEmpty() ? DEFAULT_NAME : clean;
@@ -133,6 +185,12 @@ public final class HighScoreStore {
         return out.toString();
     }
 
+    /**
+     * Da formato a una puntuación con seis cifras (por ejemplo, 000925).
+     *
+     * @param score puntuación (los negativos se muestran como 0)
+     * @return puntuación con formato
+     */
     public static String formatScore(int score) {
         return String.format(Locale.ROOT, "%06d", Math.max(0, score));
     }

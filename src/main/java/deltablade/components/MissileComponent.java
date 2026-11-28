@@ -13,6 +13,9 @@ import javafx.scene.paint.Stop;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Ellipse;
 
+/**
+ * Componente FXGL del misil del jugador, que vuela recto o se dirige con las flechas y estalla al chocar.
+ */
 public class MissileComponent extends Component {
 
     /** Grados en sentido horario del morro del sprite respecto a "arriba"; se gira para que vuele con el morro delante. */
@@ -29,24 +32,46 @@ public class MissileComponent extends Component {
     private double trailAcc;
     private double ribbonPhase;
 
+    /**
+     * Crea un misil que sale hacia arriba a la velocidad configurada.
+     */
     public MissileComponent() {
         this.heading = 0;
         this.speed = GameVars.MISSILE_SPEED;
     }
 
+    /**
+     * Indica si el jugador está dirigiendo el misil.
+     *
+     * @param steering {@code true} mientras se dirige
+     */
     public void setSteering(boolean steering) {
         this.steering = steering;
     }
 
+    /**
+     * Indica hacia qué lado quiere girar el jugador el misil.
+     *
+     * @param left {@code true} si se pulsa la izquierda
+     * @param right {@code true} si se pulsa la derecha
+     */
     public void setTurnInput(boolean left, boolean right) {
         this.turnLeft = left;
         this.turnRight = right;
     }
 
+    /**
+     * Indica si el misil ya ha estallado.
+     *
+     * @return {@code true} si ha estallado
+     */
     public boolean isDetonated() {
         return detonated;
     }
 
+    /**
+     * Marca el misil como estallado sin crear la explosión.
+     */
     public void markDetonated() {
         detonated = true;
     }
@@ -93,6 +118,9 @@ public class MissileComponent extends Component {
         }
     }
 
+    /**
+     * Hace estallar el misil, dañando a los enemigos cercanos. Si ya había estallado, no hace nada.
+     */
     public void requestDetonate() {
         if (detonated || entity == null || !entity.isActive()) {
             return;

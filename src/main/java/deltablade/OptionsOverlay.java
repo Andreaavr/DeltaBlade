@@ -82,6 +82,11 @@ public final class OptionsOverlay {
     private Button prevTrack;
     private Button nextTrack;
 
+    /**
+     * Crea la pantalla de opciones (música, pista y volúmenes).
+     *
+     * @param onClose acción al cerrar la pantalla
+     */
     public OptionsOverlay(Runnable onClose) {
         double width = getAppWidth();
         double height = getAppHeight();
@@ -212,6 +217,11 @@ public final class OptionsOverlay {
         refreshControls();
     }
 
+    /**
+     * Devuelve el nodo raíz de la pantalla, para añadirlo a la escena.
+     *
+     * @return nodo raíz
+     */
     public Group getRoot() {
         return root;
     }
