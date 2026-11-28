@@ -97,7 +97,6 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     private double fireJamRemaining = 0;
     private double laserHeat = 0;
     private double laserCooldown = 0;
-    private double laserTickTimer = 0;
     private boolean laserShotCounted = false;
     private double sweepAngle = 0;
     private double sweepActive = 0;
@@ -809,7 +808,6 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         clearLaserBeams();
         laserHeat = 0;
         laserCooldown = 0;
-        laserTickTimer = 0;
         java.util.Arrays.fill(laserTickTimers, 0);
         laserShotCounted = false;
         sweepAngle = 0;
@@ -3101,7 +3099,6 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         clearLaserBeams();
         laserHeat = 0;
         laserCooldown = 0;
-        laserTickTimer = 0;
         java.util.Arrays.fill(laserTickTimers, 0);
         laserShotCounted = false;
         sweepActive = 0;
@@ -3436,7 +3433,6 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
 
     private void applyPlasmaHit(Entity orb, Entity enemy) {
         PlasmaOrbComponent plasma = orb.getComponent(PlasmaOrbComponent.class);
-        EnemyComponent ec = enemy.getComponent(EnemyComponent.class);
         damageEnemy(enemy, plasma.getCoreDamage());
         inc(GameVars.HITS_LANDED, 1);
         double cx = enemy.getX() + enemy.getWidth() / 2.0;
@@ -3770,16 +3766,6 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
         ec.dock();
         waveManager.checkKillBonuses();
         checkWaveComplete();
-    }
-
-    private boolean hasScoopEscorts() {
-        for (Entity enemy : getGameWorld().getEntitiesByType(EntityType.ENEMY)) {
-            if (enemy.isActive() && enemy.hasComponent(EnemyComponent.class)
-                    && enemy.getComponent(EnemyComponent.class).isScooped()) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private void hitScoopFormation() {
@@ -4707,7 +4693,7 @@ public class DeltaBladeApp extends GameApplication implements MinigameHost {
     }
 
     private void styleRankDot(Circle dot, int colorIndex, boolean collected) {
-        Color color = RankMarkerComponent.COLORS[colorIndex];
+        Color color = RankMarkerComponent.colorAt(colorIndex);
         if (collected) {
             dot.setFill(color);
             dot.setStroke(Color.WHITE);

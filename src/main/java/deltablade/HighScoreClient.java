@@ -34,6 +34,10 @@ public final class HighScoreClient {
     private static final AtomicBoolean SUBMITTING = new AtomicBoolean(false);
 
     public record SubmitResult(boolean ok, int rank, List<HighScoreStore.Entry> entries) {
+        public SubmitResult {
+            entries = entries == null ? List.of() : List.copyOf(entries);
+        }
+
         public static SubmitResult fail() {
             return new SubmitResult(false, -1, cachedEntries());
         }

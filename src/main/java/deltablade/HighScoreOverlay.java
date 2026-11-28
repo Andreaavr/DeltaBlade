@@ -303,7 +303,7 @@ public final class HighScoreOverlay {
     }
 
     public void setGlobalEntries(List<HighScoreStore.Entry> entries, Integer highlight) {
-        this.globalEntries = entries;
+        this.globalEntries = entries == null ? null : List.copyOf(entries);
         if (highlight != null) {
             this.globalHighlight = highlight;
         }

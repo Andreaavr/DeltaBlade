@@ -49,10 +49,12 @@ final class MusicCatalog {
         }
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
             for (Path path : stream) {
-                if (!Files.isRegularFile(path) || !MusicLocations.isCatalogAudio(path.getFileName().toString())) {
+                Path fileName = path.getFileName();
+                if (fileName == null || !Files.isRegularFile(path)
+                        || !MusicLocations.isCatalogAudio(fileName.toString())) {
                     continue;
                 }
-                addTrack(tracks, path.getFileName().toString(), path.toUri().toString());
+                addTrack(tracks, fileName.toString(), path.toUri().toString());
             }
         } catch (IOException e) {
             System.err.println("[MusicCatalog] Could not read " + dir + ": " + e.getMessage());
@@ -134,8 +136,10 @@ final class MusicCatalog {
         }
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir)) {
             for (Path path : stream) {
-                if (Files.isRegularFile(path) && MusicLocations.isCatalogAudio(path.getFileName().toString())) {
-                    addUnique(names, path.getFileName().toString());
+                Path fileName = path.getFileName();
+                if (fileName != null && Files.isRegularFile(path)
+                        && MusicLocations.isCatalogAudio(fileName.toString())) {
+                    addUnique(names, fileName.toString());
                 }
             }
         } catch (IOException e) {

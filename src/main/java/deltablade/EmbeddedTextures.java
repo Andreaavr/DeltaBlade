@@ -5,6 +5,7 @@ import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Polygon;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -111,12 +112,10 @@ public final class EmbeddedTextures {
             return IMAGE_CACHE.get(cacheKey);
         }
 
-        try {
-            java.io.InputStream is = EmbeddedTextures.class.getResourceAsStream("/assets/textures/" + name);
+        try (java.io.InputStream is = EmbeddedTextures.class.getResourceAsStream("/assets/textures/" + name)) {
             if (is != null) {
                 byte[] pngBytes = is.readAllBytes();
-                is.close();
-                WritableImage img = decodePng(pngBytes, name);
+                WritableImage img = decodePng(pngBytes);
                 if (img != null && img.getWidth() > 0 && img.getHeight() > 0) {
                     IMAGE_CACHE.put(cacheKey, img);
                     return img;
@@ -130,7 +129,7 @@ public final class EmbeddedTextures {
         if (base64 != null) {
             try {
                 byte[] pngBytes = Base64.getDecoder().decode(base64);
-                WritableImage img = decodePng(pngBytes, name);
+                WritableImage img = decodePng(pngBytes);
                 if (img != null && img.getWidth() > 0 && img.getHeight() > 0) {
                     IMAGE_CACHE.put(cacheKey, img);
                     return img;
@@ -157,7 +156,7 @@ public final class EmbeddedTextures {
      * Decodifica un array de bytes PNG a WritableImage a su tamaño original usando solo Inflater.
      * Admite RGBA de 8 bits (tipo de color 6), sin entrelazado y filtros 0-4.
      */
-    private static WritableImage decodePng(byte[] png, String name) {
+    private static WritableImage decodePng(byte[] png) {
         int offset = 0;
 
         if (png.length < 8 ||
@@ -175,7 +174,7 @@ public final class EmbeddedTextures {
         while (offset + 8 <= png.length) {
             int chunkLen = readInt(png, offset);
             offset += 4;
-            String chunkType = new String(png, offset, 4);
+            String chunkType = new String(png, offset, 4, StandardCharsets.US_ASCII);
             offset += 4;
 
             if (offset + chunkLen + 4 > png.length) break;

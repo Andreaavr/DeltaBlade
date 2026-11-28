@@ -729,7 +729,7 @@ public class WaveManager {
             case RANK -> squadIndex % 2 == 0
                     ? new EntryPath(getAppWidth() / 2.0, -50, EntryPath.Type.FROM_CENTER)
                     : new EntryPath(getAppWidth() / 2.0, -50, EntryPath.Type.FROM_TOP_SPLIT);
-            case BOSS -> new EntryPath(getAppWidth() / 2, -80, EntryPath.Type.FROM_TOP_SPLIT);
+            case BOSS -> new EntryPath(getAppWidth() / 2.0, -80, EntryPath.Type.FROM_TOP_SPLIT);
             case KAMIKAZE -> {
                 boolean fromLeft = squadIndex % 2 == 0;
                 double y = 50 + (squadIndex % 3) * 30;
@@ -922,7 +922,7 @@ public class WaveManager {
     }
 
     public static EntryPath bossEntry() {
-        return new EntryPath(getAppWidth() / 2, -80, EntryPath.Type.FROM_TOP_SPLIT);
+        return new EntryPath(getAppWidth() / 2.0, -80, EntryPath.Type.FROM_TOP_SPLIT);
     }
 
     public void onEnemyDestroyed(int squadId, boolean wasEntering) {
@@ -972,14 +972,12 @@ public class WaveManager {
         public final boolean beadString;
         /** Trayectoria opcional (arco, rizo...). null = forma de entrada simple antigua. */
         public List<Point2D> flight;
-        public String flightName;
 
         public static EntryPath flight(FlightPaths.Kind kind, boolean mirror) {
             List<Point2D> pts = FlightPaths.build(kind, mirror);
             Point2D first = pts.get(0);
             EntryPath p = new EntryPath(first.getX(), first.getY(), Type.FROM_CENTER);
             p.flight = pts;
-            p.flightName = kind.name();
             return p;
         }
 

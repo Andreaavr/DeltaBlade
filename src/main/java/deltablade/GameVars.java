@@ -41,8 +41,8 @@ public final class GameVars {
     public static final int MONSTER_WAVE_MIN_LEVEL = 6;
     public static final int MONSTER_SPLIT_MIN_LEVEL = 8;
 
-    public static final char[] EXTRA_LETTERS = {'E', 'X', 'T', 'R', 'A'};
-    public static final String[] EXTRA_VARS = {EXTRA_E, EXTRA_X, EXTRA_T, EXTRA_R, EXTRA_A};
+    static final char[] EXTRA_LETTERS = {'E', 'X', 'T', 'R', 'A'};
+    static final String[] EXTRA_VARS = {EXTRA_E, EXTRA_X, EXTRA_T, EXTRA_R, EXTRA_A};
 
     public static final double EXTRA_LETTER_DROP_CHANCE = 0.025;
     public static final double PICKUP_DROP_CHANCE = 0.03;
